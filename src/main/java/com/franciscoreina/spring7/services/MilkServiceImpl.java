@@ -44,6 +44,7 @@ public class MilkServiceImpl implements MilkService {
     public void update(UUID milkId, MilkUpdateRequest request) {
         Milk milkToUpdate = getMilkOrThrow(milkId);
         milkMapper.updateEntity(milkToUpdate, request);
+        milkRepository.save(milkToUpdate);
     }
 
     @Transactional
@@ -51,6 +52,7 @@ public class MilkServiceImpl implements MilkService {
     public void patch(UUID milkId, MilkPatchRequest request) {
         Milk milkToPatch = getMilkOrThrow(milkId);
         milkMapper.patchEntity(milkToPatch, request);
+        milkRepository.save(milkToPatch);
     }
 
     @Override

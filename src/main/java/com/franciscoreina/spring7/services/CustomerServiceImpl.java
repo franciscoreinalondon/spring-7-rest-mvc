@@ -44,6 +44,7 @@ public class CustomerServiceImpl implements CustomerService {
     public void update(UUID customerId, CustomerUpdateRequest request) {
         Customer customerToUpdate = getCustomerOrThrow(customerId);
         customerMapper.updateEntity(customerToUpdate, request);
+        customerRepository.save(customerToUpdate);
     }
 
     @Transactional
@@ -51,6 +52,7 @@ public class CustomerServiceImpl implements CustomerService {
     public void patch(UUID customerId, CustomerPatchRequest request) {
         Customer customerToPatch = getCustomerOrThrow(customerId);
         customerMapper.patchEntity(customerToPatch, request);
+        customerRepository.save(customerToPatch);
     }
 
     @Override
