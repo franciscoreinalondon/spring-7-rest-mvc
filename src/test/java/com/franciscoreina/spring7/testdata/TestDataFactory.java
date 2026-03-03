@@ -159,4 +159,13 @@ public class TestDataFactory {
                 ThreadLocalRandom.current()
                         .nextLong(1_000_000_000L, 10_000_000_000L));
     }
+
+    public static String randomText(int length) {
+        StringBuilder sb = new StringBuilder();
+
+        while (sb.length() < length) {
+            sb.append(UUID.randomUUID().toString().replace("-", ""));
+        }
+        return sb.substring(0, length);
+    }
 }
