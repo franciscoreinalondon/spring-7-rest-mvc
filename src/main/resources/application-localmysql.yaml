@@ -1,0 +1,36 @@
+spring:
+  datasource:
+    username: restadmin
+    password: password
+    url: jdbc:mysql://127.0.0.1:3306/restdb?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      pool-name: RestDB-Pool
+      maximum-pool-size: 5               # Maximum pool size (default is 10)
+      data-source-properties:
+        cachePrepStmts: true             # Enable prepared statement cache
+        prepStmtCacheSize: 250           # Number of cached statements
+        prepStmtCacheSqlLimit: 2048      # Max SQL length to cache
+        useServerPrepStmts: true         # Use server-side prepared statements
+        useLocalSessionState: true       # Avoid unnecessary session checks
+        rewriteBatchedStatements: true   # Optimize batch inserts/updates
+        cacheResultSetMetadata: true     # Cache result set metadata
+        cacheServerConfiguration: true   # Cache MySQL server config
+        elideSetAutoCommits: true        # Skip redundant setAutoCommit calls
+        maintainTimeStats: false         # Disable internal timing stats (less overhead)
+  jpa:
+    datasource: mysql
+    hibernate:
+      ddl-auto: create      # Auto-create schema (use "validate" in production)
+    properties:
+      hibernate:
+        show_sql: false     # Log SQL statements
+        format_sql: false   # Format SQL output in logs
+
+logging:
+  level:
+    org:
+      hibernate:
+        orm:
+          jdbc:
+            bind: off       # Enable/disable Hibernate JDBC bind parameter logging
