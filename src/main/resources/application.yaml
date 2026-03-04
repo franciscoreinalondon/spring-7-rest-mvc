@@ -1,9 +1,10 @@
 spring:
   application:
     name: spring-7-rest-mvc
-#  profiles:
-#    active: localmysql   # Use MySQL profile — application-localmysql.yaml
-
+  profiles:
+    active: localmysql   # Use MySQL profile — application-localmysql.yaml
+  flyway:
+    enabled: false        # Disable Flyway for Repository and Integration Tests
 #  jpa:
 #    properties:
 #      jakarta:
@@ -12,5 +13,5 @@ spring:
 #            scripts:
 #              action: drop-and-create             # Generate database schema creation scripts
 #              create-source: metadata             # Use entity metadata (JPA annotations) as the source for schema generation
-#              drop-target: drop-and-create.sql    # File where the generated DROP schema script will be written
-#              create-target: drop-and-create.sql  # File where the generated CREATE schema script will be written
+#              drop-target: V1__init-mysql-database.sql    # File where the generated DROP schema script will be written
+#              create-target: V1__init-mysql-database.sql  # File where the generated CREATE schema script will be written

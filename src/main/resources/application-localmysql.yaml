@@ -19,13 +19,15 @@ spring:
         elideSetAutoCommits: true        # Skip redundant setAutoCommit calls
         maintainTimeStats: false         # Disable internal timing stats (less overhead)
   jpa:
-    datasource: mysql
+    database: mysql
     hibernate:
-      ddl-auto: create      # Auto-create schema (use "validate" in production)
+      ddl-auto: validate    # Auto-create schema ("validate" in production)
     properties:
       hibernate:
         show_sql: false     # Log SQL statements
         format_sql: false   # Format SQL output in logs
+  flyway:
+    enabled: true
 
 logging:
   level:
