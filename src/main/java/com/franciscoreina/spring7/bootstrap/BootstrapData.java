@@ -3,13 +3,20 @@ package com.franciscoreina.spring7.bootstrap;
 import com.franciscoreina.spring7.domain.Customer;
 import com.franciscoreina.spring7.domain.Milk;
 import com.franciscoreina.spring7.domain.MilkType;
+import com.franciscoreina.spring7.dtos.milk.MilkCsvRecord;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
+import com.franciscoreina.spring7.services.MilkCsvService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ResourceUtils;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.math.BigDecimal;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Component
@@ -17,11 +24,14 @@ public class BootstrapData implements CommandLineRunner {
 
     private final CustomerRepository customerRepository;
     private final MilkRepository milkRepository;
+    private final MilkCsvService milkCsvService;
 
+    @Transactional
     @Override
     public void run(String... args) throws Exception {
         loadCustomerData();
         loadMilkData();
+        loadCsvData();
     }
 
     private void loadCustomerData() {
@@ -74,5 +84,36 @@ public class BootstrapData implements CommandLineRunner {
                 .stock(60)
                 .build());
 
+    }
+
+    private void loadCsvData() throws FileNotFoundException {
+        if (milkRepository.count() >= 10) {
+            return;
+        }
+
+        File csvFile = ResourceUtils.getFile("classpath:csvdata/milk_dataset.csv");
+        List<MilkCsvRecord> records = milkCsvService.convertCSV(csvFile);
+
+        records.forEach(record -> milkRepository.save(mapToBeer(record)));
+    }
+
+    // The mapper logic is mostly academic, since some properties are filled
+    // with placeholder values and do not represent realistic domain data.
+    private Milk mapToBeer(MilkCsvRecord record) {
+        return Milk.builder()
+                .name(record.getMilk())
+                .milkType(parseMilkType(record.getStyle()))
+                .price(BigDecimal.TEN)
+                .upc(record.getRow().toString())
+                .stock(record.getCount())
+                .build();
+    }
+
+    private MilkType parseMilkType(String style) {
+        try {
+            return MilkType.valueOf(style.toUpperCase().replace(" ", "_"));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Unknown milk type: " + style);
+        }
     }
 }
