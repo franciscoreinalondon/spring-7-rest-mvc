@@ -16,11 +16,9 @@ public class MilkCsvServiceImpl implements MilkCsvService {
     public List<MilkCsvRecord> convertCSV(File csvFile) {
 
         try {
-            List<MilkCsvRecord> milkCsvRecords = new CsvToBeanBuilder<MilkCsvRecord>(new FileReader(csvFile))
+            return new CsvToBeanBuilder<MilkCsvRecord>(new FileReader(csvFile))
                     .withType(MilkCsvRecord.class)
                     .build().parse();
-
-            return milkCsvRecords;
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }

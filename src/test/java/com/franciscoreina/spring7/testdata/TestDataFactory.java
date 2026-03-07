@@ -17,6 +17,9 @@ import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * Creates test objects (entities/DTOs) without persisting them.
+ */
 public class TestDataFactory {
 
     public static Customer newCustomer() {
@@ -51,6 +54,13 @@ public class TestDataFactory {
         );
     }
 
+    public static CustomerCreateRequest newCustomerCreateRequestNullName() {
+        return new CustomerCreateRequest(
+                null,
+                "customer_" + UUID.randomUUID() + "@domain.com"
+        );
+    }
+
     public static CustomerUpdateRequest newCustomerUpdateRequest(Customer customer) {
         return new CustomerUpdateRequest(
                 customer.getName(),
@@ -60,8 +70,15 @@ public class TestDataFactory {
 
     public static CustomerPatchRequest newCustomerPatchRequestWithName() {
         return new CustomerPatchRequest(
-                "PatchRequest",
+                "Patch name",
                 null
+        );
+    }
+
+    public static CustomerPatchRequest newCustomerPatchRequestInvalidEmail() {
+        return new CustomerPatchRequest(
+                null,
+                "Invalid email"
         );
     }
 
@@ -120,6 +137,16 @@ public class TestDataFactory {
         );
     }
 
+    public static MilkCreateRequest newMilkCreateRequestNullName() {
+        return new MilkCreateRequest(
+                null,
+                MilkType.SEMI_SKIMMED,
+                randomUpc(),
+                new BigDecimal("1.20"),
+                100
+        );
+    }
+
     public static MilkUpdateRequest newMilkUpdateRequest(Milk milk) {
         return new MilkUpdateRequest(
                 milk.getName(),
@@ -132,9 +159,19 @@ public class TestDataFactory {
 
     public static MilkPatchRequest newMilkPatchRequestWithName() {
         return new MilkPatchRequest(
-                "PatchRequest",
+                "Patch name",
                 null,
                 null,
+                null,
+                null
+        );
+    }
+
+    public static MilkPatchRequest newMilkPatchRequestInvalidUpc() {
+        return new MilkPatchRequest(
+                null,
+                null,
+                TestDataFactory.randomText(55),
                 null,
                 null
         );

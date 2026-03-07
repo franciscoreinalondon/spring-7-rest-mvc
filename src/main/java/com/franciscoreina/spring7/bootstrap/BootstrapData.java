@@ -9,6 +9,7 @@ import com.franciscoreina.spring7.repositories.MilkRepository;
 import com.franciscoreina.spring7.services.MilkCsvService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ResourceUtils;
@@ -18,6 +19,7 @@ import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.util.List;
 
+@Profile("!integration-test")
 @RequiredArgsConstructor
 @Component
 public class BootstrapData implements CommandLineRunner {

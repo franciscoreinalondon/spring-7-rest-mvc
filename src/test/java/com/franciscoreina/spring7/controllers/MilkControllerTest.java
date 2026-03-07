@@ -275,8 +275,7 @@ public class MilkControllerTest {
     void patchMilk_returns400_whenUpcInvalid() throws Exception {
         // Arrange
         UUID milkId = savedMilk.getId();
-        String invalidUpc = TestDataFactory.randomText(55);
-        MilkPatchRequest wrongPatchRequest = new MilkPatchRequest(null, null, invalidUpc, null, null);
+        MilkPatchRequest wrongPatchRequest = TestDataFactory.newMilkPatchRequestInvalidUpc();
 
         // Act
         mockMvc.perform(patch(ApiPaths.MILKS + "/" + milkId)

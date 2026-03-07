@@ -20,7 +20,7 @@ public class MilkCsvRecord {
     private String mfp;         // Milk fat percentage content
 
     @CsvBindByName
-    private String lc;          // Lactose content (may be NA for lactose-free milk)
+    private String lc;          // Lactose content (maybe NA for lactose-free milk)
 
     @CsvBindByName
     private Integer id;         // Unique identifier of the milk product

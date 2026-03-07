@@ -1,7 +1,10 @@
 spring:
 
-#  jpa:
-#    properties:
+  jpa:
+    properties:
+      hibernate:
+        show_sql: false     # Log SQL statements
+
 #      jakarta:
 #        persistence:
 #          schema-generation:
