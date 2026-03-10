@@ -22,6 +22,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -62,7 +63,13 @@ public class Customer {
     @Column(nullable = false)
     private Instant updatedAt;
 
+    @Builder.Default
     @OneToMany(mappedBy = "customer")
-    private Set<MilkOrder> milkOrders;
+    private Set<MilkOrder> milkOrders = new HashSet<>();
+
+    public void addMilkOrder(MilkOrder order) {
+        milkOrders.add(order);
+        order.setCustomer(this);
+    }
 
 }
