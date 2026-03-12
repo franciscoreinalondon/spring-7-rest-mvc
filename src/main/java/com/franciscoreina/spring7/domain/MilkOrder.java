@@ -24,6 +24,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -47,7 +48,7 @@ public class MilkOrder {
 
     @NotBlank
     @Size(max = 50)
-    @Column(nullable = false, length = 5, unique = true)
+    @Column(nullable = false, length = 50, unique = true)
     private String customerRef;
 
     @CreatedDate
@@ -58,16 +59,25 @@ public class MilkOrder {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @ManyToOne
+    // JPA Relationships
+
+    @ManyToOne(optional = false)
     private Customer customer;
 
+    @Builder.Default
     @OneToMany(mappedBy = "milkOrder")
-    private Set<MilkOrderLine> milkOrderLines;
+    private Set<MilkOrderLine> milkOrderLines = new HashSet<>();
+
+    public void addMilkOrderLine(MilkOrderLine orderLine) {
+        milkOrderLines.add(orderLine);
+        orderLine.setMilkOrder(this);
+    }
 
     @OneToOne(mappedBy = "milkOrder", cascade = CascadeType.PERSIST)
     private MilkOrderShipment milkOrderShipment;
 
     public void addMilkOrderShipment(MilkOrderShipment orderShipment) {
+        this.milkOrderShipment = orderShipment;
         orderShipment.setMilkOrder(this);
     }
 

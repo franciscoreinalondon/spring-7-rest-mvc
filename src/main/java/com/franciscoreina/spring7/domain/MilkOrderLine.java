@@ -16,8 +16,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
@@ -44,25 +44,27 @@ public class MilkOrderLine {
     @NotNull
     @PositiveOrZero
     @Column(nullable = false)
-    private Integer orderQuantity = 0;
+    private Integer orderQuantity;
 
     @NotNull
     @PositiveOrZero
     @Column(nullable = false)
-    private Integer stockAllocated = 0;
+    private Integer stockAllocated;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
+    @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @ManyToOne
+    // JPA Relationships
+
+    @ManyToOne(optional = false)
     private MilkOrder milkOrder;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private Milk milk;
 
 }

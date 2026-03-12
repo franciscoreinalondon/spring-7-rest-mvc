@@ -87,8 +87,11 @@ public class Milk {
     @Column(nullable = false)
     private Instant updatedAt;
 
+    // JPA Relationships
+
+    @Builder.Default
     @OneToMany(mappedBy = "milk")
-    private Set<MilkOrderLine> milkOrderLines;
+    private Set<MilkOrderLine> milkOrderLines = new HashSet<>();
 
     @Builder.Default
     @ManyToMany
@@ -106,4 +109,5 @@ public class Milk {
         categories.remove(category);
         category.getMilkSet().remove(this);
     }
+
 }

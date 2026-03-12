@@ -63,6 +63,8 @@ public class Customer {
     @Column(nullable = false)
     private Instant updatedAt;
 
+    // JPA Relationships
+
     @Builder.Default
     @OneToMany(mappedBy = "customer")
     private Set<MilkOrder> milkOrders = new HashSet<>();

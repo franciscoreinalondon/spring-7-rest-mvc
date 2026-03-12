@@ -27,7 +27,7 @@ create table milk (
 ) engine=InnoDB;
 
 alter table customer
-    add constraint UKdwk6cx0afu8bs9o4t536v1j5v unique (email);
+    add constraint uk_customer_email unique (email);
 
 alter table milk
-    add constraint UK4bn8xy85ulcdevoqhtejcfpus unique (upc);
+    add constraint uk_milk_upc unique (upc);

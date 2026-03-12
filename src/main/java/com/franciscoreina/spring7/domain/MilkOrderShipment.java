@@ -55,13 +55,10 @@ public class MilkOrderShipment {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @OneToOne
-    @JoinColumn(name = "milk_order_id")
+    // JPA Relationships
+    @OneToOne(optional = false)
+    @JoinColumn(name = "milk_order_id", nullable = false, unique = true)
     private MilkOrder milkOrder;
-
-    public void addMilkOrder(MilkOrder order) {
-        order.setMilkOrderShipment(this);
-    }
 
     @Override
     public int hashCode() {
