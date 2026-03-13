@@ -2,5 +2,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+
+  security:
+    user:
+      name: user
+      password: pass
+
   flyway:
     enabled: true

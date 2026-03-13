@@ -1,6 +1,8 @@
 package com.franciscoreina.spring7.integration;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.util.UriBuilder;
@@ -12,8 +14,22 @@ public abstract class AbstractIntegrationTest {
 
     private static final MediaType JSON = MediaType.APPLICATION_JSON;
 
+    @Value("${spring.security.user.name}")
+    String username;
+
+    @Value("${spring.security.user.password}")
+    String password;
+
     @Autowired
     WebTestClient webTestClient;
+
+    @BeforeEach
+    void setUp() {
+        webTestClient = webTestClient
+                .mutate()
+                .defaultHeaders(header -> header.setBasicAuth(username, password))
+                .build();
+    }
 
     protected WebTestClient.ResponseSpec postRequest(String uri, Object body) {
         return webTestClient.post()

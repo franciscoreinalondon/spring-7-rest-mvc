@@ -6,6 +6,11 @@ spring:
         show_sql: false     # Log SQL statements
         format_sql: false   # Format SQL output in logs
 
+  security:
+    user:
+      name: user
+      password: pass
+
 #      jakarta:
 #        persistence:
 #          schema-generation:

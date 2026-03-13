@@ -20,6 +20,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
+import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -47,6 +48,7 @@ public class CustomerIT extends AbstractIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        super.setUp();
         customerRepository.deleteAll();
     }
 
@@ -303,5 +305,31 @@ public class CustomerIT extends AbstractIntegrationTest {
                     assertThat(error.status()).isEqualTo(404);
                     assertThat(error.message()).contains("Customer not found");
                 });
+    }
+
+    // ---------------
+    //      AUTH
+    // ---------------
+
+    @Test
+    void requestWithAuth_returns200() {
+        // Act + Assert
+        getRequest(ApiPaths.CUSTOMERS)
+                .expectStatus().isOk();
+    }
+
+    @Test
+    void requestWithoutAuth_returns401() {
+        // Arrange
+        WebTestClient clientWithoutAuth = webTestClient
+                .mutate()
+                .defaultHeaders(headers -> headers.remove("Authorization"))
+                .build();
+
+        // Act + Assert
+        clientWithoutAuth.get()
+                .uri(ApiPaths.CUSTOMERS)
+                .exchange()
+                .expectStatus().isUnauthorized();
     }
 }
