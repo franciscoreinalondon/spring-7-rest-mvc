@@ -7,9 +7,10 @@ spring:
         format_sql: false   # Format SQL output in logs
 
   security:
-    user:
-      name: user
-      password: pass
+    oauth2:
+      resource-server:
+        jwt:
+          issuer-uri: http://localhost:9000
 
 #      jakarta:
 #        persistence:

@@ -1,5 +1,6 @@
 package com.franciscoreina.spring7.integration;
 
+import com.franciscoreina.spring7.dtos.access_token.AccessTokenResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,21 +15,52 @@ public abstract class AbstractIntegrationTest {
 
     private static final MediaType JSON = MediaType.APPLICATION_JSON;
 
-    @Value("${spring.security.user.name}")
-    String username;
-
-    @Value("${spring.security.user.password}")
-    String password;
-
     @Autowired
     WebTestClient webTestClient;
 
+    @Value("${test.auth-server.token-uri}")
+    String tokenUri;
+
+    @Value("${test.auth-server.client-id}")
+    String clientId;
+
+    @Value("${test.auth-server.client-secret}")
+    String clientSecret;
+
+    @Value("${test.auth-server.scope}")
+    String scope;
+
+    private String accessToken;
+
     @BeforeEach
     void setUp() {
+        accessToken = fetchAccessToken();
         webTestClient = webTestClient
                 .mutate()
-                .defaultHeaders(header -> header.setBasicAuth(username, password))
+                .defaultHeaders(headers -> headers.setBearerAuth(accessToken))
                 .build();
+    }
+
+    private String fetchAccessToken() {
+        AccessTokenResponse tokenResponse = WebTestClient.bindToServer()
+                .baseUrl(tokenUri)
+                .build()
+                .post()
+                .uri("")
+                .headers(headers -> headers.setBasicAuth(clientId, clientSecret))
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .bodyValue("grant_type=client_credentials&scope=" + scope)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(AccessTokenResponse.class)
+                .returnResult()
+                .getResponseBody();
+
+        if (tokenResponse == null || tokenResponse.accessToken() == null) {
+            throw new IllegalStateException("Could not obtain the access token from the auth server");
+        }
+
+        return tokenResponse.accessToken();
     }
 
     protected WebTestClient.ResponseSpec postRequest(String uri, Object body) {

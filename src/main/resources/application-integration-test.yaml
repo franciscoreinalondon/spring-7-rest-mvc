@@ -10,3 +10,10 @@ spring:
 
   flyway:
     enabled: true
+
+test:
+  auth-server:
+    token-uri: http://localhost:9000/oauth2/token
+    client-id: messaging-client
+    client-secret: secret
+    scope: "message.read message.write"
