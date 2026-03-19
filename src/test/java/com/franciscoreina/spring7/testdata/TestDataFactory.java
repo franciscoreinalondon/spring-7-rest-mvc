@@ -1,21 +1,24 @@
 package com.franciscoreina.spring7.testdata;
 
 import com.franciscoreina.spring7.domain.customer.Customer;
+import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.dto.request.customer.CustomerCreateRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
-import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.dto.request.customer.CustomerUpdateRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkCreateRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
-import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.dto.request.milk.MilkUpdateRequest;
+import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
+import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 /**
  * Creates test objects (entities/DTOs) without persisting them.
@@ -93,23 +96,41 @@ public class TestDataFactory {
         );
     }
 
-    public static Milk newMilk() {
+    public static Category newCategory() {
+        return Category.builder()
+                .description("Dairy Products")
+                .build();
+    }
+
+    public static Category newSavedCategory() {
+        return Category.builder()
+                .id(UUID.randomUUID())
+                .version(0)
+                .description("Dairy Products")
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+    }
+
+    public static Milk newMilk(Category category) {
         return Milk.builder()
                 .name("Milk name")
                 .milkType(MilkType.SEMI_SKIMMED)
                 .upc(randomUpc())
                 .price(new BigDecimal("1.20"))
                 .stock(100)
+                .categories(Set.of(category))
                 .build();
     }
 
-    public static Milk newMilk(String upc) {
+    public static Milk newMilk(String upc, Category category) {
         return Milk.builder()
                 .name("Milk name")
                 .milkType(MilkType.SEMI_SKIMMED)
                 .upc(upc)
                 .price(new BigDecimal("1.20"))
                 .stock(100)
+                .categories(Set.of(category))
                 .build();
     }
 
@@ -122,6 +143,7 @@ public class TestDataFactory {
                 .upc(milk.getUpc())
                 .price(milk.getPrice())
                 .stock(milk.getStock())
+                .categories(milk.getCategories())
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
@@ -133,7 +155,11 @@ public class TestDataFactory {
                 milk.getMilkType(),
                 milk.getUpc(),
                 milk.getPrice(),
-                milk.getStock()
+                milk.getStock(),
+                milk.getCategories()
+                        .stream()
+                        .map(Category::getId)
+                        .collect(Collectors.toSet())
         );
     }
 
@@ -143,7 +169,8 @@ public class TestDataFactory {
                 MilkType.SEMI_SKIMMED,
                 randomUpc(),
                 new BigDecimal("1.20"),
-                100
+                100,
+                Set.of(UUID.randomUUID())
         );
     }
 
@@ -153,7 +180,12 @@ public class TestDataFactory {
                 milk.getMilkType(),
                 milk.getUpc(),
                 milk.getPrice(),
-                milk.getStock()
+                milk.getStock(),
+                milk.getCategories() == null ? Set.of() :
+                        milk.getCategories()
+                                .stream()
+                                .map(Category::getId)
+                                .collect(Collectors.toSet())
         );
     }
 
@@ -163,7 +195,8 @@ public class TestDataFactory {
                 null,
                 null,
                 null,
-                null
+                null,
+                Set.of()
         );
     }
 
@@ -173,7 +206,8 @@ public class TestDataFactory {
                 null,
                 TestDataFactory.randomText(55),
                 null,
-                null
+                null,
+                Set.of()
         );
     }
 
@@ -187,7 +221,11 @@ public class TestDataFactory {
                 milk.getPrice(),
                 milk.getStock(),
                 milk.getCreatedAt(),
-                milk.getUpdatedAt()
+                milk.getUpdatedAt(),
+                milk.getCategories()
+                        .stream()
+                        .map(Category::getId)
+                        .collect(Collectors.toSet())
         );
     }
 

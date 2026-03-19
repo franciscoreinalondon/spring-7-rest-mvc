@@ -1,9 +1,11 @@
 package com.franciscoreina.spring7.testdata;
 
 import com.franciscoreina.spring7.domain.customer.Customer;
+import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.dto.file.MilkCsvRecord;
+import com.franciscoreina.spring7.repositories.CategoryRepository;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
 import com.franciscoreina.spring7.services.MilkCsvService;
@@ -24,6 +26,7 @@ import java.util.List;
 @Component
 public class IntegrationTestDataFactory {
 
+    private final CategoryRepository categoryRepository;
     private final CustomerRepository customerRepository;
     private final MilkRepository milkRepository;
     private final MilkCsvService milkCsvService;
@@ -44,12 +47,14 @@ public class IntegrationTestDataFactory {
     }
 
     public Milk persistMilk() {
-        return milkRepository.saveAndFlush(TestDataFactory.newMilk());
+        Category category = categoryRepository.saveAndFlush(TestDataFactory.newCategory());
+        return milkRepository.saveAndFlush(TestDataFactory.newMilk(category));
     }
 
     public List<Milk> persistTwoMilks() {
-        Milk first = milkRepository.save(TestDataFactory.newMilk());
-        Milk second = milkRepository.save(TestDataFactory.newMilk());
+        Category category = categoryRepository.saveAndFlush(TestDataFactory.newCategory());
+        Milk first = milkRepository.save(TestDataFactory.newMilk(category));
+        Milk second = milkRepository.save(TestDataFactory.newMilk(category));
         milkRepository.flush();
         return List.of(first, second);
     }

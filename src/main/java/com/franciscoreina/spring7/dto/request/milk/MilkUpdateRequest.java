@@ -40,6 +40,6 @@ public record MilkUpdateRequest(
         Integer stock,
 
         @NotEmpty
-        Set<@NotNull CategoryResponse> categories
+        Set<@NotNull UUID> categoryIds
 ) {
 }

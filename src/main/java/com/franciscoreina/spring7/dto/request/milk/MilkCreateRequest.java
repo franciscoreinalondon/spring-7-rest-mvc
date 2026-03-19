@@ -42,6 +42,6 @@ public record MilkCreateRequest(
         Integer stock,
 
         @NotEmpty
-        Set<@NotNull CategoryResponse> categories
+        Set<@NotNull UUID> categoryIds
 ) {
 }

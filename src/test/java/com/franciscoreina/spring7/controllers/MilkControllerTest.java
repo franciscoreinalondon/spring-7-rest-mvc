@@ -1,6 +1,7 @@
 package com.franciscoreina.spring7.controllers;
 
 import com.franciscoreina.spring7.api.ApiPaths;
+import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.dto.request.milk.MilkCreateRequest;
@@ -62,6 +63,7 @@ public class MilkControllerTest {
     @MockitoBean
     JwtDecoder jwtDecoder;
 
+    Category savedCategory;
     Milk milk;
     Milk savedMilk;
     MilkCreateRequest milkCreateRequest;
@@ -71,7 +73,8 @@ public class MilkControllerTest {
 
     @BeforeEach
     void setUp() {
-        milk = TestDataFactory.newMilk();
+        savedCategory = TestDataFactory.newSavedCategory();
+        milk = TestDataFactory.newMilk(savedCategory);
         savedMilk = TestDataFactory.newSavedMilk(milk);
         milkCreateRequest = TestDataFactory.newMilkCreateRequest(milk);
         milkUpdateRequest = TestDataFactory.newMilkUpdateRequest(savedMilk);
@@ -96,23 +99,23 @@ public class MilkControllerTest {
         verify(milkService).create(milkCreateRequest);
     }
 
-//TBF
-//    @Test
-//    void postMilk_returns400_whenNameNull() throws Exception {
-//        // Arrange
-//        milk.setName(null);
-//        MilkCreateRequest wrongCreateRequest = TestDataFactory.newMilkCreateRequest(milk);
-//
-//        // Act
-//        mockMvc.perform(post(ApiPaths.MILKS)
-//                        .accept(MediaType.APPLICATION_JSON)
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsBytes(wrongCreateRequest)))
-//                .andExpect(status().isBadRequest());
-//
-//        // Assert
-//        verifyNoInteractions(milkService);
-//    }
+
+    @Test
+    void postMilk_returns400_whenNameNull() throws Exception {
+        // Arrange
+        milk.setName(null);
+        MilkCreateRequest wrongCreateRequest = TestDataFactory.newMilkCreateRequest(milk);
+
+        // Act
+        mockMvc.perform(post(ApiPaths.MILKS)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(wrongCreateRequest)))
+                .andExpect(status().isBadRequest());
+
+        // Assert
+        verifyNoInteractions(milkService);
+    }
 
     @Test
     void postMilk_returns409_whenUpcDuplicated() throws Exception {
@@ -164,7 +167,7 @@ public class MilkControllerTest {
     @Test
     void listMilks_returns200_andArray_whenExists() throws Exception {
         // Arrange
-        Milk savedMilk2 = TestDataFactory.newSavedMilk(TestDataFactory.newMilk());
+        Milk savedMilk2 = TestDataFactory.newSavedMilk(TestDataFactory.newMilk(savedCategory));
         MilkResponse response2 = TestDataFactory.newMilkResponse(savedMilk2);
         Page<MilkResponse> responseList = new PageImpl<>(List.of(milkResponse, response2));
 
@@ -183,37 +186,36 @@ public class MilkControllerTest {
         verify(milkService).list(isNull(), isNull(), any(Pageable.class));
     }
 
-    // TBF
-//    @Test
-//    void listMilksByName_returns200_andArray_whenExists() throws Exception {
-//        // Arrange
-//        Milk milk1 = TestDataFactory.newMilk();
-//        milk1.setName("Ultra-Fresh Skimmed");
-//        milk1.setMilkType(MilkType.SKIMMED);
-//        MilkResponse response1 = TestDataFactory.newMilkResponse(TestDataFactory.newSavedMilk(milk1));
-//
-//        Milk milk2 = TestDataFactory.newMilk();
-//        milk2.setName("Select Semi Skimmed");
-//        MilkResponse response2 = TestDataFactory.newMilkResponse(TestDataFactory.newSavedMilk(milk2));
-//
-//        Pageable pageable = PageRequest.of(0, 20);
-//
-//        Page<MilkResponse> responseList = new PageImpl<>(List.of(response1, response2));
-//
-//        given(milkService.list("skimmed", null, pageable)).willReturn(responseList);
-//
-//        // Act
-//        mockMvc.perform(get(ApiPaths.MILKS)
-//                        .param("name", "skimmed")
-//                        .accept(MediaType.APPLICATION_JSON))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.content.size()").value(2))
-//                .andExpect(jsonPath("$.content[0].id").value(response1.id().toString()))
-//                .andExpect(jsonPath("$.content[0].name").value(response1.name()));
-//
-//        // Assert
-//        verify(milkService).list("skimmed", null, pageable);
-//    }
+    @Test
+    void listMilksByName_returns200_andArray_whenExists() throws Exception {
+        // Arrange
+        Milk milk1 = TestDataFactory.newMilk(savedCategory);
+        milk1.setName("Ultra-Fresh Skimmed");
+        milk1.setMilkType(MilkType.SKIMMED);
+        MilkResponse response1 = TestDataFactory.newMilkResponse(TestDataFactory.newSavedMilk(milk1));
+
+        Milk milk2 = TestDataFactory.newMilk(savedCategory);
+        milk2.setName("Select Semi Skimmed");
+        MilkResponse response2 = TestDataFactory.newMilkResponse(TestDataFactory.newSavedMilk(milk2));
+
+        Pageable pageable = PageRequest.of(0, 20);
+
+        Page<MilkResponse> responseList = new PageImpl<>(List.of(response1, response2));
+
+        given(milkService.list("skimmed", null, pageable)).willReturn(responseList);
+
+        // Act
+        mockMvc.perform(get(ApiPaths.MILKS)
+                        .param("name", "skimmed")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.size()").value(2))
+                .andExpect(jsonPath("$.content[0].id").value(response1.id().toString()))
+                .andExpect(jsonPath("$.content[0].name").value(response1.name()));
+
+        // Assert
+        verify(milkService).list("skimmed", null, pageable);
+    }
 
     @Test
     void listMilksByType_returns200_andArray_whenExists() throws Exception {
@@ -294,24 +296,23 @@ public class MilkControllerTest {
         verify(milkService).update(milkId, milkUpdateRequest);
     }
 
-    //TBF
-//    @Test
-//    void putMilk_returns400_whenNameNull() throws Exception {
-//        // Arrange
-//        UUID milkId = savedMilk.getId();
-//        milk.setName(null);
-//        MilkUpdateRequest wrongUpdateRequest = TestDataFactory.newMilkUpdateRequest(milk);
-//
-//        // Act
-//        mockMvc.perform(put(ApiPaths.MILKS + "/" + milkId)
-//                        .accept(MediaType.APPLICATION_JSON)
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsString(wrongUpdateRequest)))
-//                .andExpect(status().isBadRequest());
-//
-//        // Assert
-//        verifyNoInteractions(milkService);
-//    }
+    @Test
+    void putMilk_returns400_whenNameNull() throws Exception {
+        // Arrange
+        UUID milkId = savedMilk.getId();
+        milk.setName(null);
+        MilkUpdateRequest wrongUpdateRequest = TestDataFactory.newMilkUpdateRequest(milk);
+
+        // Act
+        mockMvc.perform(put(ApiPaths.MILKS + "/" + milkId)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(wrongUpdateRequest)))
+                .andExpect(status().isBadRequest());
+
+        // Assert
+        verifyNoInteractions(milkService);
+    }
 
     @Test
     void putMilk_returns404_whenMissing() throws Exception {

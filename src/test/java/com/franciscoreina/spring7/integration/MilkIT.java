@@ -1,6 +1,7 @@
 package com.franciscoreina.spring7.integration;
 
 import com.franciscoreina.spring7.api.ApiPaths;
+import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.dto.request.milk.MilkCreateRequest;
@@ -8,6 +9,7 @@ import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
 import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.dto.request.milk.MilkUpdateRequest;
 import com.franciscoreina.spring7.exceptions.ApiError;
+import com.franciscoreina.spring7.repositories.CategoryRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
 import com.franciscoreina.spring7.testdata.IntegrationTestDataFactory;
 import com.franciscoreina.spring7.testdata.TestDataFactory;
@@ -44,6 +46,9 @@ public class MilkIT extends AbstractIntegrationTest {
     static MySQLContainer<?> mysqlContainer = new MySQLContainer<>("mysql:8.4");
 
     @Autowired
+    CategoryRepository categoryRepository;
+
+    @Autowired
     MilkRepository milkRepository;
 
     @Autowired
@@ -62,7 +67,8 @@ public class MilkIT extends AbstractIntegrationTest {
     @Test
     void create_whenValidData_returnsCreated() {
         // Arrange
-        Milk milk = TestDataFactory.newMilk();
+        Category savedCategory = categoryRepository.save(TestDataFactory.newCategory());
+        Milk milk = TestDataFactory.newMilk(savedCategory);
         MilkCreateRequest request = TestDataFactory.newMilkCreateRequest(milk);
 
         // Act
@@ -97,7 +103,7 @@ public class MilkIT extends AbstractIntegrationTest {
     void create_whenUpcDuplicated_returnsConflict() {
         // Arrange
         Milk milk = dataFactory.persistMilk();
-        Milk duplicateUpc = TestDataFactory.newMilk(milk.getUpc());
+        Milk duplicateUpc = TestDataFactory.newMilk(milk.getUpc(), milk.getCategories().iterator().next());
         MilkCreateRequest request = TestDataFactory.newMilkCreateRequest(duplicateUpc);
 
         // Act + Assert
