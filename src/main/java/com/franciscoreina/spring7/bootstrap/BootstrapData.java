@@ -3,11 +3,15 @@ package com.franciscoreina.spring7.bootstrap;
 import com.franciscoreina.spring7.domain.customer.Customer;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
+import com.franciscoreina.spring7.domain.order.MilkOrder;
+import com.franciscoreina.spring7.domain.order.OrderLine;
 import com.franciscoreina.spring7.dto.file.MilkCsvRecord;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
+import com.franciscoreina.spring7.repositories.MilkOrderRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
 import com.franciscoreina.spring7.services.MilkCsvService;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -26,6 +30,7 @@ public class BootstrapData implements CommandLineRunner {
 
     private final CustomerRepository customerRepository;
     private final MilkRepository milkRepository;
+    private final MilkOrderRepository milkOrderRepository;
     private final MilkCsvService milkCsvService;
 
     @Transactional
@@ -33,6 +38,7 @@ public class BootstrapData implements CommandLineRunner {
     public void run(String... args) throws Exception {
         loadCustomerData();
         loadMilkData();
+        loadOrderData();
         loadCsvData();
     }
 
@@ -86,6 +92,57 @@ public class BootstrapData implements CommandLineRunner {
                 .stock(60)
                 .build());
 
+    }
+
+    private void loadOrderData() {
+        if (milkOrderRepository.count() > 0) {
+            return;
+        }
+
+        val customers = customerRepository.findAll();
+        val customer1 = customers.get(0);
+        val customer2 = customers.get(1);
+
+        val milks = milkRepository.findAll();
+        val milk1 = milks.get(0);
+        val milk2 = milks.get(1);
+        val milk3 = milks.get(2);
+
+        milkOrderRepository.save(
+                createMilkOrder(customer1, "1234r", List.of(
+                        OrderLine.builder().milk(milk1).orderQuantity(1).stockAllocated(10).build(),
+                        OrderLine.builder().milk(milk2).orderQuantity(2).stockAllocated(10).build()
+                ))
+        );
+
+        milkOrderRepository.save(
+                createMilkOrder(customer1, "5678r", List.of(
+                        OrderLine.builder().milk(milk3).orderQuantity(1).stockAllocated(10).build()
+                ))
+        );
+
+        milkOrderRepository.save(
+                createMilkOrder(customer2, "1357r", List.of(
+                        OrderLine.builder().milk(milk1).orderQuantity(3).stockAllocated(10).build(),
+                        OrderLine.builder().milk(milk2).orderQuantity(1).stockAllocated(10).build()
+                ))
+        );
+
+    }
+
+    public MilkOrder createMilkOrder(Customer customer, String customerRef, List<OrderLine> lines) {
+        MilkOrder milkOrder = MilkOrder.builder()
+                .customer(customer)
+                .customerRef(customerRef)
+                .paymentAmount(lines.stream()
+                        .map(ol -> ol.getMilk().getPrice()
+                                        .multiply(BigDecimal.valueOf(ol.getOrderQuantity())))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+                )
+                .build();
+
+        lines.forEach(milkOrder::addOrderLine);
+        return milkOrder;
     }
 
     private void loadCsvData() throws FileNotFoundException {

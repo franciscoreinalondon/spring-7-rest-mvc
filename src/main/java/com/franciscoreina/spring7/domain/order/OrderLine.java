@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
@@ -44,12 +45,12 @@ public class OrderLine {
     private Integer version;
 
     @NotNull
-    @PositiveOrZero
+    @Min(value = 1, message = "Quantity on hand must be greater than 0")
     @Column(nullable = false)
     private Integer orderQuantity;
 
     @NotNull
-    @PositiveOrZero
+    @PositiveOrZero()
     @Column(nullable = false)
     private Integer stockAllocated;
 
