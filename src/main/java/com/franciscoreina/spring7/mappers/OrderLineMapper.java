@@ -1,12 +1,13 @@
 package com.franciscoreina.spring7.mappers;
 
+import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.order.OrderLine;
 import com.franciscoreina.spring7.dto.request.order.OrderLineCreateRequest;
 import com.franciscoreina.spring7.dto.response.order.OrderLineResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper
+@Mapper(uses = {Milk.class})
 public interface OrderLineMapper {
 
     @Mapping(target = "id", ignore = true)

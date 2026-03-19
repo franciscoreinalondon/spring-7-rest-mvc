@@ -3,6 +3,7 @@ package com.franciscoreina.spring7.dto.request.milk;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.domain.order.OrderShipment;
+import com.franciscoreina.spring7.dto.response.milk.CategoryResponse;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
@@ -41,6 +42,6 @@ public record MilkCreateRequest(
         Integer stock,
 
         @NotEmpty
-        Set<@NotNull UUID> categoryIds
+        Set<@NotNull CategoryResponse> categories
 ) {
 }
