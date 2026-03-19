@@ -1,7 +1,5 @@
 package com.franciscoreina.spring7.dto.response.order;
 
-import com.franciscoreina.spring7.domain.milk.Milk;
-import com.franciscoreina.spring7.domain.order.MilkOrder;
 import com.franciscoreina.spring7.domain.order.OrderLineStatus;
 
 import java.time.Instant;

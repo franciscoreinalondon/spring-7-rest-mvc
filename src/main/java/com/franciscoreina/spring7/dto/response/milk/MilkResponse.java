@@ -4,6 +4,7 @@ import com.franciscoreina.spring7.domain.milk.MilkType;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 
 public record MilkResponse(
@@ -15,6 +16,7 @@ public record MilkResponse(
         BigDecimal price,
         Integer stock,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        Set<UUID> categoryIds
 ) {
 }

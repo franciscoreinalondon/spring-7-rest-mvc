@@ -1,9 +1,5 @@
 package com.franciscoreina.spring7.dto.response.order;
 
-import com.franciscoreina.spring7.domain.customer.Customer;
-import com.franciscoreina.spring7.domain.order.OrderLine;
-import com.franciscoreina.spring7.domain.order.OrderShipment;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Set;
@@ -18,7 +14,7 @@ public record MilkOrderResponse(
         Instant updatedAt,
         // JPA Relationships
         UUID customerId,
-        Set<OrderLine> orderLines,
+        Set<UUID> orderLineIds,
         UUID orderShipmentId
 ) {
 }
