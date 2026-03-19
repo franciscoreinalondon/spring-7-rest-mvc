@@ -1,6 +1,6 @@
 package com.franciscoreina.spring7.services;
 
-import com.franciscoreina.spring7.dtos.milk.MilkCsvRecord;
+import com.franciscoreina.spring7.dto.file.MilkCsvRecord;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.ResourceUtils;
 

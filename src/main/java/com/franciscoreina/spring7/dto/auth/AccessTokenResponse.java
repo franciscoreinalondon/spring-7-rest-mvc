@@ -1,4 +1,4 @@
-package com.franciscoreina.spring7.dtos.access_token;
+package com.franciscoreina.spring7.dto.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

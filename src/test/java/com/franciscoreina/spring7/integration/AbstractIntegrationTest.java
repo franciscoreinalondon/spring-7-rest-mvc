@@ -1,6 +1,6 @@
 package com.franciscoreina.spring7.integration;
 
-import com.franciscoreina.spring7.dtos.access_token.AccessTokenResponse;
+import com.franciscoreina.spring7.dto.auth.AccessTokenResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

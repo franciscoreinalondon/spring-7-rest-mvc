@@ -1,4 +1,4 @@
-package com.franciscoreina.spring7.domain;
+package com.franciscoreina.spring7.domain.milk;
 
 public enum MilkType {
     WHOLE,

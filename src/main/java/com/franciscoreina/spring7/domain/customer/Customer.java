@@ -1,4 +1,4 @@
-package com.franciscoreina.spring7.domain;
+package com.franciscoreina.spring7.domain.customer;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -6,7 +6,6 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import jakarta.validation.constraints.Email;
@@ -22,8 +21,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @Builder
@@ -63,15 +60,15 @@ public class Customer {
     @Column(nullable = false)
     private Instant updatedAt;
 
-    // JPA Relationships
-
-    @Builder.Default
-    @OneToMany(mappedBy = "customer")
-    private Set<MilkOrder> milkOrders = new HashSet<>();
-
-    public void addMilkOrder(MilkOrder order) {
-        milkOrders.add(order);
-        order.setCustomer(this);
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Customer that)) return false;
+        return id != null && id.equals(that.id);
     }
 
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

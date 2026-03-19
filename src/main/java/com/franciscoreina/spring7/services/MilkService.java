@@ -1,10 +1,10 @@
 package com.franciscoreina.spring7.services;
 
-import com.franciscoreina.spring7.domain.MilkType;
-import com.franciscoreina.spring7.dtos.milk.MilkCreateRequest;
-import com.franciscoreina.spring7.dtos.milk.MilkPatchRequest;
-import com.franciscoreina.spring7.dtos.milk.MilkResponse;
-import com.franciscoreina.spring7.dtos.milk.MilkUpdateRequest;
+import com.franciscoreina.spring7.domain.milk.MilkType;
+import com.franciscoreina.spring7.dto.request.milk.MilkCreateRequest;
+import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
+import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
+import com.franciscoreina.spring7.dto.request.milk.MilkUpdateRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

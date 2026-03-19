@@ -1,4 +1,4 @@
-package com.franciscoreina.spring7.dtos.milk;
+package com.franciscoreina.spring7.dto.file;
 
 import com.opencsv.bean.CsvBindByName;
 import lombok.AllArgsConstructor;

@@ -1,4 +1,4 @@
-package com.franciscoreina.spring7.dtos.customer;
+package com.franciscoreina.spring7.dto.response.customer;
 
 import java.time.Instant;
 import java.util.UUID;

@@ -19,5 +19,7 @@ create table milk_category (
 ) engine=InnoDB;
 
 alter table milk_category
-    add constraint fk_milk_category_milk_id foreign key (milk_id) references milk(id),
-    add constraint fk_milk_category_category_id foreign key (category_id) references category(id);
+    add constraint fk_milk_category_milk_id
+        foreign key (milk_id) references milk(id) ON DELETE CASCADE,
+    add constraint fk_milk_category_category_id
+        foreign key (category_id) references category(id) ON DELETE CASCADE;

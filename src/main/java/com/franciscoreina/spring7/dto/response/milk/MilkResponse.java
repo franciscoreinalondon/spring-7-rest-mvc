@@ -1,6 +1,6 @@
-package com.franciscoreina.spring7.dtos.milk;
+package com.franciscoreina.spring7.dto.response.milk;
 
-import com.franciscoreina.spring7.domain.MilkType;
+import com.franciscoreina.spring7.domain.milk.MilkType;
 
 import java.math.BigDecimal;
 import java.time.Instant;

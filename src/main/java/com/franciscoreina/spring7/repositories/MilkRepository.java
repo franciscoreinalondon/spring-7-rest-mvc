@@ -1,7 +1,7 @@
 package com.franciscoreina.spring7.repositories;
 
-import com.franciscoreina.spring7.domain.Milk;
-import com.franciscoreina.spring7.domain.MilkType;
+import com.franciscoreina.spring7.domain.milk.Milk;
+import com.franciscoreina.spring7.domain.milk.MilkType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,15 +1,11 @@
-package com.franciscoreina.spring7.domain;
+package com.franciscoreina.spring7.domain.milk;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import jakarta.validation.constraints.NotBlank;
@@ -23,20 +19,17 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.time.Instant;
 import java.util.UUID;
 
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Setter
 @EntityListeners(AuditingEntityListener.class)
 @Entity
-@Table(name = "milk_order")
-public class MilkOrder {
+@Table(name = "category")
+public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -48,37 +41,26 @@ public class MilkOrder {
 
     @NotBlank
     @Size(max = 50)
-    @Column(nullable = false, length = 50, unique = true)
-    private String customerRef;
+    @Column(nullable = false, length = 50)
+    private String description;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @LastModifiedDate
     @Column(nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
-    // JPA Relationships
-
-    @ManyToOne(optional = false)
-    private Customer customer;
-
-    @Builder.Default
-    @OneToMany(mappedBy = "milkOrder")
-    private Set<MilkOrderLine> milkOrderLines = new HashSet<>();
-
-    public void addMilkOrderLine(MilkOrderLine orderLine) {
-        milkOrderLines.add(orderLine);
-        orderLine.setMilkOrder(this);
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Category that)) return false;
+        return id != null && id.equals(that.id);
     }
 
-    @OneToOne(mappedBy = "milkOrder", cascade = CascadeType.PERSIST)
-    private MilkOrderShipment milkOrderShipment;
-
-    public void addMilkOrderShipment(MilkOrderShipment orderShipment) {
-        this.milkOrderShipment = orderShipment;
-        orderShipment.setMilkOrder(this);
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
-
 }

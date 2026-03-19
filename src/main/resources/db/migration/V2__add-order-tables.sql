@@ -1,5 +1,5 @@
 
-drop table if exists milk_order_line;
+drop table if exists order_line;
 
 drop table if exists milk_order;
 
@@ -10,6 +10,7 @@ create table milk_order (
                       id binary(16) not null,
                       customer_id binary(16) not null,
                       customer_ref varchar(50) not null unique,
+                      payment_amount decimal(14,2) not null,
                       primary key (id)
 ) engine=InnoDB;
 
@@ -22,12 +23,20 @@ create table milk_order_line (
                       milk_order_id binary(16) not null,
                       order_quantity integer not null,
                       stock_allocated integer not null,
+                      order_line_status enum ('NEW', 'COMPLETE') not null,
                       primary key (id)
 ) engine=InnoDB;
 
 alter table milk_order
-    add constraint fk_milk_order_customer_id foreign key (customer_id) references customer(id);
+    add constraint fk_milk_order_customer_id
+        foreign key (customer_id) references customer(id);
 
 alter table milk_order_line
-    add constraint fk_milk_order_line_milkOrder_id foreign key (milk_order_id) references milk_order(id),
-    add constraint fk_milk_order_line_milk_id foreign key (milk_id) references milk(id);
+    add constraint fk_milk_order_line_milk_order_id
+        foreign key (milk_order_id) references milk_order(id) ON DELETE CASCADE,
+    add constraint fk_milk_order_line_milk_id
+        foreign key (milk_id) references milk(id);
+
+create index idx_milk_order_customer_id on milk_order(customer_id);
+create index idx_milk_order_line_milk_order_id on milk_order_line(milk_order_id);
+create index idx_milk_order_line_milk_id on milk_order_line(milk_id);

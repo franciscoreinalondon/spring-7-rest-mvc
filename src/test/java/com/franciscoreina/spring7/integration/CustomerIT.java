@@ -1,11 +1,11 @@
 package com.franciscoreina.spring7.integration;
 
 import com.franciscoreina.spring7.api.ApiPaths;
-import com.franciscoreina.spring7.domain.Customer;
-import com.franciscoreina.spring7.dtos.customer.CustomerCreateRequest;
-import com.franciscoreina.spring7.dtos.customer.CustomerPatchRequest;
-import com.franciscoreina.spring7.dtos.customer.CustomerResponse;
-import com.franciscoreina.spring7.dtos.customer.CustomerUpdateRequest;
+import com.franciscoreina.spring7.domain.customer.Customer;
+import com.franciscoreina.spring7.dto.request.customer.CustomerCreateRequest;
+import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
+import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
+import com.franciscoreina.spring7.dto.request.customer.CustomerUpdateRequest;
 import com.franciscoreina.spring7.exceptions.ApiError;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
 import com.franciscoreina.spring7.testdata.IntegrationTestDataFactory;

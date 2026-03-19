@@ -1,17 +1,17 @@
-package com.franciscoreina.spring7.domain;
+package com.franciscoreina.spring7.domain.milk;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import jakarta.validation.constraints.DecimalMin;
@@ -24,7 +24,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -39,7 +38,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Setter
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "milk")
@@ -87,14 +85,22 @@ public class Milk {
     @Column(nullable = false)
     private Instant updatedAt;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Milk that)) return false;
+        return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
     // JPA Relationships
 
     @Builder.Default
-    @OneToMany(mappedBy = "milk")
-    private Set<MilkOrderLine> milkOrderLines = new HashSet<>();
-
-    @Builder.Default
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "milk_category",
             joinColumns = @JoinColumn(name = "milk_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id"))
@@ -102,12 +108,5 @@ public class Milk {
 
     public void addCategory(Category category) {
         categories.add(category);
-        category.getMilkSet().add(this);
     }
-
-    public void removeCategory(Category category) {
-        categories.remove(category);
-        category.getMilkSet().remove(this);
-    }
-
 }

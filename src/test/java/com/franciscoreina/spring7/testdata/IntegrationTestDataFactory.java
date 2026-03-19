@@ -1,9 +1,9 @@
 package com.franciscoreina.spring7.testdata;
 
-import com.franciscoreina.spring7.domain.Customer;
-import com.franciscoreina.spring7.domain.Milk;
-import com.franciscoreina.spring7.domain.MilkType;
-import com.franciscoreina.spring7.dtos.milk.MilkCsvRecord;
+import com.franciscoreina.spring7.domain.customer.Customer;
+import com.franciscoreina.spring7.domain.milk.Milk;
+import com.franciscoreina.spring7.domain.milk.MilkType;
+import com.franciscoreina.spring7.dto.file.MilkCsvRecord;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
 import com.franciscoreina.spring7.services.MilkCsvService;

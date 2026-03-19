@@ -1,5 +1,5 @@
 
-drop table if exists milk_order_shipment;
+drop table if exists order_shipment;
 
 create table milk_order_shipment (
                       id binary(16) not null,
@@ -12,4 +12,5 @@ create table milk_order_shipment (
 ) engine=InnoDB;
 
 alter table milk_order_shipment
-    add constraint fk_milk_order_shipment_milk_order_id foreign key (milk_order_id) references milk_order(id);
+    add constraint fk_milk_order_shipment_milk_order_id
+        foreign key (milk_order_id) references milk_order(id) ON DELETE CASCADE;

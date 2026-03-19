@@ -1,6 +1,6 @@
 package com.franciscoreina.spring7.integration;
 
-import com.franciscoreina.spring7.domain.Milk;
+import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.repositories.MilkRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,7 +1,7 @@
 package com.franciscoreina.spring7.repositories;
 
 import com.franciscoreina.spring7.config.JpaConfig;
-import com.franciscoreina.spring7.domain.Customer;
+import com.franciscoreina.spring7.domain.customer.Customer;
 import com.franciscoreina.spring7.testdata.TestDataFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.validation.ConstraintViolationException;
