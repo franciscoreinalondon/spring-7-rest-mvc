@@ -56,21 +56,3 @@ public class MilkCsvRecord {
     private String label;       // Full product label (milk name + dairy)
 
 }
-
-/*
-* private Integer count;              // Counter in the original dataset
-private BigDecimal milkFatPercentage; // Percentage of milk fat content
-private BigDecimal lactoseContent;    // Lactose content (may be NA for lactose-free milk)
-private Integer id;                 // Unique identifier of the milk product
-private String milk;                // Name of the milk product
-private String style;               // Type of milk (e.g. Whole, Skimmed, A2, Goat)
-private Integer dairyId;            // Identifier of the dairy producer
-private Integer ounces;             // Package size in fluid ounces
-private String style2;              // Secondary milk classification (optional)
-private Integer dairyCount;         // Counter associated with the dairy producer
-private String dairy;               // Name of the dairy producer
-private String city;                // City where the dairy is located
-private String state;               // State where the dairy is located
-private String label;               // Full product label (milk name + dairy)
-*
-* */

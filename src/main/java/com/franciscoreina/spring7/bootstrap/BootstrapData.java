@@ -11,14 +11,12 @@ import com.franciscoreina.spring7.repositories.MilkOrderRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
 import com.franciscoreina.spring7.services.MilkCsvService;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ResourceUtils;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -99,14 +97,14 @@ public class BootstrapData implements CommandLineRunner {
             return;
         }
 
-        val customers = customerRepository.findAll();
-        val customer1 = customers.get(0);
-        val customer2 = customers.get(1);
+        var customers = customerRepository.findAll();
+        var customer1 = customers.get(0);
+        var customer2 = customers.get(1);
 
-        val milks = milkRepository.findAll();
-        val milk1 = milks.get(0);
-        val milk2 = milks.get(1);
-        val milk3 = milks.get(2);
+        var milks = milkRepository.findAll();
+        var milk1 = milks.get(0);
+        var milk2 = milks.get(1);
+        var milk3 = milks.get(2);
 
         milkOrderRepository.save(
                 createMilkOrder(customer1, "1234r", List.of(
@@ -131,7 +129,7 @@ public class BootstrapData implements CommandLineRunner {
     }
 
     public MilkOrder createMilkOrder(Customer customer, String customerRef, List<OrderLine> lines) {
-        MilkOrder milkOrder = MilkOrder.builder()
+        var milkOrder = MilkOrder.builder()
                 .customer(customer)
                 .customerRef(customerRef)
                 .paymentAmount(lines.stream()
@@ -150,8 +148,8 @@ public class BootstrapData implements CommandLineRunner {
             return;
         }
 
-        File csvFile = ResourceUtils.getFile("classpath:csvdata/milk_dataset.csv");
-        List<MilkCsvRecord> records = milkCsvService.convertCSV(csvFile);
+        var csvFile = ResourceUtils.getFile("classpath:csvdata/milk_dataset.csv");
+        var records = milkCsvService.convertCSV(csvFile);
 
         records.forEach(record -> milkRepository.save(mapToBeer(record)));
     }

@@ -4,8 +4,8 @@ import com.franciscoreina.spring7.api.ApiPaths;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.dto.request.milk.MilkCreateRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
-import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.dto.request.milk.MilkUpdateRequest;
+import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.services.MilkService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,9 +35,9 @@ public class MilkController {
 
     @PostMapping
     public ResponseEntity<Void> create(@Valid @RequestBody MilkCreateRequest request) {
-        MilkResponse milkResponse = milkService.create(request);
+        var milkResponse = milkService.create(request);
+        var location = URI.create(ApiPaths.MILKS + "/" + milkResponse.id());
 
-        URI location = URI.create(ApiPaths.MILKS + "/" + milkResponse.id());
         return ResponseEntity.created(location).build();
     }
 

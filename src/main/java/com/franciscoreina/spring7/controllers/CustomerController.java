@@ -3,8 +3,8 @@ package com.franciscoreina.spring7.controllers;
 import com.franciscoreina.spring7.api.ApiPaths;
 import com.franciscoreina.spring7.dto.request.customer.CustomerCreateRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
-import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.dto.request.customer.CustomerUpdateRequest;
+import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.services.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,9 +32,9 @@ public class CustomerController {
 
     @PostMapping
     public ResponseEntity<Void> create(@Valid @RequestBody CustomerCreateRequest request) {
-        CustomerResponse customerResponse = customerService.create(request);
+        var customerResponse = customerService.create(request);
+        var location = URI.create(ApiPaths.CUSTOMERS + "/" + customerResponse.id());
 
-        URI location = URI.create(ApiPaths.CUSTOMERS + "/" + customerResponse.id());
         return ResponseEntity.created(location).build();
     }
 

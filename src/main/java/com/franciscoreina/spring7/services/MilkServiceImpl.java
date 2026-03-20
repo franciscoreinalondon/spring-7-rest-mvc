@@ -4,8 +4,8 @@ import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.dto.request.milk.MilkCreateRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
-import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.dto.request.milk.MilkUpdateRequest;
+import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.mappers.MilkMapper;
 import com.franciscoreina.spring7.repositories.MilkRepository;
@@ -26,14 +26,14 @@ public class MilkServiceImpl implements MilkService {
 
     @Override
     public MilkResponse create(MilkCreateRequest request) {
-        Milk saved = milkRepository.save(milkMapper.toEntity(request));
-        return milkMapper.toResponse(saved);
+        var savedMilk = milkRepository.save(milkMapper.toEntity(request));
+        return milkMapper.toResponse(savedMilk);
     }
 
     @Override
     public MilkResponse getById(UUID milkId) {
-        Milk milk = getMilkOrThrow(milkId);
-        return milkMapper.toResponse(milk);
+        var savedMilk = getMilkOrThrow(milkId);
+        return milkMapper.toResponse(savedMilk);
     }
 
     @Override
@@ -60,7 +60,7 @@ public class MilkServiceImpl implements MilkService {
     @Transactional
     @Override
     public void update(UUID milkId, MilkUpdateRequest request) {
-        Milk milkToUpdate = getMilkOrThrow(milkId);
+        var milkToUpdate = getMilkOrThrow(milkId);
         milkMapper.updateEntity(milkToUpdate, request);
         milkRepository.save(milkToUpdate);
     }
@@ -68,15 +68,15 @@ public class MilkServiceImpl implements MilkService {
     @Transactional
     @Override
     public void patch(UUID milkId, MilkPatchRequest request) {
-        Milk milkToPatch = getMilkOrThrow(milkId);
+        var milkToPatch = getMilkOrThrow(milkId);
         milkMapper.patchEntity(milkToPatch, request);
         milkRepository.save(milkToPatch);
     }
 
     @Override
     public void delete(UUID milkId) {
-        Milk milk = getMilkOrThrow(milkId);
-        milkRepository.delete(milk);
+        var savedMilk = getMilkOrThrow(milkId);
+        milkRepository.delete(savedMilk);
     }
 
     private Milk getMilkOrThrow(UUID milkId) {

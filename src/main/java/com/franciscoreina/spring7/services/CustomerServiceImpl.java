@@ -3,8 +3,8 @@ package com.franciscoreina.spring7.services;
 import com.franciscoreina.spring7.domain.customer.Customer;
 import com.franciscoreina.spring7.dto.request.customer.CustomerCreateRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
-import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.dto.request.customer.CustomerUpdateRequest;
+import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.mappers.CustomerMapper;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
@@ -24,14 +24,14 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public CustomerResponse create(CustomerCreateRequest request) {
-        Customer saved = customerRepository.save(customerMapper.toEntity(request));
-        return customerMapper.toResponse(saved);
+        var savedCustomer = customerRepository.save(customerMapper.toEntity(request));
+        return customerMapper.toResponse(savedCustomer);
     }
 
     @Override
     public CustomerResponse getById(UUID customerId) {
-        Customer customer = getCustomerOrThrow(customerId);
-        return customerMapper.toResponse(customer);
+        var savedCustomer = getCustomerOrThrow(customerId);
+        return customerMapper.toResponse(savedCustomer);
     }
 
     @Override
@@ -42,7 +42,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     @Override
     public void update(UUID customerId, CustomerUpdateRequest request) {
-        Customer customerToUpdate = getCustomerOrThrow(customerId);
+        var customerToUpdate = getCustomerOrThrow(customerId);
         customerMapper.updateEntity(customerToUpdate, request);
         customerRepository.save(customerToUpdate);
     }
@@ -50,15 +50,15 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     @Override
     public void patch(UUID customerId, CustomerPatchRequest request) {
-        Customer customerToPatch = getCustomerOrThrow(customerId);
+        var customerToPatch = getCustomerOrThrow(customerId);
         customerMapper.patchEntity(customerToPatch, request);
         customerRepository.save(customerToPatch);
     }
 
     @Override
     public void delete(UUID customerId) {
-        Customer customer = getCustomerOrThrow(customerId);
-        customerRepository.delete(customer);
+        var savedCustomer = getCustomerOrThrow(customerId);
+        customerRepository.delete(savedCustomer);
     }
 
     private Customer getCustomerOrThrow(UUID customerId) {
