@@ -1,8 +1,7 @@
 package com.franciscoreina.spring7.dto.request.order;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.franciscoreina.spring7.domain.customer.Customer;
-import com.franciscoreina.spring7.dto.response.order.OrderLineResponse;
+import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -27,7 +26,7 @@ public record MilkOrderCreateRequest(
         BigDecimal paymentAmount,
 
         @NotNull
-        Customer customer,
+        UUID customerId,
 
         @NotEmpty
         Set<@Valid OrderLineCreateRequest> orderLines
