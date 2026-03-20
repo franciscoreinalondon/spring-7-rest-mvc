@@ -1,6 +1,5 @@
 package com.franciscoreina.spring7.services;
 
-import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.dto.request.order.MilkOrderCreateRequest;
 import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
 import org.springframework.data.domain.Page;
@@ -13,7 +12,7 @@ public interface MilkOrderService {
 
     MilkOrderResponse getById(UUID milkOrderId);
 
-    Page<MilkOrderResponse> list(String name, MilkType milkType, Pageable pageable);
+    Page<MilkOrderResponse> list(String customerRef, Pageable pageable);
 
 
 }

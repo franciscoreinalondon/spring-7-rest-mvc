@@ -1,6 +1,5 @@
 package com.franciscoreina.spring7.services;
 
-import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.dto.request.order.MilkOrderCreateRequest;
 import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,7 @@ public class MilkOrderServiceImpl implements MilkOrderService {
     }
 
     @Override
-    public Page<MilkOrderResponse> list(String name, MilkType milkType, Pageable pageable) {
+    public Page<MilkOrderResponse> list(String customerRef, Pageable pageable) {
         return null;
     }
 }

@@ -2,27 +2,28 @@ package com.franciscoreina.spring7.controllers;
 
 import com.franciscoreina.spring7.api.ApiPaths;
 import com.franciscoreina.spring7.domain.customer.Customer;
-import com.franciscoreina.spring7.domain.milk.Category;
-import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.order.MilkOrder;
+import com.franciscoreina.spring7.domain.order.OrderLine;
 import com.franciscoreina.spring7.dto.request.order.MilkOrderCreateRequest;
 import com.franciscoreina.spring7.dto.request.order.OrderLineCreateRequest;
-import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
-import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
 import com.franciscoreina.spring7.services.MilkOrderService;
 import com.franciscoreina.spring7.testdata.TestDataFactory;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.security.oauth2.server.resource.autoconfigure.servlet.OAuth2ResourceServerAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
-import java.util.UUID;
+import java.util.List;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -35,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ImportAutoConfiguration(exclude = OAuth2ResourceServerAutoConfiguration.class)
-@WebMvcTest
+@WebMvcTest(MilkOrderController.class)
 class MilkOrderControllerTest {
 
     @Autowired
@@ -44,33 +45,32 @@ class MilkOrderControllerTest {
     @Autowired
     ObjectMapper objectMapper;
 
-    @Autowired
+    @MockitoBean
     MilkOrderService milkOrderService;
 
-    Category category;
-    Customer customer;
-    CustomerResponse customerResponse;
-    Milk milk;
-    MilkResponse milkResponse;
-    OrderLineCreateRequest orderLineCreateRequest;
+    Customer savedCustomer;
+    OrderLine savedOrderLine;
     MilkOrder savedMilkOrder;
     MilkOrderCreateRequest milkOrderCreateRequest;
     MilkOrderResponse milkOrderResponse;
+    OrderLineCreateRequest orderLineCreateRequest;
 
     @BeforeEach
     void setUp() {
-        category = TestDataFactory.getNewCategory();
-        customer = TestDataFactory.getNewCustomer();
-        customerResponse = TestDataFactory.getCustomerResponse(customer);
-        milk = TestDataFactory.getNewMilk(category);
-        milkResponse = TestDataFactory.getMilkResponse(milk);
-        orderLineCreateRequest = TestDataFactory.newOrderLineCreateRequest(milkResponse);
-//        savedMilkOrder = TestDataFactory.
-        milkOrderCreateRequest = TestDataFactory.newMilkOrderCreateRequest(customerResponse, orderLineCreateRequest);
-        milkOrderResponse = TestDataFactory.newMilkOrderResponse(savedMilkOrder);
+        var savedCategory = TestDataFactory.getSavedCategory(TestDataFactory.getNewCategory());
+        savedCustomer = TestDataFactory.getSavedCustomer(TestDataFactory.getNewCustomer());
+        var customerResponse = TestDataFactory.getCustomerResponse(savedCustomer);
+        var savedMilk = TestDataFactory.getSavedMilk(TestDataFactory.getNewMilk(savedCategory));
+        var milkResponse = TestDataFactory.getMilkResponse(savedMilk);
+
+        savedOrderLine = TestDataFactory.getSavedOrderLine(savedMilk);
+        savedMilkOrder = TestDataFactory.getSavedMilkOrder(savedCustomer, Set.of(savedOrderLine)); // MilkOrder is assigned to OrderLine
+        orderLineCreateRequest = TestDataFactory.getOrderLineCreateRequest(milkResponse.id());
+        milkOrderCreateRequest = TestDataFactory.getMilkOrderCreateRequest(customerResponse.id(), orderLineCreateRequest);
+        milkOrderResponse = TestDataFactory.getMilkOrderResponse(savedMilkOrder);
     }
 
-//    @Test
+    @Test
     void postMilkOrder_returns201_andLocationHeader_whenRequestValid() throws Exception {
         // Arrange
         given(milkOrderService.create(milkOrderCreateRequest)).willReturn(milkOrderResponse);
@@ -81,49 +81,47 @@ class MilkOrderControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(milkOrderCreateRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", ApiPaths.MILKS + "/" + milkOrderResponse.id()));
+                .andExpect(header().string("Location", ApiPaths.MILK_ORDERS + "/" + milkOrderResponse.id()));
 
         // Assert
         verify(milkOrderService).create(milkOrderCreateRequest);
     }
 
-//    @Test
+    @Test
     void getMilkOrderById_returns200_andBody_whenExists() throws Exception {
         // Arrange
-        UUID milkOrderId = savedMilkOrder.getId();
-        given(milkOrderService.getById(milkOrderId)).willReturn(milkOrderResponse);
+        var savedMilkOrderId = savedMilkOrder.getId();
+        given(milkOrderService.getById(savedMilkOrderId)).willReturn(milkOrderResponse);
 
         // Act
-        mockMvc.perform(get(ApiPaths.MILK_ORDERS + "/" + milkOrderId))
+        mockMvc.perform(get(ApiPaths.MILK_ORDERS + "/" + savedMilkOrderId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(milkOrderResponse.id().toString()));
-//                .andExpect(jsonPath("$.name").value(milkResponse.name()))
-//                .andExpect(jsonPath("$.upc").value(milkResponse.upc()));
+                .andExpect(jsonPath("$.id").value(milkOrderResponse.id().toString()))
+                .andExpect(jsonPath("$.customerRef").value(milkOrderResponse.customerRef()));
 
         // Assert
-        verify(milkOrderService).getById(milkOrderId);
+        verify(milkOrderService).getById(savedMilkOrderId);
     }
 
-//    @Test
+    @Test
     void listMilkOrders_returns200_andArray_whenExists() throws Exception {
         // Arrange
-//        MilkOrderResponse savedMilkOrder2 = TestDataFactory.newSavedMilkOrder(TestDataFactory.newMilkOrder(savedCategory));
+        var savedMilkOrder2 = TestDataFactory.getSavedMilkOrder(savedCustomer, Set.of(savedOrderLine));
+        var response2 = TestDataFactory.getMilkOrderResponse(savedMilkOrder2);
+        var responseList = new PageImpl<>(List.of(milkOrderResponse, response2));
 
-//        MilkOrderResponse response2 = TestDataFactory.newMilkOrderResponse(savedMilkOrder2);
-//        Page<MilkOrderResponse> responseList = new PageImpl<>(List.of(milkOrderResponse, response2));
-
-//        given(milkOrderService.list(isNull(), isNull(), any(Pageable.class))).willReturn(responseList);
+        given(milkOrderService.list(isNull(), any(Pageable.class))).willReturn(responseList);
 
         // Act
-//        mockMvc.perform(get(ApiPaths.MILK_ORDERS))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.content.size()").value(2))
-//                .andExpect(jsonPath("$.content[0].id").value(milkOrderResponse.id().toString()))
-////                .andExpect(jsonPath("$.content[0].upc").value(milkResponse.upc()))
-//                .andExpect(jsonPath("$.content[1].id").value(response2.id().toString()));
-////                .andExpect(jsonPath("$.content[1].upc").value(response2.upc()));
+        mockMvc.perform(get(ApiPaths.MILK_ORDERS))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.size()").value(2))
+                .andExpect(jsonPath("$.content[0].id").value(milkOrderResponse.id().toString()))
+                .andExpect(jsonPath("$.content[0].customerRef").value(milkOrderResponse.customerRef()))
+                .andExpect(jsonPath("$.content[1].id").value(response2.id().toString()))
+                .andExpect(jsonPath("$.content[1].customerRef").value(response2.customerRef()));
 
         // Assert
-        verify(milkOrderService).list(isNull(), isNull(), any(Pageable.class));
+        verify(milkOrderService).list(isNull(), any(Pageable.class));
     }
 }

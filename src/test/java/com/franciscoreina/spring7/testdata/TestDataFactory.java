@@ -248,24 +248,52 @@ public class TestDataFactory {
     //      ORDER
     // ---------------
 
-    public static OrderLineCreateRequest newOrderLineCreateRequest(MilkResponse milkResponse) {
-        return new OrderLineCreateRequest(
-                2,
-                milkResponse.id()
-        );
+
+    public static OrderLine getSavedOrderLine(Milk milk) {
+        return OrderLine.builder()
+                .id(UUID.randomUUID())
+                .version(0)
+                .orderQuantity(2)
+                .stockAllocated(10)
+                .milk(milk)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
     }
 
-    public static MilkOrderCreateRequest newMilkOrderCreateRequest(
-            CustomerResponse customerResponse, OrderLineCreateRequest orderLineCreateRequest) {
+    public static MilkOrder getSavedMilkOrder(Customer savedCustomer, Set<OrderLine> savedOrderLines) {
+        var savedMilkOrder = MilkOrder.builder()
+                .id(UUID.randomUUID())
+                .version(0)
+                .customerRef(UUID.randomUUID().toString())
+                .customer(savedCustomer)
+                .paymentAmount(savedOrderLines.stream()
+                        .map(ol -> ol.getMilk().getPrice()
+                                .multiply(BigDecimal.valueOf(ol.getOrderQuantity())))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add))
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+
+        savedOrderLines.forEach(savedMilkOrder::addOrderLine);
+        return savedMilkOrder;
+    }
+
+    public static OrderLineCreateRequest getOrderLineCreateRequest(UUID milkId) {
+        return new OrderLineCreateRequest(2, milkId);
+    }
+
+    public static MilkOrderCreateRequest getMilkOrderCreateRequest(
+            UUID customerId, OrderLineCreateRequest orderLineCreateRequest) {
         return new MilkOrderCreateRequest(
-                "1234r",
+                UUID.randomUUID().toString(),
                 new BigDecimal("10.00"),
-                customerResponse.id(),
+                customerId,
                 Set.of(orderLineCreateRequest)
         );
     }
 
-    public static MilkOrderResponse newMilkOrderResponse(MilkOrder milkOrder) {
+    public static MilkOrderResponse getMilkOrderResponse(MilkOrder milkOrder) {
         return new MilkOrderResponse(
                 milkOrder.getId(),
                 milkOrder.getVersion(),
@@ -277,13 +305,13 @@ public class TestDataFactory {
                 milkOrder.getOrderLines().stream()
                         .map(OrderLine::getId)
                         .collect(Collectors.toSet()),
-                milkOrder.getOrderShipment().getId()
-        );
+                milkOrder.getOrderShipment() != null ?
+                        milkOrder.getOrderShipment().getId() : null);
     }
 
-    // ---------------
-    //     HELPERS
-    // ---------------
+// ---------------
+//     HELPERS
+// ---------------
 
     private static String randomUpc() {
         return String.valueOf(
