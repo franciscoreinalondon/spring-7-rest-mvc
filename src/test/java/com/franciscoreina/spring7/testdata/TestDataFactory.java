@@ -4,14 +4,19 @@ import com.franciscoreina.spring7.domain.customer.Customer;
 import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
+import com.franciscoreina.spring7.domain.order.MilkOrder;
+import com.franciscoreina.spring7.domain.order.OrderLine;
 import com.franciscoreina.spring7.dto.request.customer.CustomerCreateRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerUpdateRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkCreateRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkUpdateRequest;
+import com.franciscoreina.spring7.dto.request.order.MilkOrderCreateRequest;
+import com.franciscoreina.spring7.dto.request.order.OrderLineCreateRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
+import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -226,6 +231,39 @@ public class TestDataFactory {
                         .stream()
                         .map(Category::getId)
                         .collect(Collectors.toSet())
+        );
+    }
+
+    public static OrderLineCreateRequest newOrderLineCreateRequest(MilkResponse milkResponse) {
+        return new OrderLineCreateRequest(
+                2,
+                milkResponse.id()
+        );
+    }
+
+    public static MilkOrderCreateRequest newMilkOrderCreateRequest(
+            CustomerResponse customerResponse, OrderLineCreateRequest orderLineCreateRequest) {
+        return new MilkOrderCreateRequest(
+                "1234r",
+                new BigDecimal("10.00"),
+                customerResponse.id(),
+                Set.of(orderLineCreateRequest)
+        );
+    }
+
+    public static MilkOrderResponse newMilkOrderResponse(MilkOrder milkOrder) {
+        return new MilkOrderResponse(
+                milkOrder.getId(),
+                milkOrder.getVersion(),
+                milkOrder.getCustomerRef(),
+                milkOrder.getPaymentAmount(),
+                milkOrder.getCreatedAt(),
+                milkOrder.getUpdatedAt(),
+                milkOrder.getCustomer().getId(),
+                milkOrder.getOrderLines().stream()
+                        .map(OrderLine::getId)
+                        .collect(Collectors.toSet()),
+                milkOrder.getOrderShipment().getId()
         );
     }
 
