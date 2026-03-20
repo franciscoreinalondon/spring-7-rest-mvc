@@ -5,8 +5,8 @@ import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.dto.request.milk.MilkCreateRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
-import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.dto.request.milk.MilkUpdateRequest;
+import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.mappers.MilkMapper;
 import com.franciscoreina.spring7.repositories.MilkRepository;
@@ -21,7 +21,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -47,54 +46,57 @@ public class MilkServiceImplTest {
     @InjectMocks
     MilkServiceImpl milkService;
 
-    Category savedCategory = TestDataFactory.newSavedCategory();
-    Milk milk;
+    Category newCategory;
+    Category savedCategory;
+    Milk newMilk;
     Milk savedMilk;
-    MilkCreateRequest milkCreateRequest;
-    MilkUpdateRequest milkUpdateRequest;
-    MilkPatchRequest milkPatchRequest;
-    MilkResponse milkResponse;
+    MilkCreateRequest createRequest;
+    MilkUpdateRequest updateRequest;
+    MilkPatchRequest patchRequest;
+    MilkResponse response;
 
     @BeforeEach
     void setUp() {
-        milk = TestDataFactory.newMilk(savedCategory);
-        savedMilk = TestDataFactory.newSavedMilk(milk);
-        milkCreateRequest = TestDataFactory.newMilkCreateRequest(milk);
-        milkUpdateRequest = TestDataFactory.newMilkUpdateRequest(savedMilk);
-        milkPatchRequest = TestDataFactory.newMilkPatchRequestWithName();
-        milkResponse = TestDataFactory.newMilkResponse(savedMilk);
+        newCategory = TestDataFactory.getNewCategory();
+        savedCategory = TestDataFactory.getSavedCategory(newCategory);
+        newMilk = TestDataFactory.getNewMilk(savedCategory);
+        savedMilk = TestDataFactory.getSavedMilk(newMilk);
+        createRequest = TestDataFactory.getMilkCreateRequest(newMilk);
+        updateRequest = TestDataFactory.getMilkUpdateRequest(savedMilk);
+        patchRequest = TestDataFactory.getMilkPatchRequestWithName();
+        response = TestDataFactory.getMilkResponse(savedMilk);
     }
 
     @Test
     void create_returnResponse_whenRequestValid() {
         // Arrange
-        given(milkMapper.toEntity(milkCreateRequest)).willReturn(milk);
-        given(milkRepository.save(milk)).willReturn(savedMilk);
-        given(milkMapper.toResponse(savedMilk)).willReturn(milkResponse);
+        given(milkMapper.toEntity(createRequest)).willReturn(newMilk);
+        given(milkRepository.save(newMilk)).willReturn(savedMilk);
+        given(milkMapper.toResponse(savedMilk)).willReturn(response);
 
         // Act
-        MilkResponse milkResponse = milkService.create(milkCreateRequest);
+        var milkResponse = milkService.create(createRequest);
 
         // Assert
-        assertThat(milkResponse).isSameAs(this.milkResponse);
+        assertThat(milkResponse).isSameAs(this.response);
 
-        verify(milkMapper).toEntity(milkCreateRequest);
-        verify(milkRepository).save(milk);
+        verify(milkMapper).toEntity(createRequest);
+        verify(milkRepository).save(newMilk);
         verify(milkMapper).toResponse(savedMilk);
     }
 
     @Test
     void create_propagatesDataIntegrityException_whenRepoRejects() {
         // Arrange
-        given(milkMapper.toEntity(milkCreateRequest)).willReturn(milk);
-        given(milkRepository.save(milk)).willThrow(new DataIntegrityViolationException("Upc Duplicated"));
+        given(milkMapper.toEntity(createRequest)).willReturn(newMilk);
+        given(milkRepository.save(newMilk)).willThrow(new DataIntegrityViolationException("Upc Duplicated"));
 
         // Act-Assert
-        assertThatThrownBy(() -> milkService.create(milkCreateRequest))
+        assertThatThrownBy(() -> milkService.create(createRequest))
                 .isInstanceOf(DataIntegrityViolationException.class);
 
-        verify(milkMapper).toEntity(milkCreateRequest);
-        verify(milkRepository).save(milk);
+        verify(milkMapper).toEntity(createRequest);
+        verify(milkRepository).save(newMilk);
     }
 
     @Test
@@ -102,13 +104,13 @@ public class MilkServiceImplTest {
         // Arrange
         UUID milkId = savedMilk.getId();
         given(milkRepository.findById(milkId)).willReturn(Optional.of(savedMilk));
-        given(milkMapper.toResponse(savedMilk)).willReturn(milkResponse);
+        given(milkMapper.toResponse(savedMilk)).willReturn(response);
 
         // Act
-        MilkResponse milkResponse = milkService.getById(milkId);
+        var milkResponse = milkService.getById(milkId);
 
         // Assert
-        assertThat(milkResponse).isSameAs(this.milkResponse);
+        assertThat(milkResponse).isSameAs(this.response);
 
         verify(milkRepository).findById(milkId);
         verify(milkMapper).toResponse(savedMilk);
@@ -130,15 +132,15 @@ public class MilkServiceImplTest {
     @Test
     void list_returnsList_whenMilksExist() {
         // Arrange
-        Milk savedMilk2 = TestDataFactory.newSavedMilk(TestDataFactory.newMilk(savedCategory));
-        Pageable pageable = PageRequest.of(0, 20);
+        var savedMilk2 = TestDataFactory.getSavedMilk(TestDataFactory.getNewMilk(savedCategory));
+        var pageable = PageRequest.of(0, 20);
 
         given(milkRepository.findAll(pageable)).willReturn(new PageImpl<>(List.of(savedMilk, savedMilk2)));
-        given(milkMapper.toResponse(savedMilk)).willReturn(TestDataFactory.newMilkResponse(savedMilk));
-        given(milkMapper.toResponse(savedMilk2)).willReturn(TestDataFactory.newMilkResponse(savedMilk2));
+        given(milkMapper.toResponse(savedMilk)).willReturn(TestDataFactory.getMilkResponse(savedMilk));
+        given(milkMapper.toResponse(savedMilk2)).willReturn(TestDataFactory.getMilkResponse(savedMilk2));
 
         // Act
-        Page<MilkResponse> milkResponseList = milkService.list(null, null, pageable);
+       var milkResponseList = milkService.list(null, null, pageable);
 
         // Assert
         assertThat(milkResponseList).hasSize(2);
@@ -154,14 +156,14 @@ public class MilkServiceImplTest {
     void listByName_returnsList_whenMilksExist() {
         // Arrange
         savedMilk.setName("Skimmed name");
-        Pageable pageable = PageRequest.of(0, 20);
+        var pageable = PageRequest.of(0, 20);
 
         given(milkRepository.findAllByNameContainingIgnoreCase("Skimmed", pageable))
                 .willReturn(new PageImpl<>(List.of(savedMilk)));
-        given(milkMapper.toResponse(savedMilk)).willReturn(TestDataFactory.newMilkResponse(savedMilk));
+        given(milkMapper.toResponse(savedMilk)).willReturn(TestDataFactory.getMilkResponse(savedMilk));
 
         // Act
-        Page<MilkResponse> milkResponseList = milkService.list("Skimmed", null, pageable);
+        var milkResponseList = milkService.list("Skimmed", null, pageable);
 
         // Assert
         assertThat(milkResponseList).hasSize(1);
@@ -174,14 +176,14 @@ public class MilkServiceImplTest {
     @Test
     void listByType_returnsList_whenMilksExist() {
         // Arrange
-        Pageable pageable = PageRequest.of(0, 20);
+        var pageable = PageRequest.of(0, 20);
 
         given(milkRepository.findAllByMilkType(MilkType.SEMI_SKIMMED, pageable))
                 .willReturn(new PageImpl<>(List.of(savedMilk)));
-        given(milkMapper.toResponse(savedMilk)).willReturn(TestDataFactory.newMilkResponse(savedMilk));
+        given(milkMapper.toResponse(savedMilk)).willReturn(TestDataFactory.getMilkResponse(savedMilk));
 
         // Act
-        Page<MilkResponse> milkResponseList = milkService.list(null, MilkType.SEMI_SKIMMED, pageable);
+        var milkResponseList = milkService.list(null, MilkType.SEMI_SKIMMED, pageable);
 
         // Assert
         assertThat(milkResponseList.getContent()).hasSize(1);
@@ -194,16 +196,16 @@ public class MilkServiceImplTest {
     @Test
     void listByNameAndType_returnsList_whenMilksExist() {
         // Arrange Milk name
-        Milk savedMilk2 = TestDataFactory.newSavedMilk(TestDataFactory.newMilk(savedCategory));
-        Pageable pageable = PageRequest.of(0, 20);
+        var savedMilk2 = TestDataFactory.getSavedMilk(TestDataFactory.getNewMilk(savedCategory));
+        var pageable = PageRequest.of(0, 20);
 
         given(milkRepository.findAllByNameContainingIgnoreCaseAndMilkType("Milk name", MilkType.SEMI_SKIMMED, pageable))
                 .willReturn(new PageImpl<>(List.of(savedMilk, savedMilk2)));
-        given(milkMapper.toResponse(savedMilk)).willReturn(TestDataFactory.newMilkResponse(savedMilk));
-        given(milkMapper.toResponse(savedMilk2)).willReturn(TestDataFactory.newMilkResponse(savedMilk2));
+        given(milkMapper.toResponse(savedMilk)).willReturn(TestDataFactory.getMilkResponse(savedMilk));
+        given(milkMapper.toResponse(savedMilk2)).willReturn(TestDataFactory.getMilkResponse(savedMilk2));
 
         // Act
-        Page<MilkResponse> milkResponseList = milkService.list("Milk name", MilkType.SEMI_SKIMMED, pageable);
+        var milkResponseList = milkService.list("Milk name", MilkType.SEMI_SKIMMED, pageable);
 
         // Assert
         assertThat(milkResponseList).hasSize(2);
@@ -220,12 +222,12 @@ public class MilkServiceImplTest {
     @Test
     void list_returnsEmptyList_whenNoMilks() {
         // Arrange
-        Pageable pageable = PageRequest.of(0, 20);
+        var pageable = PageRequest.of(0, 20);
 
         given(milkRepository.findAll(pageable)).willReturn(Page.empty());
 
         // Act
-        Page<MilkResponse> milkResponseList = milkService.list(null, null, pageable);
+        var milkResponseList = milkService.list(null, null, pageable);
 
         // Assert
         assertThat(milkResponseList.getContent()).isEmpty();
@@ -237,15 +239,15 @@ public class MilkServiceImplTest {
     @Test
     void update_updatesEntity_whenMilkExists() {
         // Arrange
-        UUID milkId = savedMilk.getId();
-        given(milkRepository.findById(milkId)).willReturn(Optional.of(savedMilk));
+        var savedMilkId = savedMilk.getId();
+        given(milkRepository.findById(savedMilkId)).willReturn(Optional.of(savedMilk));
 
         // Act
-        milkService.update(milkId, milkUpdateRequest);
+        milkService.update(savedMilkId, updateRequest);
 
         // Assert
-        verify(milkRepository).findById(milkId);
-        verify(milkMapper).updateEntity(savedMilk, milkUpdateRequest);
+        verify(milkRepository).findById(savedMilkId);
+        verify(milkMapper).updateEntity(savedMilk, updateRequest);
         verify(milkRepository).save(savedMilk);
     }
 
@@ -255,7 +257,7 @@ public class MilkServiceImplTest {
         given(milkRepository.findById(any(UUID.class))).willReturn(Optional.empty());
 
         // Act-Assert
-        assertThatThrownBy(() -> milkService.update(UUID.randomUUID(), milkUpdateRequest))
+        assertThatThrownBy(() -> milkService.update(UUID.randomUUID(), updateRequest))
                 .isInstanceOf(NotFoundException.class);
 
         verifyNoInteractions(milkMapper);
@@ -268,26 +270,26 @@ public class MilkServiceImplTest {
         given(milkRepository.save(savedMilk)).willThrow(new DataIntegrityViolationException("Upc Duplicated"));
 
         // Act-Assert
-        assertThatThrownBy(() -> milkService.update(savedMilk.getId(), milkUpdateRequest))
+        assertThatThrownBy(() -> milkService.update(savedMilk.getId(), updateRequest))
                 .isInstanceOf(DataIntegrityViolationException.class);
 
         verify(milkRepository).findById(savedMilk.getId());
-        verify(milkMapper).updateEntity(savedMilk, milkUpdateRequest);
+        verify(milkMapper).updateEntity(savedMilk, updateRequest);
         verify(milkRepository).save(savedMilk);
     }
 
     @Test
     void patch_updatesOnlyProvidedFields_whenMilkExists() {
         // Arrange
-        UUID milkId = savedMilk.getId();
-        given(milkRepository.findById(milkId)).willReturn(Optional.of(savedMilk));
+        var savedMilkId = savedMilk.getId();
+        given(milkRepository.findById(savedMilkId)).willReturn(Optional.of(savedMilk));
 
         // Act
-        milkService.patch(milkId, milkPatchRequest);
+        milkService.patch(savedMilkId, patchRequest);
 
         // Assert
-        verify(milkRepository).findById(milkId);
-        verify(milkMapper).patchEntity(savedMilk, milkPatchRequest);
+        verify(milkRepository).findById(savedMilkId);
+        verify(milkMapper).patchEntity(savedMilk, patchRequest);
         verify(milkRepository).save(savedMilk);
     }
 
@@ -297,7 +299,7 @@ public class MilkServiceImplTest {
         given(milkRepository.findById(any(UUID.class))).willReturn(Optional.empty());
 
         // Act-Assert
-        assertThatThrownBy(() -> milkService.patch(UUID.randomUUID(), milkPatchRequest))
+        assertThatThrownBy(() -> milkService.patch(UUID.randomUUID(), patchRequest))
                 .isInstanceOf(NotFoundException.class);
 
         verify(milkRepository).findById(any(UUID.class));
@@ -311,25 +313,25 @@ public class MilkServiceImplTest {
         given(milkRepository.save(savedMilk)).willThrow(new DataIntegrityViolationException("Upc Duplicated"));
 
         // Act-Assert
-        assertThatThrownBy(() -> milkService.patch(savedMilk.getId(), milkPatchRequest))
+        assertThatThrownBy(() -> milkService.patch(savedMilk.getId(), patchRequest))
                 .isInstanceOf(DataIntegrityViolationException.class);
 
         verify(milkRepository).findById(savedMilk.getId());
-        verify(milkMapper).patchEntity(savedMilk, milkPatchRequest);
+        verify(milkMapper).patchEntity(savedMilk, patchRequest);
         verify(milkRepository).save(savedMilk);
     }
 
     @Test
     void delete_deletesMilk_whenMilkExists() {
         // Arrange
-        UUID milkId = savedMilk.getId();
-        given(milkRepository.findById(milkId)).willReturn(Optional.of(savedMilk));
+        var savedMilkId = savedMilk.getId();
+        given(milkRepository.findById(savedMilkId)).willReturn(Optional.of(savedMilk));
 
         // Act
-        milkService.delete(milkId);
+        milkService.delete(savedMilkId);
 
         // Assert
-        verify(milkRepository).findById(milkId);
+        verify(milkRepository).findById(savedMilkId);
         verify(milkRepository).delete(savedMilk);
     }
 

@@ -30,21 +30,25 @@ import java.util.stream.Collectors;
  */
 public class TestDataFactory {
 
-    public static Customer newCustomer() {
+    // ---------------
+    //     CUSTOMER
+    // ---------------
+
+    public static Customer getNewCustomer() {
         return Customer.builder()
                 .name("Customer name")
                 .email("customer_" + UUID.randomUUID() + "@domain.com")
                 .build();
     }
 
-    public static Customer newCustomer(String email) {
+    public static Customer getNewCustomer(String email) {
         return Customer.builder()
                 .name("Customer name")
                 .email(email)
                 .build();
     }
 
-    public static Customer newSavedCustomer(Customer customer) {
+    public static Customer getSavedCustomer(Customer customer) {
         return Customer.builder()
                 .id(UUID.randomUUID())
                 .version(0)
@@ -55,42 +59,42 @@ public class TestDataFactory {
                 .build();
     }
 
-    public static CustomerCreateRequest newCustomerCreateRequest(Customer customer) {
+    public static CustomerCreateRequest getCustomerCreateRequest(Customer customer) {
         return new CustomerCreateRequest(
                 customer.getName(),
                 customer.getEmail()
         );
     }
 
-    public static CustomerCreateRequest newCustomerCreateRequestNullName() {
+    public static CustomerCreateRequest getCustomerCreateRequestNullName() {
         return new CustomerCreateRequest(
                 null,
                 "customer_" + UUID.randomUUID() + "@domain.com"
         );
     }
 
-    public static CustomerUpdateRequest newCustomerUpdateRequest(Customer customer) {
+    public static CustomerUpdateRequest getCustomerUpdateRequest(Customer customer) {
         return new CustomerUpdateRequest(
                 customer.getName(),
                 customer.getEmail()
         );
     }
 
-    public static CustomerPatchRequest newCustomerPatchRequestWithName() {
+    public static CustomerPatchRequest getCustomerPatchRequestWithName() {
         return new CustomerPatchRequest(
                 "Patch name",
                 null
         );
     }
 
-    public static CustomerPatchRequest newCustomerPatchRequestInvalidEmail() {
+    public static CustomerPatchRequest getCustomerPatchRequestInvalidEmail() {
         return new CustomerPatchRequest(
                 null,
                 "Invalid email"
         );
     }
 
-    public static CustomerResponse newCustomerResponse(Customer customer) {
+    public static CustomerResponse getCustomerResponse(Customer customer) {
         return new CustomerResponse(
                 customer.getId(),
                 customer.getVersion(),
@@ -101,23 +105,31 @@ public class TestDataFactory {
         );
     }
 
-    public static Category newCategory() {
+    // ---------------
+    //    CATEGORY
+    // ---------------
+
+    public static Category getNewCategory() {
         return Category.builder()
                 .description("Dairy Products")
                 .build();
     }
 
-    public static Category newSavedCategory() {
+    public static Category getSavedCategory(Category category) {
         return Category.builder()
                 .id(UUID.randomUUID())
                 .version(0)
-                .description("Dairy Products")
+                .description(category.getDescription())
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
     }
 
-    public static Milk newMilk(Category category) {
+    // ---------------
+    //      MILK
+    // ---------------
+
+    public static Milk getNewMilk(Category category) {
         return Milk.builder()
                 .name("Milk name")
                 .milkType(MilkType.SEMI_SKIMMED)
@@ -128,7 +140,7 @@ public class TestDataFactory {
                 .build();
     }
 
-    public static Milk newMilk(String upc, Category category) {
+    public static Milk getNewMilk(String upc, Category category) {
         return Milk.builder()
                 .name("Milk name")
                 .milkType(MilkType.SEMI_SKIMMED)
@@ -139,7 +151,7 @@ public class TestDataFactory {
                 .build();
     }
 
-    public static Milk newSavedMilk(Milk milk) {
+    public static Milk getSavedMilk(Milk milk) {
         return Milk.builder()
                 .id(UUID.randomUUID())
                 .version(0)
@@ -154,7 +166,7 @@ public class TestDataFactory {
                 .build();
     }
 
-    public static MilkCreateRequest newMilkCreateRequest(Milk milk) {
+    public static MilkCreateRequest getMilkCreateRequest(Milk milk) {
         return new MilkCreateRequest(
                 milk.getName(),
                 milk.getMilkType(),
@@ -168,7 +180,7 @@ public class TestDataFactory {
         );
     }
 
-    public static MilkCreateRequest newMilkCreateRequestNullName() {
+    public static MilkCreateRequest getMilkCreateRequestNullName() {
         return new MilkCreateRequest(
                 null,
                 MilkType.SEMI_SKIMMED,
@@ -179,22 +191,20 @@ public class TestDataFactory {
         );
     }
 
-    public static MilkUpdateRequest newMilkUpdateRequest(Milk milk) {
+    public static MilkUpdateRequest getMilkUpdateRequest(Milk milk) {
         return new MilkUpdateRequest(
                 milk.getName(),
                 milk.getMilkType(),
                 milk.getUpc(),
                 milk.getPrice(),
                 milk.getStock(),
-                milk.getCategories() == null ? Set.of() :
-                        milk.getCategories()
-                                .stream()
-                                .map(Category::getId)
-                                .collect(Collectors.toSet())
+                milk.getCategories().stream()
+                        .map(Category::getId)
+                        .collect(Collectors.toSet())
         );
     }
 
-    public static MilkPatchRequest newMilkPatchRequestWithName() {
+    public static MilkPatchRequest getMilkPatchRequestWithName() {
         return new MilkPatchRequest(
                 "Patch name",
                 null,
@@ -205,7 +215,7 @@ public class TestDataFactory {
         );
     }
 
-    public static MilkPatchRequest newMilkPatchRequestInvalidUpc() {
+    public static MilkPatchRequest getMilkPatchRequestInvalidUpc() {
         return new MilkPatchRequest(
                 null,
                 null,
@@ -216,7 +226,7 @@ public class TestDataFactory {
         );
     }
 
-    public static MilkResponse newMilkResponse(Milk milk) {
+    public static MilkResponse getMilkResponse(Milk milk) {
         return new MilkResponse(
                 milk.getId(),
                 milk.getVersion(),
@@ -233,6 +243,10 @@ public class TestDataFactory {
                         .collect(Collectors.toSet())
         );
     }
+
+    // ---------------
+    //      ORDER
+    // ---------------
 
     public static OrderLineCreateRequest newOrderLineCreateRequest(MilkResponse milkResponse) {
         return new OrderLineCreateRequest(
@@ -267,6 +281,10 @@ public class TestDataFactory {
         );
     }
 
+    // ---------------
+    //     HELPERS
+    // ---------------
+
     private static String randomUpc() {
         return String.valueOf(
                 ThreadLocalRandom.current()
@@ -274,7 +292,7 @@ public class TestDataFactory {
     }
 
     public static String randomText(int length) {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
 
         while (sb.length() < length) {
             sb.append(UUID.randomUUID().toString().replace("-", ""));

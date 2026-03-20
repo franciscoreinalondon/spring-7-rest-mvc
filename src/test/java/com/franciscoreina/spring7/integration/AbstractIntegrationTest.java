@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.web.util.UriBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
@@ -42,7 +41,7 @@ public abstract class AbstractIntegrationTest {
     }
 
     private String fetchAccessToken() {
-        AccessTokenResponse tokenResponse = WebTestClient.bindToServer()
+        var tokenResponse = WebTestClient.bindToServer()
                 .baseUrl(tokenUri)
                 .build()
                 .post()
@@ -109,7 +108,7 @@ public abstract class AbstractIntegrationTest {
     }
 
     private static String uriBuilder(String uri, Map<String, String> queryParams) {
-        UriBuilder uriBuilder = UriComponentsBuilder.fromPath(uri);
+        var uriBuilder = UriComponentsBuilder.fromPath(uri);
         queryParams.forEach(uriBuilder::queryParam);
         return uriBuilder.build().toString();
     }

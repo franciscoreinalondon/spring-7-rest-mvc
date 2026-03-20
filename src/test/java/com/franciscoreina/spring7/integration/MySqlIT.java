@@ -1,6 +1,5 @@
 package com.franciscoreina.spring7.integration;
 
-import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.repositories.MilkRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +9,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,7 +37,7 @@ public class MySqlIT {
 
     @Test
     void testListMilks() {
-        List<Milk> milkList = milkRepository.findAll();
+        var milkList = milkRepository.findAll();
 
         assertThat(milkList.size()).isGreaterThan(0);
     }

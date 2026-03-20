@@ -3,8 +3,8 @@ package com.franciscoreina.spring7.services;
 import com.franciscoreina.spring7.domain.customer.Customer;
 import com.franciscoreina.spring7.dto.request.customer.CustomerCreateRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
-import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.dto.request.customer.CustomerUpdateRequest;
+import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.mappers.CustomerMapper;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
@@ -42,70 +42,70 @@ public class CustomerServiceImplTest {
     @InjectMocks
     CustomerServiceImpl customerService;
 
-    Customer customer;
+    Customer newCustomer;
     Customer savedCustomer;
-    CustomerCreateRequest customerCreateRequest;
-    CustomerUpdateRequest customerUpdateRequest;
-    CustomerPatchRequest customerPatchRequest;
-    CustomerResponse customerResponse;
+    CustomerCreateRequest createRequest;
+    CustomerUpdateRequest updateRequest;
+    CustomerPatchRequest patchRequest;
+    CustomerResponse response;
 
     @BeforeEach
     void setUp() {
-        customer = TestDataFactory.newCustomer();
-        savedCustomer = TestDataFactory.newSavedCustomer(customer);
-        customerCreateRequest = TestDataFactory.newCustomerCreateRequest(customer);
-        customerUpdateRequest = TestDataFactory.newCustomerUpdateRequest(savedCustomer);
-        customerPatchRequest = TestDataFactory.newCustomerPatchRequestWithName();
-        customerResponse = TestDataFactory.newCustomerResponse(savedCustomer);
+        newCustomer = TestDataFactory.getNewCustomer();
+        savedCustomer = TestDataFactory.getSavedCustomer(newCustomer);
+        createRequest = TestDataFactory.getCustomerCreateRequest(newCustomer);
+        updateRequest = TestDataFactory.getCustomerUpdateRequest(savedCustomer);
+        patchRequest = TestDataFactory.getCustomerPatchRequestWithName();
+        response = TestDataFactory.getCustomerResponse(savedCustomer);
     }
 
 
     @Test
     void create_returnResponse_whenRequestValid() {
         // Arrange
-        given(customerMapper.toEntity(customerCreateRequest)).willReturn(customer);
-        given(customerRepository.save(customer)).willReturn(savedCustomer);
-        given(customerMapper.toResponse(savedCustomer)).willReturn(customerResponse);
+        given(customerMapper.toEntity(createRequest)).willReturn(newCustomer);
+        given(customerRepository.save(newCustomer)).willReturn(savedCustomer);
+        given(customerMapper.toResponse(savedCustomer)).willReturn(response);
 
         // Act
-        CustomerResponse customerResponse = customerService.create(customerCreateRequest);
+        var customerResponse = customerService.create(createRequest);
 
         // Assert
-        assertThat(customerResponse).isSameAs(this.customerResponse);
+        assertThat(customerResponse).isSameAs(this.response);
 
-        verify(customerMapper).toEntity(customerCreateRequest);
-        verify(customerRepository).save(customer);
+        verify(customerMapper).toEntity(createRequest);
+        verify(customerRepository).save(newCustomer);
         verify(customerMapper).toResponse(savedCustomer);
     }
 
     @Test
     void create_propagatesDataIntegrityException_whenRepoRejects() {
         // Arrange
-        given(customerMapper.toEntity(customerCreateRequest)).willReturn(customer);
-        given(customerRepository.save(customer)).willThrow(new DataIntegrityViolationException("Upc Duplicated"));
+        given(customerMapper.toEntity(createRequest)).willReturn(newCustomer);
+        given(customerRepository.save(newCustomer)).willThrow(new DataIntegrityViolationException("Upc Duplicated"));
 
         // Act-Assert
-        assertThatThrownBy(() -> customerService.create(customerCreateRequest))
+        assertThatThrownBy(() -> customerService.create(createRequest))
                 .isInstanceOf(DataIntegrityViolationException.class);
 
-        verify(customerMapper).toEntity(customerCreateRequest);
-        verify(customerRepository).save(customer);
+        verify(customerMapper).toEntity(createRequest);
+        verify(customerRepository).save(newCustomer);
     }
 
     @Test
     void getById_returnsResponse_whenCustomerExists() {
         // Arrange
-        UUID customerId = savedCustomer.getId();
-        given(customerRepository.findById(customerId)).willReturn(Optional.of(savedCustomer));
-        given(customerMapper.toResponse(savedCustomer)).willReturn(customerResponse);
+        var savedCustomerId = savedCustomer.getId();
+        given(customerRepository.findById(savedCustomerId)).willReturn(Optional.of(savedCustomer));
+        given(customerMapper.toResponse(savedCustomer)).willReturn(response);
 
         // Act
-        CustomerResponse customerResponse = customerService.getById(customerId);
+        var customerResponse = customerService.getById(savedCustomerId);
 
         // Assert
-        assertThat(customerResponse).isSameAs(this.customerResponse);
+        assertThat(customerResponse).isSameAs(this.response);
 
-        verify(customerRepository).findById(customerId);
+        verify(customerRepository).findById(savedCustomerId);
         verify(customerMapper).toResponse(savedCustomer);
     }
 
@@ -125,13 +125,13 @@ public class CustomerServiceImplTest {
     @Test
     void list_returnsList_whenCustomersExist() {
         // Arrange
-        Customer savedCustomer2 = TestDataFactory.newSavedCustomer(TestDataFactory.newCustomer());
+        var savedCustomer2 = TestDataFactory.getSavedCustomer(TestDataFactory.getNewCustomer());
         given(customerRepository.findAll()).willReturn(List.of(savedCustomer, savedCustomer2));
-        given(customerMapper.toResponse(savedCustomer)).willReturn(TestDataFactory.newCustomerResponse(savedCustomer));
-        given(customerMapper.toResponse(savedCustomer2)).willReturn(TestDataFactory.newCustomerResponse(savedCustomer2));
+        given(customerMapper.toResponse(savedCustomer)).willReturn(TestDataFactory.getCustomerResponse(savedCustomer));
+        given(customerMapper.toResponse(savedCustomer2)).willReturn(TestDataFactory.getCustomerResponse(savedCustomer2));
 
         // Act
-        List<CustomerResponse> customerResponseList = customerService.list();
+        var customerResponseList = customerService.list();
 
         // Assert
         assertThat(customerResponseList).hasSize(2);
@@ -149,7 +149,7 @@ public class CustomerServiceImplTest {
         given(customerRepository.findAll()).willReturn(Collections.emptyList());
 
         // Act
-        List<CustomerResponse> customerResponseList = customerService.list();
+        var customerResponseList = customerService.list();
 
         // Assert
         assertThat(customerResponseList).isEmpty();
@@ -161,15 +161,15 @@ public class CustomerServiceImplTest {
     @Test
     void update_updatesEntity_whenCustomerExists() {
         // Arrange
-        UUID customerId = savedCustomer.getId();
-        given(customerRepository.findById(customerId)).willReturn(Optional.of(savedCustomer));
+        var savedCustomerId = savedCustomer.getId();
+        given(customerRepository.findById(savedCustomerId)).willReturn(Optional.of(savedCustomer));
 
         // Act
-        customerService.update(customerId, customerUpdateRequest);
+        customerService.update(savedCustomerId, updateRequest);
 
         // Assert
-        verify(customerRepository).findById(customerId);
-        verify(customerMapper).updateEntity(savedCustomer, customerUpdateRequest);
+        verify(customerRepository).findById(savedCustomerId);
+        verify(customerMapper).updateEntity(savedCustomer, updateRequest);
         verify(customerRepository).save(savedCustomer);
     }
 
@@ -179,7 +179,7 @@ public class CustomerServiceImplTest {
         given(customerRepository.findById(any(UUID.class))).willReturn(Optional.empty());
 
         // Act-Assert
-        assertThatThrownBy(() -> customerService.update(UUID.randomUUID(), customerUpdateRequest))
+        assertThatThrownBy(() -> customerService.update(UUID.randomUUID(), updateRequest))
                 .isInstanceOf(NotFoundException.class);
 
         verifyNoInteractions(customerMapper);
@@ -192,26 +192,26 @@ public class CustomerServiceImplTest {
         given(customerRepository.save(savedCustomer)).willThrow(new DataIntegrityViolationException("Upc Duplicated"));
 
         // Act-Assert
-        assertThatThrownBy(() -> customerService.update(savedCustomer.getId(), customerUpdateRequest))
+        assertThatThrownBy(() -> customerService.update(savedCustomer.getId(), updateRequest))
                 .isInstanceOf(DataIntegrityViolationException.class);
 
         verify(customerRepository).findById(savedCustomer.getId());
-        verify(customerMapper).updateEntity(savedCustomer, customerUpdateRequest);
+        verify(customerMapper).updateEntity(savedCustomer, updateRequest);
         verify(customerRepository).save(savedCustomer);
     }
 
     @Test
     void patch_updatesOnlyProvidedFields_whenCustomerExists() {
         // Arrange
-        UUID customerId = savedCustomer.getId();
-        given(customerRepository.findById(customerId)).willReturn(Optional.of(savedCustomer));
+        var savedCustomerId = savedCustomer.getId();
+        given(customerRepository.findById(savedCustomerId)).willReturn(Optional.of(savedCustomer));
 
         // Act
-        customerService.patch(customerId, customerPatchRequest);
+        customerService.patch(savedCustomerId, patchRequest);
 
         // Assert
-        verify(customerRepository).findById(customerId);
-        verify(customerMapper).patchEntity(savedCustomer, customerPatchRequest);
+        verify(customerRepository).findById(savedCustomerId);
+        verify(customerMapper).patchEntity(savedCustomer, patchRequest);
         verify(customerRepository).save(savedCustomer);
     }
 
@@ -221,7 +221,7 @@ public class CustomerServiceImplTest {
         given(customerRepository.findById(any(UUID.class))).willReturn(Optional.empty());
 
         // Act-Assert
-        assertThatThrownBy(() -> customerService.patch(UUID.randomUUID(), customerPatchRequest))
+        assertThatThrownBy(() -> customerService.patch(UUID.randomUUID(), patchRequest))
                 .isInstanceOf(NotFoundException.class);
 
         verify(customerRepository).findById(any(UUID.class));
@@ -235,25 +235,25 @@ public class CustomerServiceImplTest {
         given(customerRepository.save(savedCustomer)).willThrow(new DataIntegrityViolationException("Upc Duplicated"));
 
         // Act-Assert
-        assertThatThrownBy(() -> customerService.patch(savedCustomer.getId(), customerPatchRequest))
+        assertThatThrownBy(() -> customerService.patch(savedCustomer.getId(), patchRequest))
                 .isInstanceOf(DataIntegrityViolationException.class);
 
         verify(customerRepository).findById(savedCustomer.getId());
-        verify(customerMapper).patchEntity(savedCustomer, customerPatchRequest);
+        verify(customerMapper).patchEntity(savedCustomer, patchRequest);
         verify(customerRepository).save(savedCustomer);
     }
 
     @Test
     void delete_deletesCustomer_whenCustomerExists() {
         // Arrange
-        UUID customerId = savedCustomer.getId();
-        given(customerRepository.findById(customerId)).willReturn(Optional.of(savedCustomer));
+        var savedCustomerId = savedCustomer.getId();
+        given(customerRepository.findById(savedCustomerId)).willReturn(Optional.of(savedCustomer));
 
         // Act
-        customerService.delete(customerId);
+        customerService.delete(savedCustomerId);
 
         // Assert
-        verify(customerRepository).findById(customerId);
+        verify(customerRepository).findById(savedCustomerId);
         verify(customerRepository).delete(savedCustomer);
     }
 

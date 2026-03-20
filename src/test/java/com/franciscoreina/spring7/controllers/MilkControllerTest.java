@@ -6,8 +6,8 @@ import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.dto.request.milk.MilkCreateRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
-import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.dto.request.milk.MilkUpdateRequest;
+import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.services.MilkService;
 import com.franciscoreina.spring7.testdata.TestDataFactory;
@@ -29,7 +29,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -64,47 +63,47 @@ public class MilkControllerTest {
     JwtDecoder jwtDecoder;
 
     Category savedCategory;
-    Milk milk;
+    Milk newMilk;
     Milk savedMilk;
-    MilkCreateRequest milkCreateRequest;
-    MilkUpdateRequest milkUpdateRequest;
-    MilkPatchRequest milkPatchRequest;
-    MilkResponse milkResponse;
+    MilkCreateRequest createRequest;
+    MilkUpdateRequest updateRequest;
+    MilkPatchRequest patchRequest;
+    MilkResponse response;
 
     @BeforeEach
     void setUp() {
-        savedCategory = TestDataFactory.newSavedCategory();
-        milk = TestDataFactory.newMilk(savedCategory);
-        savedMilk = TestDataFactory.newSavedMilk(milk);
-        milkCreateRequest = TestDataFactory.newMilkCreateRequest(milk);
-        milkUpdateRequest = TestDataFactory.newMilkUpdateRequest(savedMilk);
-        milkPatchRequest = TestDataFactory.newMilkPatchRequestWithName();
-        milkResponse = TestDataFactory.newMilkResponse(savedMilk);
+        savedCategory = TestDataFactory.getSavedCategory(TestDataFactory.getNewCategory());
+        newMilk = TestDataFactory.getNewMilk(savedCategory);
+        savedMilk = TestDataFactory.getSavedMilk(newMilk);
+        createRequest = TestDataFactory.getMilkCreateRequest(newMilk);
+        updateRequest = TestDataFactory.getMilkUpdateRequest(savedMilk);
+        patchRequest = TestDataFactory.getMilkPatchRequestWithName();
+        response = TestDataFactory.getMilkResponse(savedMilk);
     }
 
     @Test
     void postMilk_returns201_andLocationHeader_whenRequestValid() throws Exception {
         // Arrange
-        given(milkService.create(milkCreateRequest)).willReturn(milkResponse);
+        given(milkService.create(createRequest)).willReturn(response);
 
         // Act
         mockMvc.perform(post(ApiPaths.MILKS)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsBytes(milkCreateRequest)))
+                        .content(objectMapper.writeValueAsBytes(createRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", ApiPaths.MILKS + "/" + milkResponse.id()));
+                .andExpect(header().string("Location", ApiPaths.MILKS + "/" + response.id()));
 
         // Assert
-        verify(milkService).create(milkCreateRequest);
+        verify(milkService).create(createRequest);
     }
 
 
     @Test
     void postMilk_returns400_whenNameNull() throws Exception {
         // Arrange
-        milk.setName(null);
-        MilkCreateRequest wrongCreateRequest = TestDataFactory.newMilkCreateRequest(milk);
+        newMilk.setName(null);
+        MilkCreateRequest wrongCreateRequest = TestDataFactory.getMilkCreateRequest(newMilk);
 
         // Act
         mockMvc.perform(post(ApiPaths.MILKS)
@@ -120,56 +119,56 @@ public class MilkControllerTest {
     @Test
     void postMilk_returns409_whenUpcDuplicated() throws Exception {
         // Arrange
-        willThrow(new DataIntegrityViolationException("Upc Duplicated")).given(milkService).create(milkCreateRequest);
+        willThrow(new DataIntegrityViolationException("Upc Duplicated")).given(milkService).create(createRequest);
 
         // Act
         mockMvc.perform(post(ApiPaths.MILKS)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsBytes(milkCreateRequest)))
+                        .content(objectMapper.writeValueAsBytes(createRequest)))
                 .andExpect(status().isConflict());
 
         // Assert
-        verify(milkService).create(milkCreateRequest);
+        verify(milkService).create(createRequest);
     }
 
     @Test
     void getMilkById_returns200_andBody_whenExists() throws Exception {
         // Arrange
-        UUID milkId = savedMilk.getId();
-        given(milkService.getById(milkId)).willReturn(milkResponse);
+        var savedMilkId = savedMilk.getId();
+        given(milkService.getById(savedMilkId)).willReturn(response);
 
         // Act
-        mockMvc.perform(get(ApiPaths.MILKS + "/" + milkId))
+        mockMvc.perform(get(ApiPaths.MILKS + "/" + savedMilkId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(milkResponse.id().toString()))
-                .andExpect(jsonPath("$.name").value(milkResponse.name()))
-                .andExpect(jsonPath("$.upc").value(milkResponse.upc()));
+                .andExpect(jsonPath("$.id").value(response.id().toString()))
+                .andExpect(jsonPath("$.name").value(response.name()))
+                .andExpect(jsonPath("$.upc").value(response.upc()));
 
         // Assert
-        verify(milkService).getById(milkId);
+        verify(milkService).getById(savedMilkId);
     }
 
     @Test
     void getMilkById_returns404_whenMissing() throws Exception {
         // Arrange
-        UUID milkId = savedMilk.getId();
-        given(milkService.getById(milkId)).willThrow(NotFoundException.class);
+        var savedMilkId = savedMilk.getId();
+        given(milkService.getById(savedMilkId)).willThrow(NotFoundException.class);
 
         // Act
-        mockMvc.perform(get(ApiPaths.MILKS + "/" + milkId))
+        mockMvc.perform(get(ApiPaths.MILKS + "/" + savedMilkId))
                 .andExpect(status().isNotFound());
 
         // Assert
-        verify(milkService).getById(milkId);
+        verify(milkService).getById(savedMilkId);
     }
 
     @Test
     void listMilks_returns200_andArray_whenExists() throws Exception {
         // Arrange
-        Milk savedMilk2 = TestDataFactory.newSavedMilk(TestDataFactory.newMilk(savedCategory));
-        MilkResponse response2 = TestDataFactory.newMilkResponse(savedMilk2);
-        Page<MilkResponse> responseList = new PageImpl<>(List.of(milkResponse, response2));
+        var savedMilk2 = TestDataFactory.getSavedMilk(TestDataFactory.getNewMilk(savedCategory));
+        var response2 = TestDataFactory.getMilkResponse(savedMilk2);
+        var responseList = new PageImpl<>(List.of(response, response2));
 
         given(milkService.list(isNull(), isNull(), any(Pageable.class))).willReturn(responseList);
 
@@ -177,8 +176,8 @@ public class MilkControllerTest {
         mockMvc.perform(get(ApiPaths.MILKS))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()").value(2))
-                .andExpect(jsonPath("$.content[0].id").value(milkResponse.id().toString()))
-                .andExpect(jsonPath("$.content[0].upc").value(milkResponse.upc()))
+                .andExpect(jsonPath("$.content[0].id").value(response.id().toString()))
+                .andExpect(jsonPath("$.content[0].upc").value(response.upc()))
                 .andExpect(jsonPath("$.content[1].id").value(response2.id().toString()))
                 .andExpect(jsonPath("$.content[1].upc").value(response2.upc()));
 
@@ -189,18 +188,17 @@ public class MilkControllerTest {
     @Test
     void listMilksByName_returns200_andArray_whenExists() throws Exception {
         // Arrange
-        Milk milk1 = TestDataFactory.newMilk(savedCategory);
-        milk1.setName("Ultra-Fresh Skimmed");
-        milk1.setMilkType(MilkType.SKIMMED);
-        MilkResponse response1 = TestDataFactory.newMilkResponse(TestDataFactory.newSavedMilk(milk1));
+        var newMilk1 = TestDataFactory.getNewMilk(savedCategory);
+        newMilk1.setName("Ultra-Fresh Skimmed");
+        newMilk1.setMilkType(MilkType.SKIMMED);
+        var response1 = TestDataFactory.getMilkResponse(TestDataFactory.getSavedMilk(newMilk1));
 
-        Milk milk2 = TestDataFactory.newMilk(savedCategory);
-        milk2.setName("Select Semi Skimmed");
-        MilkResponse response2 = TestDataFactory.newMilkResponse(TestDataFactory.newSavedMilk(milk2));
+        var newMilk2 = TestDataFactory.getNewMilk(savedCategory);
+        newMilk2.setName("Select Semi Skimmed");
+        var response2 = TestDataFactory.getMilkResponse(TestDataFactory.getSavedMilk(newMilk2));
 
-        Pageable pageable = PageRequest.of(0, 20);
-
-        Page<MilkResponse> responseList = new PageImpl<>(List.of(response1, response2));
+        var pageable = PageRequest.of(0, 20);
+        var responseList = new PageImpl<>(List.of(response1, response2));
 
         given(milkService.list("skimmed", null, pageable)).willReturn(responseList);
 
@@ -220,9 +218,8 @@ public class MilkControllerTest {
     @Test
     void listMilksByType_returns200_andArray_whenExists() throws Exception {
         // Arrange
-        Pageable pageable = PageRequest.of(0, 20);
-
-        Page<MilkResponse> responseList = new PageImpl<>(List.of(milkResponse));
+        var pageable = PageRequest.of(0, 20);
+        var responseList = new PageImpl<>(List.of(response));
 
         given(milkService.list(null, MilkType.SEMI_SKIMMED, pageable)).willReturn(responseList);
 
@@ -232,8 +229,8 @@ public class MilkControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()").value(1))
-                .andExpect(jsonPath("$.content[0].id").value(milkResponse.id().toString()))
-                .andExpect(jsonPath("$.content[0].milkType").value(String.valueOf(milkResponse.milkType())));
+                .andExpect(jsonPath("$.content[0].id").value(response.id().toString()))
+                .andExpect(jsonPath("$.content[0].milkType").value(String.valueOf(response.milkType())));
 
         // Assert
         verify(milkService).list(null, MilkType.SEMI_SKIMMED, pageable);
@@ -242,9 +239,8 @@ public class MilkControllerTest {
     @Test
     void listMilksByNameAndType_returns200_andArray_whenExists() throws Exception {
         // Arrange
-        Pageable pageable = PageRequest.of(0, 20);
-
-        Page<MilkResponse> responseList = new PageImpl<>(List.of(milkResponse));
+        var pageable = PageRequest.of(0, 20);
+        var responseList = new PageImpl<>(List.of(response));
 
         given(milkService.list("Milk name", MilkType.SEMI_SKIMMED, pageable)).willReturn(responseList);
 
@@ -255,9 +251,9 @@ public class MilkControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()").value(1))
-                .andExpect(jsonPath("$.content[0].id").value(milkResponse.id().toString()))
-                .andExpect(jsonPath("$.content[0].name").value(milkResponse.name()))
-                .andExpect(jsonPath("$.content[0].milkType").value(String.valueOf(milkResponse.milkType())));
+                .andExpect(jsonPath("$.content[0].id").value(response.id().toString()))
+                .andExpect(jsonPath("$.content[0].name").value(response.name()))
+                .andExpect(jsonPath("$.content[0].milkType").value(String.valueOf(response.milkType())));
 
         // Assert
         verify(milkService).list("Milk name", MilkType.SEMI_SKIMMED, pageable);
@@ -266,7 +262,7 @@ public class MilkControllerTest {
     @Test
     void listMilks_returns200_andEmptyArray_whenNotExists() throws Exception {
         // Arrange
-        Pageable pageable = PageRequest.of(0, 20);
+        var pageable = PageRequest.of(0, 20);
 
         given(milkService.list(null, null, pageable)).willReturn(Page.empty());
 
@@ -282,29 +278,28 @@ public class MilkControllerTest {
     @Test
     void putMilk_returns204_whenRequestValid_andExists() throws Exception {
         // Arrange
-        UUID milkId = savedMilk.getId();
+        var savedMilkId = savedMilk.getId();
 
         // Act
-        mockMvc.perform(put(ApiPaths.MILKS + "/" + milkId)
+        mockMvc.perform(put(ApiPaths.MILKS + "/" + savedMilkId)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(milkUpdateRequest)))
+                        .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(""));
 
         // Assert
-        verify(milkService).update(milkId, milkUpdateRequest);
+        verify(milkService).update(savedMilkId, updateRequest);
     }
 
     @Test
     void putMilk_returns400_whenNameNull() throws Exception {
         // Arrange
-        UUID milkId = savedMilk.getId();
-        milk.setName(null);
-        MilkUpdateRequest wrongUpdateRequest = TestDataFactory.newMilkUpdateRequest(milk);
+        savedMilk.setName(null);
+        var wrongUpdateRequest = TestDataFactory.getMilkUpdateRequest(savedMilk);
 
         // Act
-        mockMvc.perform(put(ApiPaths.MILKS + "/" + milkId)
+        mockMvc.perform(put(ApiPaths.MILKS + "/" + savedMilk.getId())
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(wrongUpdateRequest)))
@@ -317,63 +312,63 @@ public class MilkControllerTest {
     @Test
     void putMilk_returns404_whenMissing() throws Exception {
         // Arrange
-        UUID milkId = savedMilk.getId();
-        willThrow(NotFoundException.class).given(milkService).update(milkId, milkUpdateRequest);
+        var savedMilkId = savedMilk.getId();
+        willThrow(NotFoundException.class).given(milkService).update(savedMilkId, updateRequest);
 
         // Act
-        mockMvc.perform(put(ApiPaths.MILKS + "/" + milkId)
+        mockMvc.perform(put(ApiPaths.MILKS + "/" + savedMilkId)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(milkUpdateRequest)))
+                        .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isNotFound());
 
         // Assert
-        verify(milkService).update(milkId, milkUpdateRequest);
+        verify(milkService).update(savedMilkId, updateRequest);
     }
 
     @Test
     void putMilk_returns409_whenUpcDuplicated() throws Exception {
         // Arrange
-        UUID milkId = savedMilk.getId();
-        willThrow(new DataIntegrityViolationException("Upc Duplicated")).given(milkService).update(milkId, milkUpdateRequest);
+        var savedMilkId = savedMilk.getId();
+        willThrow(new DataIntegrityViolationException("Upc Duplicated")).given(milkService).update(savedMilkId, updateRequest);
 
         // Act
-        mockMvc.perform(put(ApiPaths.MILKS + "/" + milkId)
+        mockMvc.perform(put(ApiPaths.MILKS + "/" + savedMilkId)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(milkUpdateRequest)))
+                        .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isConflict());
 
         // Assert
-        verify(milkService).update(milkId, milkUpdateRequest);
+        verify(milkService).update(savedMilkId, updateRequest);
     }
 
     @Test
     void patchMilk_returns204_whenRequestValid_andExists() throws Exception {
         // Arrange
-        UUID milkId = savedMilk.getId();
+        var savedMilkId = savedMilk.getId();
 
         // Act
-        mockMvc.perform(patch(ApiPaths.MILKS + "/" + milkId)
+        mockMvc.perform(patch(ApiPaths.MILKS + "/" + savedMilkId)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(milkPatchRequest)))
+                        .content(objectMapper.writeValueAsString(patchRequest)))
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(""));
 
 
         // Assert
-        verify(milkService).patch(milkId, milkPatchRequest);
+        verify(milkService).patch(savedMilkId, patchRequest);
     }
 
     @Test
     void patchMilk_returns400_whenUpcInvalid() throws Exception {
         // Arrange
-        UUID milkId = savedMilk.getId();
-        MilkPatchRequest wrongPatchRequest = TestDataFactory.newMilkPatchRequestInvalidUpc();
+        var savedMilkId = savedMilk.getId();
+        var wrongPatchRequest = TestDataFactory.getMilkPatchRequestInvalidUpc();
 
         // Act
-        mockMvc.perform(patch(ApiPaths.MILKS + "/" + milkId)
+        mockMvc.perform(patch(ApiPaths.MILKS + "/" + savedMilkId)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(wrongPatchRequest)))
@@ -386,65 +381,65 @@ public class MilkControllerTest {
     @Test
     void patchMilk_returns404_whenMissing() throws Exception {
         // Arrange
-        UUID milkId = savedMilk.getId();
-        willThrow(NotFoundException.class).given(milkService).patch(milkId, milkPatchRequest);
+        var savedMilkId = savedMilk.getId();
+        willThrow(NotFoundException.class).given(milkService).patch(savedMilkId, patchRequest);
 
         // Act
-        mockMvc.perform(patch(ApiPaths.MILKS + "/" + milkId)
+        mockMvc.perform(patch(ApiPaths.MILKS + "/" + savedMilkId)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(milkPatchRequest)))
+                        .content(objectMapper.writeValueAsString(patchRequest)))
                 .andExpect(status().isNotFound());
 
         // Assert
-        verify(milkService).patch(milkId, milkPatchRequest);
+        verify(milkService).patch(savedMilkId, patchRequest);
     }
 
     @Test
     void patchMilk_returns409_whenUpcDuplicated() throws Exception {
         // Arrange
-        UUID milkId = savedMilk.getId();
-        willThrow(new DataIntegrityViolationException("Upc Duplicated")).given(milkService).patch(milkId, milkPatchRequest);
+        var savedMilkId = savedMilk.getId();
+        willThrow(new DataIntegrityViolationException("Upc Duplicated")).given(milkService).patch(savedMilkId, patchRequest);
 
         // Act
-        mockMvc.perform(patch(ApiPaths.MILKS + "/" + milkId)
+        mockMvc.perform(patch(ApiPaths.MILKS + "/" + savedMilkId)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(milkPatchRequest)))
+                        .content(objectMapper.writeValueAsString(patchRequest)))
                 .andExpect(status().isConflict());
 
         // Assert
-        verify(milkService).patch(milkId, milkPatchRequest);
+        verify(milkService).patch(savedMilkId, patchRequest);
     }
 
     @Test
     void deleteMilk_returns204_whenExists() throws Exception {
         // Arrange
-        UUID milkId = savedMilk.getId();
+        var savedMilkId = savedMilk.getId();
 
         // Act
-        mockMvc.perform(delete(ApiPaths.MILKS + "/" + milkId)
+        mockMvc.perform(delete(ApiPaths.MILKS + "/" + savedMilkId)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(""));
 
 
         // Assert
-        verify(milkService).delete(milkId);
+        verify(milkService).delete(savedMilkId);
     }
 
     @Test
     void deleteMilk_returns404_whenMissing() throws Exception {
         // Arrange
-        UUID milkId = savedMilk.getId();
-        willThrow(NotFoundException.class).given(milkService).delete(milkId);
+        var savedMilkId = savedMilk.getId();
+        willThrow(NotFoundException.class).given(milkService).delete(savedMilkId);
 
         // Act
-        mockMvc.perform(delete(ApiPaths.MILKS + "/" + milkId)
+        mockMvc.perform(delete(ApiPaths.MILKS + "/" + savedMilkId)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
         // Assert
-        verify(milkService).delete(milkId);
+        verify(milkService).delete(savedMilkId);
     }
 }

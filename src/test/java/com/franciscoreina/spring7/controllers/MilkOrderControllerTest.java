@@ -13,19 +13,15 @@ import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
 import com.franciscoreina.spring7.services.MilkOrderService;
 import com.franciscoreina.spring7.testdata.TestDataFactory;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.security.oauth2.server.resource.autoconfigure.servlet.OAuth2ResourceServerAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -63,11 +59,11 @@ class MilkOrderControllerTest {
 
     @BeforeEach
     void setUp() {
-        category = TestDataFactory.newCategory();
-        customer = TestDataFactory.newCustomer();
-        customerResponse = TestDataFactory.newCustomerResponse(customer);
-        milk = TestDataFactory.newMilk(category);
-        milkResponse = TestDataFactory.newMilkResponse(milk);
+        category = TestDataFactory.getNewCategory();
+        customer = TestDataFactory.getNewCustomer();
+        customerResponse = TestDataFactory.getCustomerResponse(customer);
+        milk = TestDataFactory.getNewMilk(category);
+        milkResponse = TestDataFactory.getMilkResponse(milk);
         orderLineCreateRequest = TestDataFactory.newOrderLineCreateRequest(milkResponse);
 //        savedMilkOrder = TestDataFactory.
         milkOrderCreateRequest = TestDataFactory.newMilkOrderCreateRequest(customerResponse, orderLineCreateRequest);

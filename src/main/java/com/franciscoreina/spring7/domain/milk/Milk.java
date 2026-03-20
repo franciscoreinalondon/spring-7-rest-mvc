@@ -103,7 +103,7 @@ public class Milk {
     // JPA Relationships
 
     @Builder.Default
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany
     @JoinTable(name = "milk_category",
             joinColumns = @JoinColumn(name = "milk_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id"))

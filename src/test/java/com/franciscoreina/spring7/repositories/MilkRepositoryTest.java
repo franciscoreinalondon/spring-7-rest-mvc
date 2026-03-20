@@ -41,8 +41,8 @@ public class MilkRepositoryTest {
     @Test
     public void saveMilk_whenDataIsValid() {
         // Arrange-Act
-        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.newCategory());
-        Milk saved = milkRepository.saveAndFlush(TestDataFactory.newMilk(savedCategory));
+        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+        Milk saved = milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
 
         // Assert
         assertThat(saved.getId()).isNotNull();
@@ -56,9 +56,9 @@ public class MilkRepositoryTest {
     @Test
     public void saveMilk_throwException_whenDataDuplicated() {
         // Arrange
-        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.newCategory());
-        Milk milk = TestDataFactory.newMilk(savedCategory);
-        Milk replica = TestDataFactory.newMilk(milk.getUpc(), savedCategory);
+        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+        Milk milk = TestDataFactory.getNewMilk(savedCategory);
+        Milk replica = TestDataFactory.getNewMilk(milk.getUpc(), savedCategory);
 
         // Act
         milkRepository.saveAndFlush(milk);
@@ -71,8 +71,8 @@ public class MilkRepositoryTest {
     @Test
     public void saveMilk_throwException_whenNameIsNull() {
         // Arrange
-        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.newCategory());
-        Milk milk = TestDataFactory.newMilk(savedCategory);
+        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+        Milk milk = TestDataFactory.getNewMilk(savedCategory);
         milk.setName(null);
 
         // Act-Assert
@@ -83,8 +83,8 @@ public class MilkRepositoryTest {
     @Test
     public void saveMilk_throwException_whenUpcIsNull() {
         // Arrange
-        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.newCategory());
-        Milk milk = TestDataFactory.newMilk(savedCategory);
+        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+        Milk milk = TestDataFactory.getNewMilk(savedCategory);
         milk.setUpc(null);
 
         // Act-Assert
@@ -102,8 +102,8 @@ public class MilkRepositoryTest {
     @Test
     public void findMilk_whenIdExists() {
         // Arrange
-        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.newCategory());
-        Milk saved = milkRepository.saveAndFlush(TestDataFactory.newMilk(savedCategory));
+        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+        Milk saved = milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
         entityManager.clear();
 
         // Act
@@ -136,10 +136,10 @@ public class MilkRepositoryTest {
     @Test
     public void findAllMilks_whenExists() {
         // Arrange
-        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.newCategory());
-        Milk milk1 = TestDataFactory.newMilk(savedCategory);
-        Milk milk2 = TestDataFactory.newMilk(savedCategory);
-        Milk milk3 = TestDataFactory.newMilk(savedCategory);
+        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+        Milk milk1 = TestDataFactory.getNewMilk(savedCategory);
+        Milk milk2 = TestDataFactory.getNewMilk(savedCategory);
+        Milk milk3 = TestDataFactory.getNewMilk(savedCategory);
 
         // Act
         milkRepository.saveAndFlush(milk1);
@@ -153,15 +153,15 @@ public class MilkRepositoryTest {
     @Test
     public void findAllByName_whenExists() {
         // Arrange
-        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.newCategory());
-        Milk milk1 = TestDataFactory.newMilk(savedCategory);
+        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+        Milk milk1 = TestDataFactory.getNewMilk(savedCategory);
         milk1.setName("Ultra-Fresh Skimmed");
         milk1.setMilkType(MilkType.SKIMMED);
 
-        Milk milk2 = TestDataFactory.newMilk(savedCategory);
+        Milk milk2 = TestDataFactory.getNewMilk(savedCategory);
         milk2.setName("Select Semi Skimmed");
 
-        Milk milk3 = TestDataFactory.newMilk(savedCategory);
+        Milk milk3 = TestDataFactory.getNewMilk(savedCategory);
         milk3.setName("Natural A2");
         milk3.setMilkType(MilkType.A2);
 
@@ -180,10 +180,10 @@ public class MilkRepositoryTest {
     @Test
     public void findAllMilksByType_whenExists() {
         // Arrange
-        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.newCategory());
-        Milk milk1 = TestDataFactory.newMilk(savedCategory); // SEMI_SKIMMED milk type
-        Milk milk2 = TestDataFactory.newMilk(savedCategory); // SEMI_SKIMMED milk type
-        Milk milk3 = TestDataFactory.newMilk(savedCategory);
+        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+        Milk milk1 = TestDataFactory.getNewMilk(savedCategory); // SEMI_SKIMMED milk type
+        Milk milk2 = TestDataFactory.getNewMilk(savedCategory); // SEMI_SKIMMED milk type
+        Milk milk3 = TestDataFactory.getNewMilk(savedCategory);
         milk3.setMilkType(MilkType.A2);
 
         Pageable pageable = PageRequest.of(0, 20);
@@ -201,16 +201,16 @@ public class MilkRepositoryTest {
     @Test
     public void findAllByNameAndMilkType_whenExists() {
         // Arrange
-        Category savedCategory = categoryRepository.save(TestDataFactory.newCategory());
+        Category savedCategory = categoryRepository.save(TestDataFactory.getNewCategory());
 
-        Milk milk1 = TestDataFactory.newMilk(savedCategory);
+        Milk milk1 = TestDataFactory.getNewMilk(savedCategory);
         milk1.setName("Ultra-Fresh Skimmed");
         milk1.setMilkType(MilkType.SKIMMED);
 
-        Milk milk2 = TestDataFactory.newMilk(savedCategory); // SEMI_SKIMMED milk type
+        Milk milk2 = TestDataFactory.getNewMilk(savedCategory); // SEMI_SKIMMED milk type
         milk2.setName("Select Semi Skimmed");
 
-        Milk milk3 = TestDataFactory.newMilk(savedCategory);
+        Milk milk3 = TestDataFactory.getNewMilk(savedCategory);
         milk3.setName("Natural A2");
         milk3.setMilkType(MilkType.A2);
 
@@ -233,8 +233,8 @@ public class MilkRepositoryTest {
     @Test
     public void updateMilk_whenIsModified() {
         // Arrange
-        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.newCategory());
-        Milk saved = milkRepository.saveAndFlush(TestDataFactory.newMilk(savedCategory));
+        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+        Milk saved = milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
         Integer oldVersion = saved.getVersion();
 
         // Act
@@ -253,8 +253,8 @@ public class MilkRepositoryTest {
     @Test
     public void deleteMilk_whenIdExists() {
         // Arrange
-        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.newCategory());
-        Milk saved = milkRepository.saveAndFlush(TestDataFactory.newMilk(savedCategory));
+        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+        Milk saved = milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
 
         // Act
         milkRepository.deleteById(saved.getId());

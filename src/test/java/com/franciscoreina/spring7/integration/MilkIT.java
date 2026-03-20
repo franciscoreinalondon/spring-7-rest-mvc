@@ -1,13 +1,8 @@
 package com.franciscoreina.spring7.integration;
 
 import com.franciscoreina.spring7.api.ApiPaths;
-import com.franciscoreina.spring7.domain.milk.Category;
-import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
-import com.franciscoreina.spring7.dto.request.milk.MilkCreateRequest;
-import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
 import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
-import com.franciscoreina.spring7.dto.request.milk.MilkUpdateRequest;
 import com.franciscoreina.spring7.exceptions.ApiError;
 import com.franciscoreina.spring7.repositories.CategoryRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
@@ -22,14 +17,11 @@ import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTest
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.reactive.server.EntityExchangeResult;
-import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.FileNotFoundException;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -67,19 +59,19 @@ public class MilkIT extends AbstractIntegrationTest {
     @Test
     void create_whenValidData_returnsCreated() {
         // Arrange
-        Category savedCategory = categoryRepository.save(TestDataFactory.newCategory());
-        Milk milk = TestDataFactory.newMilk(savedCategory);
-        MilkCreateRequest request = TestDataFactory.newMilkCreateRequest(milk);
+        var savedCategory = categoryRepository.save(TestDataFactory.getNewCategory());
+        var newMilk = TestDataFactory.getNewMilk(savedCategory);
+        var createRequest = TestDataFactory.getMilkCreateRequest(newMilk);
 
         // Act
-        EntityExchangeResult<Void> result = postRequest(ApiPaths.MILKS, request)
+        var result = postRequest(ApiPaths.MILKS, createRequest)
                 .expectStatus().isCreated()
                 .expectHeader().exists(HttpHeaders.LOCATION)
                 .expectBody(Void.class)
                 .returnResult();
 
         // Assert
-        String location = result.getResponseHeaders().getFirst(HttpHeaders.LOCATION);
+        var location = result.getResponseHeaders().getFirst(HttpHeaders.LOCATION);
         assertThat(location).isNotBlank();
         assertThat(location).contains(ApiPaths.MILKS);
     }
@@ -87,10 +79,10 @@ public class MilkIT extends AbstractIntegrationTest {
     @Test
     void create_whenNameIsNull_returnsBadRequest() {
         // Arrange
-        MilkCreateRequest request = TestDataFactory.newMilkCreateRequestNullName();
+        var createRequest = TestDataFactory.getMilkCreateRequestNullName();
 
         // Act + Assert
-        postRequest(ApiPaths.MILKS, request)
+        postRequest(ApiPaths.MILKS, createRequest)
                 .expectStatus().isBadRequest()
                 .expectBody(ApiError.class)
                 .value(error -> {
@@ -102,12 +94,12 @@ public class MilkIT extends AbstractIntegrationTest {
     @Test
     void create_whenUpcDuplicated_returnsConflict() {
         // Arrange
-        Milk milk = dataFactory.persistMilk();
-        Milk duplicateUpc = TestDataFactory.newMilk(milk.getUpc(), milk.getCategories().iterator().next());
-        MilkCreateRequest request = TestDataFactory.newMilkCreateRequest(duplicateUpc);
+        var savedMilk = dataFactory.persistMilk();
+        var milkDuplicateUpc = TestDataFactory.getNewMilk(savedMilk.getUpc(), savedMilk.getCategories().iterator().next());
+        var createRequest = TestDataFactory.getMilkCreateRequest(milkDuplicateUpc);
 
         // Act + Assert
-        postRequest(ApiPaths.MILKS, request)
+        postRequest(ApiPaths.MILKS, createRequest)
                 .expectStatus().isEqualTo(HttpStatus.CONFLICT)
                 .expectBody(ApiError.class)
                 .value(error -> {
@@ -123,15 +115,15 @@ public class MilkIT extends AbstractIntegrationTest {
     @Test
     void getById_whenIdExists_returnsMilk() {
         // Arrange
-        Milk milk = dataFactory.persistMilk();
+        var savedMilk = dataFactory.persistMilk();
 
         // Act + Assert
-        getRequest(ApiPaths.MILKS + "/" + milk.getId())
+        getRequest(ApiPaths.MILKS + "/" + savedMilk.getId())
                 .expectStatus().isOk()
                 .expectBody(MilkResponse.class)
                 .value(response -> {
                     assertThat(response).isNotNull();
-                    assertThat(response.id()).isEqualTo(milk.getId());
+                    assertThat(response.id()).isEqualTo(savedMilk.getId());
                 });
     }
 
@@ -166,66 +158,66 @@ public class MilkIT extends AbstractIntegrationTest {
                 .jsonPath("$.content[*].stock").isNotEmpty();
     }
 
-    //TBF
-//    @Test
-//    void listByName_whenMilksExists_returnsDataList() {
-//        // Arrange
-//        dataFactory.persistTwoMilks(); // SEMI_SKIMMED milk types
-//
-//        Milk milk3 = TestDataFactory.newMilk();
-//        milk3.setName("Natural A2");
-//        milk3.setMilkType(MilkType.A2);
-//        milkRepository.saveAndFlush(milk3);
-//
-//        // Act + Assert
-//        getRequest(ApiPaths.MILKS, Map.of("name", "a2"))
-//                .expectStatus().isOk()
-//                .expectBody()
-//                .jsonPath("$.content").isArray()
-//                .jsonPath("$.content.length()").isEqualTo(1)
-//                .jsonPath("$.content[0].name")
-//                .value(name -> assertThat(name.toString().toLowerCase()).contains(("a2")));
-//    }
+    @Test
+    void listByName_whenMilksExists_returnsDataList() {
+        // Arrange
+        dataFactory.persistTwoMilks(); // SEMI_SKIMMED milk types
 
-    // TBF
-//    @Test
-//    void listByType_whenMilksExists_returnsDataList() {
-//        // Arrange
-//        dataFactory.persistTwoMilks(); // SEMI_SKIMMED milk types
-//
-//        Milk third = TestDataFactory.newMilk();
-//        third.setMilkType(MilkType.A2);
-//        milkRepository.saveAndFlush(third);
-//
-//        // Act + Assert
-//        getRequest(ApiPaths.MILKS, Map.of("milkType", "A2"))
-//                .expectStatus().isOk()
-//                .expectBody()
-//                .jsonPath("$.content").isArray()
-//                .jsonPath("$.content.length()").isEqualTo(1)
-//                .jsonPath("$.content[0].milkType").isEqualTo(MilkType.A2);
-//    }
+        var savedCategory = categoryRepository.save(TestDataFactory.getNewCategory());
+        var newMilk3 = TestDataFactory.getNewMilk(savedCategory);
+        newMilk3.setName("Natural A2");
+        newMilk3.setMilkType(MilkType.A2);
+        milkRepository.saveAndFlush(newMilk3);
 
-    //TBF
-//    @Test
-//    void listByNameAndType_whenMilksExists_returnsDataList() {
-//        // Arrange
-//        dataFactory.persistTwoMilks(); // SEMI_SKIMMED milk types
-//
-//        Milk milk3 = TestDataFactory.newMilk();
-//        milk3.setName("Natural A2");
-//        milk3.setMilkType(MilkType.A2);
-//        milkRepository.saveAndFlush(milk3);
-//
-//        // Act + Assert
-//        getRequest(ApiPaths.MILKS, Map.of("name", "natural", "milkType", "A2"))
-//                .expectStatus().isOk()
-//                .expectBody()
-//                .jsonPath("$.content.length()").isEqualTo(1)
-//                .jsonPath("$.content[0].name")
-//                .value(name -> assertThat(name.toString().toLowerCase()).contains("a2"))
-//                .jsonPath("$.content[0].milkType").isEqualTo(MilkType.A2);
-//    }
+        // Act + Assert
+        getRequest(ApiPaths.MILKS, Map.of("name", "a2"))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.content").isArray()
+                .jsonPath("$.content.length()").isEqualTo(1)
+                .jsonPath("$.content[0].name")
+                .value(name -> assertThat(name.toString().toLowerCase()).contains(("a2")));
+    }
+
+    @Test
+    void listByType_whenMilksExists_returnsDataList() {
+        // Arrange
+        dataFactory.persistTwoMilks(); // SEMI_SKIMMED milk types
+
+        var savedCategory = categoryRepository.save(TestDataFactory.getNewCategory());
+        var newMilk3 = TestDataFactory.getNewMilk(savedCategory);
+        newMilk3.setMilkType(MilkType.A2);
+        milkRepository.saveAndFlush(newMilk3);
+
+        // Act + Assert
+        getRequest(ApiPaths.MILKS, Map.of("milkType", "A2"))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.content").isArray()
+                .jsonPath("$.content.length()").isEqualTo(1)
+                .jsonPath("$.content[0].milkType").isEqualTo(MilkType.A2);
+    }
+
+    @Test
+    void listByNameAndType_whenMilksExists_returnsDataList() {
+        // Arrange
+        dataFactory.persistTwoMilks(); // SEMI_SKIMMED milk types
+
+        var savedCategory = categoryRepository.save(TestDataFactory.getNewCategory());
+        var newMilk3 = TestDataFactory.getNewMilk(savedCategory);
+        newMilk3.setName("Natural A2");
+        newMilk3.setMilkType(MilkType.A2);
+        milkRepository.saveAndFlush(newMilk3);
+
+        // Act + Assert
+        getRequest(ApiPaths.MILKS, Map.of("name", "natural", "milkType", "A2"))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.content.length()").isEqualTo(1)
+                .jsonPath("$.content[0].name")
+                .value(name -> assertThat(name.toString().toLowerCase()).contains("a2"))
+                .jsonPath("$.content[0].milkType").isEqualTo(MilkType.A2);
+    }
 
     @Test
     void listByNameAndTypeUsingPage1_whenMilksExists_returnsDataList() throws FileNotFoundException {
@@ -253,72 +245,73 @@ public class MilkIT extends AbstractIntegrationTest {
     // ---------------
     //      UPDATE
     // ---------------
-//TBF
-//    @Test
-//    void update_whenValidMilk_returnsNoContentAndUpdatesMilk() {
-//        // Arrange
-//        Milk milk = dataFactory.persistMilk();
-//        milk.setName("Updated Name");
-//        MilkUpdateRequest update = TestDataFactory.newMilkUpdateRequest(milk);
-//
-//        // Act
-//        putRequest(ApiPaths.MILKS + "/" + milk.getId(), update)
-//                .expectStatus().isNoContent();
-//
-//        // Assert
-//        Milk updatedMilk = milkRepository.findById(milk.getId()).orElseThrow();
-//        assertThat(updatedMilk.getName()).isEqualTo("Updated Name");
-//    }
+
+    @Test
+    void update_whenValidMilk_returnsNoContentAndUpdatesMilk() {
+        // Arrange
+        var savedMilk = dataFactory.persistMilk();
+        savedMilk.setName("Updated Name");
+        var updateRequest = TestDataFactory.getMilkUpdateRequest(savedMilk);
+
+        // Act
+        putRequest(ApiPaths.MILKS + "/" + savedMilk.getId(), updateRequest)
+                .expectStatus().isNoContent();
+
+        // Assert
+        var updatedMilk = milkRepository.findById(savedMilk.getId()).orElseThrow();
+        assertThat(updatedMilk.getName()).isEqualTo("Updated Name");
+    }
+
+    @Test
+    void update_whenIdNotExists_returnsNotFound() {
+        // Arrange
+        var savedMilk = dataFactory.persistMilk();
+        savedMilk.setName("Updated Name");
+        var updateRequest = TestDataFactory.getMilkUpdateRequest(savedMilk);
+
+        // Act + Assert
+        putRequest(ApiPaths.MILKS + "/" + UUID.randomUUID(), updateRequest)
+                .expectStatus().isNotFound()
+                .expectBody(ApiError.class)
+                .value(error -> {
+                    assertThat(error).isNotNull();
+                    assertThat(error.status()).isEqualTo(404);
+                    assertThat(error.message()).contains("Milk not found");
+                });
+    }
+
+    @Test
+    void update_whenNameIsNull_returnsBadRequest() {
+        // Arrange
+        var savedMilk = dataFactory.persistMilk();
+        savedMilk.setName(null);
+        var updateRequest = TestDataFactory.getMilkUpdateRequest(savedMilk);
+
+        // Act + Assert
+        putRequest(ApiPaths.MILKS + "/" + UUID.randomUUID(), updateRequest)
+                .expectStatus().isBadRequest()
+                .expectBody(ApiError.class)
+                .value(error -> {
+                    assertThat(error).isNotNull();
+                    assertThat(error.status()).isEqualTo(400);
+                });
+    }
 
     //TBF
-//    @Test
-//    void update_whenIdNotExists_returnsNotFound() {
-//        // Arrange
-//        Milk milk = dataFactory.persistMilk();
-//        milk.setName("Updated Name");
-//        MilkUpdateRequest update = TestDataFactory.newMilkUpdateRequest(milk);
-//
-//        // Act + Assert
-//        putRequest(ApiPaths.MILKS + "/" + UUID.randomUUID(), update)
-//                .expectStatus().isNotFound()
-//                .expectBody(ApiError.class)
-//                .value(error -> {
-//                    assertThat(error).isNotNull();
-//                    assertThat(error.status()).isEqualTo(404);
-//                    assertThat(error.message()).contains("Milk not found");
-//                });
-//    }
-//TBF
-//    @Test
-//    void update_whenNameIsNull_returnsBadRequest() {
-//        // Arrange
-//        Milk milk = dataFactory.persistMilk();
-//        milk.setName(null);
-//        MilkUpdateRequest update = TestDataFactory.newMilkUpdateRequest(milk);
-//
-//        // Act + Assert
-//        putRequest(ApiPaths.MILKS + "/" + UUID.randomUUID(), update)
-//                .expectStatus().isBadRequest()
-//                .expectBody(ApiError.class)
-//                .value(error -> {
-//                    assertThat(error).isNotNull();
-//                    assertThat(error.status()).isEqualTo(400);
-//                });
-//    }
-//TBF
 //    @Test
 //    void update_whenUpcDuplicated_returnsConflict() {
 //        // Arrange
 //        dataFactory.persistTwoMilks();
-//        List<Milk> milkList = dataFactory.findTwoMilks();
-//        String existingUpc = milkList.getLast().getUpc();
 //
-//        Milk milk = milkList.getFirst();
-//        milk.setUpc(existingUpc);
-//        MilkUpdateRequest update = TestDataFactory.newMilkUpdateRequest(milk);
+//        var savedMilkList = dataFactory.findTwoMilks();
+//        var existingUpc = savedMilkList.getLast().getUpc();
+//
+//        var savedMilk = savedMilkList.getFirst();
+//        savedMilk.setUpc(existingUpc);
+//        var updateRequest = TestDataFactory.getMilkUpdateRequest(savedMilk);
 //
 //        // Act + Assert
-//        putRequest(ApiPaths.MILKS + "/" + milk.getId(), update)
+//        putRequest(ApiPaths.MILKS + "/" + savedMilk.getId(), updateRequest)
 //                .expectStatus().isEqualTo(HttpStatus.CONFLICT)
 //                .expectBody(ApiError.class)
 //                .value(error -> {
@@ -330,26 +323,26 @@ public class MilkIT extends AbstractIntegrationTest {
     @Test
     void patch_whenValidMilk_returnsNoContentAndUpdatesMilk() {
         // Arrange
-        Milk milk = dataFactory.persistMilk();
-        MilkPatchRequest patch = TestDataFactory.newMilkPatchRequestWithName();
+        var savedMilk = dataFactory.persistMilk();
+        var patchRequest = TestDataFactory.getMilkPatchRequestWithName();
 
         // Act
-        patchRequest(ApiPaths.MILKS + "/" + milk.getId(), patch)
+        patchRequest(ApiPaths.MILKS + "/" + savedMilk.getId(), patchRequest)
                 .expectStatus().isNoContent();
 
         // Assert
-        Milk updatedMilk = milkRepository.findById(milk.getId()).orElseThrow();
+        var updatedMilk = milkRepository.findById(savedMilk.getId()).orElseThrow();
         assertThat(updatedMilk.getName()).isEqualTo("Patch name");
     }
 
     @Test
     void patch_whenInvalidUpc_returnsBadRequest() {
         // Arrange
-        Milk milk = dataFactory.persistMilk();
-        MilkPatchRequest patch = TestDataFactory.newMilkPatchRequestInvalidUpc();
+        var savedMilk = dataFactory.persistMilk();
+        var patchRequest = TestDataFactory.getMilkPatchRequestInvalidUpc();
 
         // Act + Assert
-        patchRequest(ApiPaths.MILKS + "/" + milk.getId(), patch)
+        patchRequest(ApiPaths.MILKS + "/" + savedMilk.getId(), patchRequest)
                 .expectStatus().isBadRequest()
                 .expectBody(ApiError.class)
                 .value(error -> {
@@ -365,7 +358,7 @@ public class MilkIT extends AbstractIntegrationTest {
     @Test
     void delete_whenIdExists_returnsNoContent() {
         // Arrange
-        Milk savedMilk = dataFactory.persistMilk();
+        var savedMilk = dataFactory.persistMilk();
 
         // Act
         deleteRequest(ApiPaths.MILKS + "/" + savedMilk.getId())
@@ -402,7 +395,7 @@ public class MilkIT extends AbstractIntegrationTest {
     @Test
     void requestWithoutAuth_returns401() {
         // Arrange
-        WebTestClient clientWithoutAuth = webTestClient
+        var clientWithoutAuth = webTestClient
                 .mutate()
                 .defaultHeaders(headers -> headers.remove("Authorization"))
                 .build();

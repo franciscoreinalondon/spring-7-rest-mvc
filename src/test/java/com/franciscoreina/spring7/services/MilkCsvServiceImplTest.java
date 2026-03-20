@@ -1,12 +1,9 @@
 package com.franciscoreina.spring7.services;
 
-import com.franciscoreina.spring7.dto.file.MilkCsvRecord;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.ResourceUtils;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,9 +14,9 @@ public class MilkCsvServiceImplTest {
     @Test
     void convertCSV() throws FileNotFoundException {
 
-        File csvFile = ResourceUtils.getFile("classpath:csvdata/milk_dataset.csv");
+        var csvFile = ResourceUtils.getFile("classpath:csvdata/milk_dataset.csv");
 
-        List<MilkCsvRecord> recordList = milkCsvService.convertCSV(csvFile);
+        var recordList = milkCsvService.convertCSV(csvFile);
 
         System.out.println(recordList.size());
 

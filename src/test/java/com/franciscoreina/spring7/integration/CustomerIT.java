@@ -1,11 +1,7 @@
 package com.franciscoreina.spring7.integration;
 
 import com.franciscoreina.spring7.api.ApiPaths;
-import com.franciscoreina.spring7.domain.customer.Customer;
-import com.franciscoreina.spring7.dto.request.customer.CustomerCreateRequest;
-import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
-import com.franciscoreina.spring7.dto.request.customer.CustomerUpdateRequest;
 import com.franciscoreina.spring7.exceptions.ApiError;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
 import com.franciscoreina.spring7.testdata.IntegrationTestDataFactory;
@@ -19,13 +15,10 @@ import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTest
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.reactive.server.EntityExchangeResult;
-import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,18 +52,18 @@ public class CustomerIT extends AbstractIntegrationTest {
     @Test
     void create_whenValidData_returnsCreated() {
         // Arrange
-        Customer customer = TestDataFactory.newCustomer();
-        CustomerCreateRequest request = TestDataFactory.newCustomerCreateRequest(customer);
+        var newCustomer = TestDataFactory.getNewCustomer();
+        var createRequest = TestDataFactory.getCustomerCreateRequest(newCustomer);
 
         // Act
-        EntityExchangeResult<Void> result = postRequest(ApiPaths.CUSTOMERS, request)
+        var result = postRequest(ApiPaths.CUSTOMERS, createRequest)
                 .expectStatus().isCreated()
                 .expectHeader().exists(HttpHeaders.LOCATION)
                 .expectBody(Void.class)
                 .returnResult();
 
         // Assert
-        String location = result.getResponseHeaders().getFirst(HttpHeaders.LOCATION);
+        var location = result.getResponseHeaders().getFirst(HttpHeaders.LOCATION);
         assertThat(location).isNotBlank();
         assertThat(location).contains(ApiPaths.CUSTOMERS);
     }
@@ -78,10 +71,10 @@ public class CustomerIT extends AbstractIntegrationTest {
     @Test
     void create_whenNameIsNull_returnsBadRequest() {
         // Arrange
-        CustomerCreateRequest request = TestDataFactory.newCustomerCreateRequestNullName();
+        var createRequest = TestDataFactory.getCustomerCreateRequestNullName();
 
         // Act + Assert
-        postRequest(ApiPaths.CUSTOMERS, request)
+        postRequest(ApiPaths.CUSTOMERS, createRequest)
                 .expectStatus().isBadRequest()
                 .expectBody(ApiError.class)
                 .value(error -> {
@@ -93,12 +86,12 @@ public class CustomerIT extends AbstractIntegrationTest {
     @Test
     void create_whenEmailDuplicated_returnsConflict() {
         // Arrange
-        Customer customer = dataFactory.persistCustomer();
-        Customer duplicateEmail = TestDataFactory.newCustomer(customer.getEmail());
-        CustomerCreateRequest request = TestDataFactory.newCustomerCreateRequest(duplicateEmail);
+        var savedCustomer = dataFactory.persistCustomer();
+        var customerDuplicateEmail = TestDataFactory.getNewCustomer(savedCustomer.getEmail());
+        var createRequest = TestDataFactory.getCustomerCreateRequest(customerDuplicateEmail);
 
         // Act + Assert
-        postRequest(ApiPaths.CUSTOMERS, request)
+        postRequest(ApiPaths.CUSTOMERS, createRequest)
                 .expectStatus().isEqualTo(HttpStatus.CONFLICT)
                 .expectBody(ApiError.class)
                 .value(error -> {
@@ -114,15 +107,15 @@ public class CustomerIT extends AbstractIntegrationTest {
     @Test
     void getById_whenIdExists_returnsCustomer() {
         // Arrange
-        Customer customer = dataFactory.persistCustomer();
+        var savedCustomer = dataFactory.persistCustomer();
 
         // Act + Assert
-        getRequest(ApiPaths.CUSTOMERS + "/" + customer.getId())
+        getRequest(ApiPaths.CUSTOMERS + "/" + savedCustomer.getId())
                 .expectStatus().isOk()
                 .expectBody(CustomerResponse.class)
                 .value(response -> {
                     assertThat(response).isNotNull();
-                    assertThat(response.id()).isEqualTo(customer.getId());
+                    assertThat(response.id()).isEqualTo(savedCustomer.getId());
                 });
     }
 
@@ -177,28 +170,28 @@ public class CustomerIT extends AbstractIntegrationTest {
     @Test
     void update_whenValidCustomer_returnsNoContentAndUpdatesCustomer() {
         // Arrange
-        Customer customer = dataFactory.persistCustomer();
-        customer.setName("Updated Name");
-        CustomerUpdateRequest update = TestDataFactory.newCustomerUpdateRequest(customer);
+        var savedCustomer = dataFactory.persistCustomer();
+        savedCustomer.setName("Updated Name");
+        var updateRequest = TestDataFactory.getCustomerUpdateRequest(savedCustomer);
 
         // Act
-        putRequest(ApiPaths.CUSTOMERS + "/" + customer.getId(), update)
+        putRequest(ApiPaths.CUSTOMERS + "/" + savedCustomer.getId(), updateRequest)
                 .expectStatus().isNoContent();
 
         // Assert
-        Customer updatedCustomer = customerRepository.findById(customer.getId()).orElseThrow();
+        var updatedCustomer = customerRepository.findById(savedCustomer.getId()).orElseThrow();
         assertThat(updatedCustomer.getName()).isEqualTo("Updated Name");
     }
 
     @Test
     void update_whenIdNotExists_returnsNotFound() {
         // Arrange
-        Customer customer = dataFactory.persistCustomer();
-        customer.setName("Updated Name");
-        CustomerUpdateRequest update = TestDataFactory.newCustomerUpdateRequest(customer);
+        var savedCustomer = dataFactory.persistCustomer();
+        savedCustomer.setName("Updated Name");
+        var updateRequest = TestDataFactory.getCustomerUpdateRequest(savedCustomer);
 
         // Act + Assert
-        putRequest(ApiPaths.CUSTOMERS + "/" + UUID.randomUUID(), update)
+        putRequest(ApiPaths.CUSTOMERS + "/" + UUID.randomUUID(), updateRequest)
                 .expectStatus().isNotFound()
                 .expectBody(ApiError.class)
                 .value(error -> {
@@ -211,12 +204,12 @@ public class CustomerIT extends AbstractIntegrationTest {
     @Test
     void update_whenNameIsNull_returnsBadRequest() {
         // Arrange
-        Customer customer = dataFactory.persistCustomer();
-        customer.setName(null);
-        CustomerUpdateRequest update = TestDataFactory.newCustomerUpdateRequest(customer);
+        var savedCustomer = dataFactory.persistCustomer();
+        savedCustomer.setName(null);
+        var updateRequest = TestDataFactory.getCustomerUpdateRequest(savedCustomer);
 
         // Act + Assert
-        putRequest(ApiPaths.CUSTOMERS + "/" + UUID.randomUUID(), update)
+        putRequest(ApiPaths.CUSTOMERS + "/" + UUID.randomUUID(), updateRequest)
                 .expectStatus().isBadRequest()
                 .expectBody(ApiError.class)
                 .value(error -> {
@@ -229,15 +222,15 @@ public class CustomerIT extends AbstractIntegrationTest {
     void update_whenEmailDuplicated_returnsConflict() {
         // Arrange
         dataFactory.persistTwoCustomers();
-        List<Customer> customerList = dataFactory.findTwoCustomers();
-        String existingEmail = customerList.getLast().getEmail();
+        var savedCustomerList = dataFactory.findTwoCustomers();
+        var existingEmail = savedCustomerList.getLast().getEmail();
 
-        Customer customer = customerList.getFirst();
-        customer.setEmail(existingEmail);
-        CustomerUpdateRequest update = TestDataFactory.newCustomerUpdateRequest(customer);
+        var savedCustomer = savedCustomerList.getFirst();
+        savedCustomer.setEmail(existingEmail);
+        var updateRequest = TestDataFactory.getCustomerUpdateRequest(savedCustomer);
 
         // Act + Assert
-        putRequest(ApiPaths.CUSTOMERS + "/" + customer.getId(), update)
+        putRequest(ApiPaths.CUSTOMERS + "/" + savedCustomer.getId(), updateRequest)
                 .expectStatus().isEqualTo(HttpStatus.CONFLICT)
                 .expectBody(ApiError.class)
                 .value(error -> {
@@ -249,26 +242,26 @@ public class CustomerIT extends AbstractIntegrationTest {
     @Test
     void patch_whenValidCustomer_returnsNoContentAndUpdatesCustomer() {
         // Arrange
-        Customer customer = dataFactory.persistCustomer();
-        CustomerPatchRequest patch = TestDataFactory.newCustomerPatchRequestWithName();
+        var savedCustomer = dataFactory.persistCustomer();
+        var patchRequest = TestDataFactory.getCustomerPatchRequestWithName();
 
         // Act
-        patchRequest(ApiPaths.CUSTOMERS + "/" + customer.getId(), patch)
+        patchRequest(ApiPaths.CUSTOMERS + "/" + savedCustomer.getId(), patchRequest)
                 .expectStatus().isNoContent();
 
         // Assert
-        Customer updatedCustomer = customerRepository.findById(customer.getId()).orElseThrow();
+        var updatedCustomer = customerRepository.findById(savedCustomer.getId()).orElseThrow();
         assertThat(updatedCustomer.getName()).isEqualTo("Patch name");
     }
 
     @Test
     void patch_whenInvalidEmail_returnsBadRequest() {
         // Arrange
-        Customer customer = dataFactory.persistCustomer();
-        CustomerPatchRequest patch = TestDataFactory.newCustomerPatchRequestInvalidEmail();
+        var savedCustomer = dataFactory.persistCustomer();
+        var patchRequest = TestDataFactory.getCustomerPatchRequestInvalidEmail();
 
         // Act + Assert
-        patchRequest(ApiPaths.CUSTOMERS + "/" + customer.getId(), patch)
+        patchRequest(ApiPaths.CUSTOMERS + "/" + savedCustomer.getId(), patchRequest)
                 .expectStatus().isBadRequest()
                 .expectBody(ApiError.class)
                 .value(error -> {
@@ -284,7 +277,7 @@ public class CustomerIT extends AbstractIntegrationTest {
     @Test
     void delete_whenIdExists_returnsNoContent() {
         // Arrange
-        Customer savedCustomer = dataFactory.persistCustomer();
+        var savedCustomer = dataFactory.persistCustomer();
 
         // Act
         deleteRequest(ApiPaths.CUSTOMERS + "/" + savedCustomer.getId())
@@ -321,7 +314,7 @@ public class CustomerIT extends AbstractIntegrationTest {
     @Test
     void requestWithoutAuth_returns401() {
         // Arrange
-        WebTestClient clientWithoutAuth = webTestClient
+        var clientWithoutAuth = webTestClient
                 .mutate()
                 .defaultHeaders(headers -> headers.remove("Authorization"))
                 .build();

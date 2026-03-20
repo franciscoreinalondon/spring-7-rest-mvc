@@ -34,7 +34,7 @@ public class CustomerRepositoryTest {
     @Test
     public void saveCustomer_whenDataIsValid() {
         // Arrange-Act
-        Customer saved = customerRepository.saveAndFlush(TestDataFactory.newCustomer());
+        Customer saved = customerRepository.saveAndFlush(TestDataFactory.getNewCustomer());
 
         // Assert
         assertThat(saved.getId()).isNotNull();
@@ -48,8 +48,8 @@ public class CustomerRepositoryTest {
     @Test
     public void saveCustomer_throwException_whenDataDuplicated() {
         // Arrange
-        Customer customer = TestDataFactory.newCustomer();
-        Customer replica = TestDataFactory.newCustomer(customer.getEmail());
+        Customer customer = TestDataFactory.getNewCustomer();
+        Customer replica = TestDataFactory.getNewCustomer(customer.getEmail());
 
         // Act
         customerRepository.saveAndFlush(customer);
@@ -62,7 +62,7 @@ public class CustomerRepositoryTest {
     @Test
     public void saveCustomer_throwException_whenNameIsNull() {
         // Arrange
-        Customer customer = TestDataFactory.newCustomer();
+        Customer customer = TestDataFactory.getNewCustomer();
         customer.setName(null);
 
         // Act-Assert
@@ -73,7 +73,7 @@ public class CustomerRepositoryTest {
     @Test
     public void saveCustomer_throwException_whenEmailIsNull() {
         // Arrange
-        Customer customer = TestDataFactory.newCustomer(null);
+        Customer customer = TestDataFactory.getNewCustomer(null);
 
         // Act-Assert
         assertThatThrownBy(() -> customerRepository.saveAndFlush(customer))
@@ -83,7 +83,7 @@ public class CustomerRepositoryTest {
     @Test
     public void saveCustomer_throwException_whenEmailIsInvalid() {
         // Arrange
-        Customer customer = TestDataFactory.newCustomer("invalidEmail");
+        Customer customer = TestDataFactory.getNewCustomer("invalidEmail");
 
         // Act-Assert
         assertThatThrownBy(() -> customerRepository.saveAndFlush(customer))
@@ -97,7 +97,7 @@ public class CustomerRepositoryTest {
     @Test
     public void findCustomer_whenIdExists() {
         // Arrange
-        Customer saved = customerRepository.saveAndFlush(TestDataFactory.newCustomer());
+        Customer saved = customerRepository.saveAndFlush(TestDataFactory.getNewCustomer());
         entityManager.clear();
 
         // Act
@@ -127,9 +127,9 @@ public class CustomerRepositoryTest {
     @Test
     public void findAllCustomers_whenExists() {
         // Arrange
-        Customer customer1 = TestDataFactory.newCustomer();
-        Customer customer2 = TestDataFactory.newCustomer();
-        Customer customer3 = TestDataFactory.newCustomer();
+        Customer customer1 = TestDataFactory.getNewCustomer();
+        Customer customer2 = TestDataFactory.getNewCustomer();
+        Customer customer3 = TestDataFactory.getNewCustomer();
 
         // Act
         customerRepository.saveAndFlush(customer1);
@@ -147,7 +147,7 @@ public class CustomerRepositoryTest {
     @Test
     public void updateCustomer_whenIsModified() {
         // Arrange
-        Customer saved = customerRepository.saveAndFlush(TestDataFactory.newCustomer());
+        Customer saved = customerRepository.saveAndFlush(TestDataFactory.getNewCustomer());
         Integer oldVersion = saved.getVersion();
 
         // Act
@@ -166,7 +166,7 @@ public class CustomerRepositoryTest {
     @Test
     public void deleteCustomer_whenIdExists() {
         // Arrange
-        Customer saved = customerRepository.saveAndFlush(TestDataFactory.newCustomer());
+        Customer saved = customerRepository.saveAndFlush(TestDataFactory.getNewCustomer());
 
         // Act
         customerRepository.deleteById(saved.getId());

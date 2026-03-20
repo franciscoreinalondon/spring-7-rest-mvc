@@ -1,7 +1,6 @@
 package com.franciscoreina.spring7.testdata;
 
 import com.franciscoreina.spring7.domain.customer.Customer;
-import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.dto.file.MilkCsvRecord;
@@ -14,7 +13,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ResourceUtils;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,14 +30,14 @@ public class IntegrationTestDataFactory {
     private final MilkCsvService milkCsvService;
 
     public Customer persistCustomer() {
-        return customerRepository.saveAndFlush(TestDataFactory.newCustomer());
+        return customerRepository.saveAndFlush(TestDataFactory.getNewCustomer());
     }
 
     public List<Customer> persistTwoCustomers() {
-        Customer first = customerRepository.save(TestDataFactory.newCustomer());
-        Customer second = customerRepository.save(TestDataFactory.newCustomer());
+        var savedCustomer1 = customerRepository.save(TestDataFactory.getNewCustomer());
+        var savedCustomer2 = customerRepository.save(TestDataFactory.getNewCustomer());
         customerRepository.flush();
-        return List.of(first, second);
+        return List.of(savedCustomer1, savedCustomer2);
     }
 
     public List<Customer> findTwoCustomers() {
@@ -47,16 +45,16 @@ public class IntegrationTestDataFactory {
     }
 
     public Milk persistMilk() {
-        Category category = categoryRepository.saveAndFlush(TestDataFactory.newCategory());
-        return milkRepository.saveAndFlush(TestDataFactory.newMilk(category));
+        var savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+        return milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
     }
 
     public List<Milk> persistTwoMilks() {
-        Category category = categoryRepository.saveAndFlush(TestDataFactory.newCategory());
-        Milk first = milkRepository.save(TestDataFactory.newMilk(category));
-        Milk second = milkRepository.save(TestDataFactory.newMilk(category));
+        var savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+        var savedMilk1 = milkRepository.save(TestDataFactory.getNewMilk(savedCategory));
+        var savedMilk2 = milkRepository.save(TestDataFactory.getNewMilk(savedCategory));
         milkRepository.flush();
-        return List.of(first, second);
+        return List.of(savedMilk1, savedMilk2);
     }
 
     public List<Milk> findTwoMilks() {
@@ -64,8 +62,8 @@ public class IntegrationTestDataFactory {
     }
 
     public void loadMilkCsvDataset() throws FileNotFoundException {
-        File csvFile = ResourceUtils.getFile("classpath:csvdata/milk_dataset.csv");
-        List<MilkCsvRecord> records = milkCsvService.convertCSV(csvFile);
+        var csvFile = ResourceUtils.getFile("classpath:csvdata/milk_dataset.csv");
+        var records = milkCsvService.convertCSV(csvFile);
 
         records.forEach(record -> milkRepository.save(mapToBeer(record)));
     }
