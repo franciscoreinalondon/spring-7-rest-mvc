@@ -88,6 +88,10 @@ public class MilkOrder {
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }
+
     @Builder.Default
     @OneToMany(mappedBy = "milkOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<OrderLine> orderLines = new HashSet<>();

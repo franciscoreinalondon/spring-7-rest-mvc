@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 public interface MilkOrderService {
-    MilkOrderResponse create(MilkOrderCreateRequest milkOrderCreateRequest);
+    MilkOrderResponse create(MilkOrderCreateRequest request);
 
     MilkOrderResponse getById(UUID milkOrderId);
 

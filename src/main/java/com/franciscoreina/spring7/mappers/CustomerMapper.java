@@ -20,6 +20,8 @@ public interface CustomerMapper {
     @Mapping(target = "updatedAt", ignore = true)
     Customer toEntity(CustomerCreateRequest customerCreateRequest);
 
+    Customer toEntity(CustomerResponse customerResponse);
+
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
     void updateEntity(@MappingTarget Customer target, CustomerUpdateRequest customerUpdateRequest);
 

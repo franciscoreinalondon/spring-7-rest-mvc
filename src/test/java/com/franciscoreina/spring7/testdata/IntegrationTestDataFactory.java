@@ -3,9 +3,12 @@ package com.franciscoreina.spring7.testdata;
 import com.franciscoreina.spring7.domain.customer.Customer;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
+import com.franciscoreina.spring7.domain.order.MilkOrder;
+import com.franciscoreina.spring7.domain.order.OrderLine;
 import com.franciscoreina.spring7.dto.file.MilkCsvRecord;
 import com.franciscoreina.spring7.repositories.CategoryRepository;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
+import com.franciscoreina.spring7.repositories.MilkOrderRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
 import com.franciscoreina.spring7.services.MilkCsvService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +19,7 @@ import org.springframework.util.ResourceUtils;
 import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Persists test data into the database for integration tests.
@@ -27,6 +31,7 @@ public class IntegrationTestDataFactory {
     private final CategoryRepository categoryRepository;
     private final CustomerRepository customerRepository;
     private final MilkRepository milkRepository;
+    private final MilkOrderRepository milkOrderRepository;
     private final MilkCsvService milkCsvService;
 
     public Customer persistCustomer() {
@@ -51,14 +56,9 @@ public class IntegrationTestDataFactory {
 
     public List<Milk> persistTwoMilks() {
         var savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
-        var savedMilk1 = milkRepository.save(TestDataFactory.getNewMilk(savedCategory));
-        var savedMilk2 = milkRepository.save(TestDataFactory.getNewMilk(savedCategory));
-        milkRepository.flush();
+        var savedMilk1 = milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
+        var savedMilk2 = milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
         return List.of(savedMilk1, savedMilk2);
-    }
-
-    public List<Milk> findTwoMilks() {
-        return milkRepository.findAll(PageRequest.of(0, 2)).getContent();
     }
 
     public void loadMilkCsvDataset() throws FileNotFoundException {
@@ -66,6 +66,66 @@ public class IntegrationTestDataFactory {
         var records = milkCsvService.convertCSV(csvFile);
 
         records.forEach(record -> milkRepository.save(mapToBeer(record)));
+    }
+
+    public MilkOrder persistMilkOrder() {
+        var savedCustomer = customerRepository.save(TestDataFactory.getNewCustomer());
+        var savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+        var savedMilk =  milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
+
+        var newOrderLine = OrderLine.builder()
+                .orderQuantity(10)
+                .stockAllocated(10)
+                .milk(savedMilk)
+                .build();
+
+        var newMilkOrder = MilkOrder.builder()
+                .customer(savedCustomer)
+                .customerRef(UUID.randomUUID().toString())
+                .paymentAmount(new BigDecimal("10.00"))
+                .build();
+
+        newMilkOrder.addOrderLine(newOrderLine);
+
+        return milkOrderRepository.saveAndFlush(newMilkOrder);
+    }
+
+    public List<MilkOrder> persistTwoMilkOrders() {
+        var savedCustomer = customerRepository.saveAndFlush(TestDataFactory.getNewCustomer());
+        var savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+        var savedMilk =  milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
+
+        var newOrderLine1 = OrderLine.builder()
+                .orderQuantity(2)
+                .stockAllocated(10)
+                .milk(savedMilk)
+                .build();
+
+        var newMilkOrder1 = MilkOrder.builder()
+                .customer(savedCustomer)
+                .customerRef(UUID.randomUUID().toString())
+                .paymentAmount(new BigDecimal("10.00"))
+                .build();
+
+        newMilkOrder1.addOrderLine(newOrderLine1);
+        var savedMilkOrder1 = milkOrderRepository.saveAndFlush(newMilkOrder1);
+
+        var newOrderLine2 = OrderLine.builder()
+                .orderQuantity(3)
+                .stockAllocated(10)
+                .milk(savedMilk)
+                .build();
+
+        var newMilkOrder2 = MilkOrder.builder()
+                .customer(savedCustomer)
+                .customerRef(UUID.randomUUID().toString())
+                .paymentAmount(new BigDecimal("15.00"))
+                .build();
+
+        newMilkOrder2.addOrderLine(newOrderLine2);
+        var savedMilkOrder2 = milkOrderRepository.saveAndFlush(newMilkOrder2);
+
+        return List.of(savedMilkOrder1, savedMilkOrder2);
     }
 
     // The mapper logic is mostly academic, since some properties are filled
