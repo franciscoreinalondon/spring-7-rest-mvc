@@ -289,7 +289,8 @@ public class TestDataFactory {
                 UUID.randomUUID().toString(),
                 new BigDecimal("10.00"),
                 customerId,
-                Set.of(orderLineCreateRequest)
+                Set.of(orderLineCreateRequest),
+                null
         );
     }
 

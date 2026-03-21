@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record MilkOrderCreateRequest(
+public record MilkOrderUpdateRequest(
         @NotBlank
         @Size(max = 50)
         String customerRef,
