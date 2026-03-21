@@ -52,6 +52,16 @@ public class Milk {
     @Version
     private Integer version;
 
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @LastModifiedDate
+    @Column(nullable = false)
+    private Instant updatedAt;
+
+    // Entity attributes
+
     @NotBlank
     @Size(max = 50)
     @Column(nullable = false, length = 50)
@@ -78,13 +88,20 @@ public class Milk {
     @Column(nullable = false)
     private Integer stock;
 
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt;
+    // JPA Relationships
 
-    @LastModifiedDate
-    @Column(nullable = false)
-    private Instant updatedAt;
+    @Builder.Default
+    @ManyToMany
+    @JoinTable(name = "milk_category",
+            joinColumns = @JoinColumn(name = "milk_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id"))
+    private Set<Category> categories = new HashSet<>();
+
+    // Methods
+
+    public void addCategory(Category category) {
+        categories.add(category);
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -96,18 +113,5 @@ public class Milk {
     @Override
     public int hashCode() {
         return getClass().hashCode();
-    }
-
-    // JPA Relationships
-
-    @Builder.Default
-    @ManyToMany
-    @JoinTable(name = "milk_category",
-            joinColumns = @JoinColumn(name = "milk_id"),
-            inverseJoinColumns = @JoinColumn(name = "category_id"))
-    private Set<Category> categories = new HashSet<>();
-
-    public void addCategory(Category category) {
-        categories.add(category);
     }
 }

@@ -73,17 +73,8 @@ public class IntegrationTestDataFactory {
         var savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
         var savedMilk =  milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
 
-        var newOrderLine = OrderLine.builder()
-                .orderQuantity(10)
-                .stockAllocated(10)
-                .milk(savedMilk)
-                .build();
-
-        var newMilkOrder = MilkOrder.builder()
-                .customer(savedCustomer)
-                .customerRef(UUID.randomUUID().toString())
-                .paymentAmount(new BigDecimal("10.00"))
-                .build();
+        var newOrderLine = OrderLine.createOrderLine(savedMilk, 2);
+        var newMilkOrder = MilkOrder.createMilkOrder(savedCustomer, UUID.randomUUID().toString());
 
         newMilkOrder.addOrderLine(newOrderLine);
 
@@ -95,32 +86,16 @@ public class IntegrationTestDataFactory {
         var savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
         var savedMilk =  milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
 
-        var newOrderLine1 = OrderLine.builder()
-                .orderQuantity(2)
-                .stockAllocated(10)
-                .milk(savedMilk)
-                .build();
+        var newOrderLine1 = OrderLine.createOrderLine(savedMilk, 2);
 
-        var newMilkOrder1 = MilkOrder.builder()
-                .customer(savedCustomer)
-                .customerRef(UUID.randomUUID().toString())
-                .paymentAmount(new BigDecimal("10.00"))
-                .build();
+        var newMilkOrder1 = MilkOrder.createMilkOrder(savedCustomer, UUID.randomUUID().toString());
 
         newMilkOrder1.addOrderLine(newOrderLine1);
         var savedMilkOrder1 = milkOrderRepository.saveAndFlush(newMilkOrder1);
 
-        var newOrderLine2 = OrderLine.builder()
-                .orderQuantity(3)
-                .stockAllocated(10)
-                .milk(savedMilk)
-                .build();
+        var newOrderLine2 = OrderLine.createOrderLine(savedMilk, 3);
 
-        var newMilkOrder2 = MilkOrder.builder()
-                .customer(savedCustomer)
-                .customerRef(UUID.randomUUID().toString())
-                .paymentAmount(new BigDecimal("15.00"))
-                .build();
+        var newMilkOrder2 = MilkOrder.createMilkOrder(savedCustomer, UUID.randomUUID().toString());
 
         newMilkOrder2.addOrderLine(newOrderLine2);
         var savedMilkOrder2 = milkOrderRepository.saveAndFlush(newMilkOrder2);

@@ -10,11 +10,11 @@ import org.mapstruct.Mapping;
 @Mapper(uses = {Milk.class})
 public interface OrderLineMapper {
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "version", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    OrderLine toEntity(OrderLineCreateRequest orderLineCreateRequest);
+//    @Mapping(target = "id", ignore = true)
+//    @Mapping(target = "version", ignore = true)
+//    @Mapping(target = "createdAt", ignore = true)
+//    @Mapping(target = "updatedAt", ignore = true)
+//    OrderLine toEntity(OrderLineCreateRequest orderLineCreateRequest);
 
     OrderLineResponse toResponse(OrderLine orderLine);
 

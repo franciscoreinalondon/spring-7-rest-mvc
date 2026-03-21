@@ -40,11 +40,6 @@ public class Category {
     @Version
     private Integer version;
 
-    @NotBlank
-    @Size(max = 50)
-    @Column(nullable = false, length = 50)
-    private String description;
-
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -52,6 +47,15 @@ public class Category {
     @LastModifiedDate
     @Column(nullable = false)
     private Instant updatedAt;
+
+    // Entity attributes
+
+    @NotBlank
+    @Size(max = 50)
+    @Column(nullable = false, length = 50)
+    private String description;
+
+    // Methods
 
     @Override
     public boolean equals(Object o) {

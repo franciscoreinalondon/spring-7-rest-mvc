@@ -1,5 +1,5 @@
 
-drop table if exists order_line;
+drop table if exists milk_order_line;
 
 drop table if exists milk_order;
 
@@ -24,6 +24,7 @@ create table milk_order_line (
                       order_quantity integer not null,
                       stock_allocated integer not null,
                       order_line_status enum ('NEW', 'COMPLETE') not null,
+                      price_at_purchase decimal(12,2) not null,
                       primary key (id)
 ) engine=InnoDB;
 

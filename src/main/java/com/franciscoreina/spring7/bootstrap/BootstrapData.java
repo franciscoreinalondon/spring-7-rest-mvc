@@ -108,38 +108,30 @@ public class BootstrapData implements CommandLineRunner {
 
         milkOrderRepository.save(
                 createMilkOrder(customer1, "1234r", List.of(
-                        OrderLine.builder().milk(milk1).orderQuantity(1).stockAllocated(10).build(),
-                        OrderLine.builder().milk(milk2).orderQuantity(2).stockAllocated(10).build()
+                        OrderLine.createOrderLine(milk1, 1),
+                        OrderLine.createOrderLine(milk1, 2)
                 ))
         );
 
         milkOrderRepository.save(
                 createMilkOrder(customer1, "5678r", List.of(
-                        OrderLine.builder().milk(milk3).orderQuantity(1).stockAllocated(10).build()
+                        OrderLine.createOrderLine(milk3, 1)
                 ))
         );
 
         milkOrderRepository.save(
                 createMilkOrder(customer2, "1357r", List.of(
-                        OrderLine.builder().milk(milk1).orderQuantity(3).stockAllocated(10).build(),
-                        OrderLine.builder().milk(milk2).orderQuantity(1).stockAllocated(10).build()
+                        OrderLine.createOrderLine(milk1, 3),
+                        OrderLine.createOrderLine(milk2, 1)
                 ))
         );
 
     }
 
     public MilkOrder createMilkOrder(Customer customer, String customerRef, List<OrderLine> lines) {
-        var milkOrder = MilkOrder.builder()
-                .customer(customer)
-                .customerRef(customerRef)
-                .paymentAmount(lines.stream()
-                        .map(ol -> ol.getMilk().getPrice()
-                                        .multiply(BigDecimal.valueOf(ol.getOrderQuantity())))
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
-                )
-                .build();
-
+        var milkOrder = MilkOrder.createMilkOrder(customer, customerRef);
         lines.forEach(milkOrder::addOrderLine);
+
         return milkOrder;
     }
 

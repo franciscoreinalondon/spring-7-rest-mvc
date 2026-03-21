@@ -41,11 +41,6 @@ public class OrderShipment {
     @Version
     private Integer version;
 
-    @NotBlank
-    @Size(max = 50)
-    @Column(nullable = false, length = 50)
-    private String trackingNumber;
-
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -53,6 +48,25 @@ public class OrderShipment {
     @LastModifiedDate
     @Column(nullable = false)
     private Instant updatedAt;
+
+    // Entity attributes
+
+    @NotBlank
+    @Size(max = 50)
+    @Column(nullable = false, length = 50)
+    private String trackingNumber;
+
+    // JPA Relationships
+
+    @OneToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "milk_order_id", nullable = false, unique = true)
+    private MilkOrder milkOrder;
+
+    // Methods
+
+    void setMilkOrder(MilkOrder milkOrder) {
+        this.milkOrder = milkOrder;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -64,15 +78,5 @@ public class OrderShipment {
     @Override
     public int hashCode() {
         return getClass().hashCode();
-    }
-
-    // JPA Relationships
-
-    @OneToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "milk_order_id", nullable = false, unique = true)
-    private MilkOrder milkOrder;
-
-    void setMilkOrder(MilkOrder milkOrder) {
-        this.milkOrder = milkOrder;
     }
 }

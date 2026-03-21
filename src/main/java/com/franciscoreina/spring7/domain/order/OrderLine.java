@@ -13,9 +13,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,12 +27,13 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
 @Getter
 @EntityListeners(AuditingEntityListener.class)
 @Entity
@@ -43,6 +47,16 @@ public class OrderLine {
 
     @Version
     private Integer version;
+
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @LastModifiedDate
+    @Column(nullable = false)
+    private Instant updatedAt;
+
+    // Entity attributes
 
     @NotNull
     @Min(value = 1, message = "Quantity on hand must be greater than 0")
@@ -59,13 +73,37 @@ public class OrderLine {
     @Column(nullable = false)
     private OrderLineStatus orderLineStatus = OrderLineStatus.NEW;
 
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt;
+    @NotNull
+    @DecimalMin("0.00")
+    @Digits(integer = 10, fraction = 2)
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal priceAtPurchase;
 
-    @LastModifiedDate
-    @Column(nullable = false)
-    private Instant updatedAt;
+    // JPA Relationships
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "milk_order_id", nullable = false)
+    private MilkOrder milkOrder;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "milk_id", nullable = false)
+    private Milk milk;
+
+    // Methods
+
+    public static OrderLine createOrderLine(Milk milk, Integer quantity) {
+        return OrderLine.builder()
+                .milk(milk)
+                .orderQuantity(quantity)
+                .priceAtPurchase(milk.getPrice())
+                .stockAllocated(0)// tbf
+                .orderLineStatus(OrderLineStatus.NEW)
+                .build();
+    }
+
+    void setMilkOrder(MilkOrder milkOrder) {
+        this.milkOrder = milkOrder;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -78,18 +116,4 @@ public class OrderLine {
     public int hashCode() {
         return getClass().hashCode();
     }
-
-    // JPA Relationships
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "milk_order_id", nullable = false)
-    private MilkOrder milkOrder;
-
-    void setMilkOrder(MilkOrder milkOrder) {
-        this.milkOrder = milkOrder;
-    }
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "milk_id", nullable = false)
-    private Milk milk;
 }

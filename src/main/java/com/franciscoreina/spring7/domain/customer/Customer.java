@@ -41,6 +41,16 @@ public class Customer {
     @Version
     private Integer version;
 
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @LastModifiedDate
+    @Column(nullable = false)
+    private Instant updatedAt;
+
+    // Entity attributes
+
     @NotBlank
     @Size(max = 50)
     @Column(nullable = false, length = 50)
@@ -52,13 +62,7 @@ public class Customer {
     @Column(nullable = false, length = 120, unique = true)
     private String email;
 
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @LastModifiedDate
-    @Column(nullable = false)
-    private Instant updatedAt;
+    // Methods
 
     @Override
     public boolean equals(Object o) {

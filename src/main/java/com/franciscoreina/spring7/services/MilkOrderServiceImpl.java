@@ -32,18 +32,14 @@ public class MilkOrderServiceImpl implements MilkOrderService {
         var savedCustomer = customerRepository.findById(request.customerId())
                 .orElseThrow(() -> new NotFoundException("Customer not found: " + request.customerId()));
 
-        var milkOrder = milkOrderMapper.toEntity(request);
-        milkOrder.setCustomer(savedCustomer);
+        var milkOrder = milkOrderMapper.createMilkOrder(request, savedCustomer);
+//        milkOrder.setCustomer(savedCustomer);//tbf
 
         for (var lineRequest : request.orderLines()) {
             var milk = milkRepository.findById(lineRequest.milkId())
                     .orElseThrow(() -> new NotFoundException("Milk not found: " + lineRequest.milkId()));
 
-            var orderLine = OrderLine.builder()
-                    .milk(milk)
-                    .orderQuantity(lineRequest.orderQuantity())
-                    .stockAllocated(0)
-                    .build();
+            var orderLine = OrderLine.createOrderLine(milk, lineRequest.orderQuantity());
             milkOrder.addOrderLine(orderLine);
         }
 
