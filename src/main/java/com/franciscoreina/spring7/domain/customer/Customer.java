@@ -11,11 +11,12 @@ import jakarta.persistence.Version;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -23,11 +24,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.Instant;
 import java.util.UUID;
 
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
 @Getter
-@Setter
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "customer")
@@ -49,7 +49,7 @@ public class Customer {
     @Column(nullable = false)
     private Instant updatedAt;
 
-    // Entity attributes
+    // Business Attributes
 
     @NotBlank
     @Size(max = 50)
@@ -62,7 +62,41 @@ public class Customer {
     @Column(nullable = false, length = 120, unique = true)
     private String email;
 
-    // Methods
+    // Business Methods (Rich Model)
+
+    public static Customer createCustomer(String name, String email) {
+        validatePresence(name, "Name is required");
+        validatePresence(email, "Email is required");
+
+        return Customer.builder()
+                .name(name.trim())
+                .email(normalizeEmail(email))
+                .build();
+    }
+
+    public void renameTo(String newName) {
+        validatePresence(newName, "Name cannot be empty");
+        this.name = newName.trim();
+    }
+
+    public void changeEmailTo(String newEmail) {
+        validatePresence(newEmail, "Email cannot be empty");
+        this.email = normalizeEmail(newEmail);
+    }
+
+    // Utilities
+
+    private static void validatePresence(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    private static String normalizeEmail(String email) {
+        return email.toLowerCase().trim();
+    }
+
+    // Equals / HashCode
 
     @Override
     public boolean equals(Object o) {

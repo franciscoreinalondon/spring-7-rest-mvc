@@ -5,28 +5,53 @@ import com.franciscoreina.spring7.dto.request.customer.CustomerCreateRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerUpdateRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
-import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper
 public interface CustomerMapper {
+
+    default Customer toEntity(CustomerCreateRequest request) {
+        if (request == null) return null;
+
+        return Customer.createCustomer(
+                request.name(),
+                request.email()
+        );
+    }
+
+//    Customer toEntity(CustomerResponse customerResponse);
+
+//    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
+//    void updateEntity(@MappingTarget Customer target, CustomerUpdateRequest customerUpdateRequest);
+
+    //    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+//    void patchEntity(@MappingTarget Customer target, CustomerPatchRequest customerPatchRequest);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "version", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    Customer toEntity(CustomerCreateRequest customerCreateRequest);
+    default void updateEntity(@MappingTarget Customer target, CustomerUpdateRequest request) {
+        if (request == null) return;
 
-    Customer toEntity(CustomerResponse customerResponse);
+        // Llamamos a tus métodos de negocio en lugar de setters
+        target.renameTo(request.name());
+        target.changeEmailTo(request.email());
+    }
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
-    void updateEntity(@MappingTarget Customer target, CustomerUpdateRequest customerUpdateRequest);
+    // Para el PATCH (solo actualiza si no es nulo)
+    default void patchEntity(@MappingTarget Customer target, CustomerPatchRequest request) {
+        if (request == null) return;
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void patchEntity(@MappingTarget Customer target, CustomerPatchRequest customerPatchRequest);
+        if (request.name() != null) {
+            target.renameTo(request.name());
+        }
+        if (request.email() != null) {
+            target.changeEmailTo(request.email());
+        }
+    }
 
     CustomerResponse toResponse(Customer customer);
 

@@ -36,15 +36,22 @@ public class TestDataFactory {
     // ---------------
 
     public static Customer getNewCustomer() {
-        return Customer.builder().name("Customer name").email("customer_" + UUID.randomUUID() + "@domain.com").build();
+        return Customer.createCustomer("Customer name", "customer_" + UUID.randomUUID() + "@domain.com");
     }
 
     public static Customer getNewCustomer(String email) {
-        return Customer.builder().name("Customer name").email(email).build();
+        return Customer.createCustomer("Customer name", email);
     }
 
     public static Customer getSavedCustomer(Customer customer) {
-        return Customer.builder().id(UUID.randomUUID()).version(0).name(customer.getName()).email(customer.getEmail()).createdAt(Instant.now()).updatedAt(Instant.now()).build();
+         var savedCustomer = Customer.createCustomer(customer.getName(), customer.getEmail());
+
+        ReflectionTestUtils.setField(savedCustomer, "id", UUID.randomUUID());
+        ReflectionTestUtils.setField(savedCustomer, "version", 0);
+        ReflectionTestUtils.setField(savedCustomer, "createdAt", Instant.now());
+        ReflectionTestUtils.setField(savedCustomer, "updatedAt", Instant.now());
+
+         return savedCustomer;
     }
 
     public static CustomerCreateRequest getCustomerCreateRequest(Customer customer) {

@@ -45,20 +45,9 @@ public class BootstrapData implements CommandLineRunner {
             return;
         }
 
-        customerRepository.save(Customer.builder()
-                .name("Alice Johnson")
-                .email("alice.johnson@example.com")
-                .build());
-
-        customerRepository.save(Customer.builder()
-                .name("Michael Brown")
-                .email("michael.brown@example.com")
-                .build());
-
-        customerRepository.save(Customer.builder()
-                .name("Sofia Martinez")
-                .email("sofia.martinez@example.com")
-                .build());
+        customerRepository.save(Customer.createCustomer("Alice Johnson", "alice.johnson@example.com"));
+        customerRepository.save(Customer.createCustomer("Michael Brown", "michael.brown@example.com"));
+        customerRepository.save(Customer.createCustomer("Sofia Martinez", "sofia.martinez@example.com"));
     }
 
     private void loadMilkData() {
