@@ -162,7 +162,7 @@ public class TestDataFactory {
     }
 
     public static MilkOrderCreateRequest getMilkOrderCreateRequest(UUID customerId, OrderLineCreateRequest orderLineCreateRequest) {
-        return new MilkOrderCreateRequest(UUID.randomUUID().toString(), new BigDecimal("10.00"), customerId, Set.of(orderLineCreateRequest), null);
+        return new MilkOrderCreateRequest("1234TDF".toString(), new BigDecimal("10.00"), customerId, Set.of(orderLineCreateRequest), null);
     }
 
     public static MilkOrderResponse getMilkOrderResponse(MilkOrder milkOrder) {

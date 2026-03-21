@@ -19,6 +19,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -65,6 +66,7 @@ public class MilkOrder {
 
     @NotBlank
     @Size(max = 50)
+    @Pattern(regexp = "^[A-Z0-9-]+$", message = "Only capital letters, numbers and hyphens are allowed")
     @Column(nullable = false, length = 50, unique = true)
     private String customerRef;
 
@@ -91,7 +93,8 @@ public class MilkOrder {
 
     public static MilkOrder createMilkOrder(Customer customer, String customerRef) {
         if (customer == null) throw new IllegalArgumentException("Customer cannot be null");
-        if (customerRef == null || customerRef.isBlank()) throw new IllegalArgumentException("Customer reference is required");
+        if (customerRef == null || customerRef.isBlank())
+            throw new IllegalArgumentException("Customer reference is required");
 
         return MilkOrder.builder()
                 .customer(customer)
@@ -109,9 +112,7 @@ public class MilkOrder {
     }
 
     public void addOrderLine(OrderLine orderLine) {
-        if (this.orderShipment != null) {
-            throw new IllegalStateException("Cannot add lines to a shipped order");
-        }
+        checkOrderIsModifiable("Cannot add lines to a shipped order");
 
         if (this.orderLines.add(orderLine)) {
             orderLine.setMilkOrder(this);
@@ -120,13 +121,17 @@ public class MilkOrder {
     }
 
     public void removeOrderLine(OrderLine orderLine) {
-        if (this.orderShipment != null) {
-            throw new IllegalStateException("Cannot remove lines to a shipped order");
-        }
+        checkOrderIsModifiable("Cannot remove lines to a shipped order");
 
         if (this.orderLines.remove(orderLine)) {
             orderLine.setMilkOrder(null);
             this.paymentAmount = getTotalAmount();
+        }
+    }
+
+    private void checkOrderIsModifiable(String message) {
+        if (this.orderShipment != null) {
+            throw new IllegalStateException(message);
         }
     }
 
@@ -137,9 +142,7 @@ public class MilkOrder {
     }
 
     public void addOrderShipment(OrderShipment orderShipment) {
-        if (this.orderShipment != null) {
-            throw new IllegalStateException("Order already has a shipment");
-        }
+        checkOrderIsModifiable("Order already has a shipment");
         if (orderShipment == null) {
             throw new IllegalArgumentException("Shipment cannot be null");
         }

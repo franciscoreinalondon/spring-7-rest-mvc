@@ -33,7 +33,6 @@ public class MilkOrderServiceImpl implements MilkOrderService {
                 .orElseThrow(() -> new NotFoundException("Customer not found: " + request.customerId()));
 
         var milkOrder = milkOrderMapper.createMilkOrder(request, savedCustomer);
-//        milkOrder.setCustomer(savedCustomer);//tbf
 
         for (var lineRequest : request.orderLines()) {
             var milk = milkRepository.findById(lineRequest.milkId())

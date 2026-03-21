@@ -30,6 +30,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -99,8 +100,16 @@ public class Milk {
 
     // Methods
 
+    public Set<Category> getCategories() {
+        return Collections.unmodifiableSet(categories);
+    }
+
     public void addCategory(Category category) {
         categories.add(category);
+    }
+
+    public void removeCategory(Category category) {
+        categories.remove(category);
     }
 
     @Override

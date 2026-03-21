@@ -107,20 +107,20 @@ public class BootstrapData implements CommandLineRunner {
         var milk3 = milks.get(2);
 
         milkOrderRepository.save(
-                createMilkOrder(customer1, "1234r", List.of(
+                createMilkOrder(customer1, "1234R", List.of(
                         OrderLine.createOrderLine(milk1, 1),
                         OrderLine.createOrderLine(milk1, 2)
                 ))
         );
 
         milkOrderRepository.save(
-                createMilkOrder(customer1, "5678r", List.of(
+                createMilkOrder(customer1, "5678R", List.of(
                         OrderLine.createOrderLine(milk3, 1)
                 ))
         );
 
         milkOrderRepository.save(
-                createMilkOrder(customer2, "1357r", List.of(
+                createMilkOrder(customer2, "1357R", List.of(
                         OrderLine.createOrderLine(milk1, 3),
                         OrderLine.createOrderLine(milk2, 1)
                 ))

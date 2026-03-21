@@ -74,7 +74,7 @@ public class IntegrationTestDataFactory {
         var savedMilk =  milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
 
         var newOrderLine = OrderLine.createOrderLine(savedMilk, 2);
-        var newMilkOrder = MilkOrder.createMilkOrder(savedCustomer, UUID.randomUUID().toString());
+        var newMilkOrder = MilkOrder.createMilkOrder(savedCustomer, "1234-1ITDF");
 
         newMilkOrder.addOrderLine(newOrderLine);
 
@@ -88,14 +88,14 @@ public class IntegrationTestDataFactory {
 
         var newOrderLine1 = OrderLine.createOrderLine(savedMilk, 2);
 
-        var newMilkOrder1 = MilkOrder.createMilkOrder(savedCustomer, UUID.randomUUID().toString());
+        var newMilkOrder1 = MilkOrder.createMilkOrder(savedCustomer, "1234-2ITDF");
 
         newMilkOrder1.addOrderLine(newOrderLine1);
         var savedMilkOrder1 = milkOrderRepository.saveAndFlush(newMilkOrder1);
 
         var newOrderLine2 = OrderLine.createOrderLine(savedMilk, 3);
 
-        var newMilkOrder2 = MilkOrder.createMilkOrder(savedCustomer, UUID.randomUUID().toString());
+        var newMilkOrder2 = MilkOrder.createMilkOrder(savedCustomer, "5678-2ITDF");
 
         newMilkOrder2.addOrderLine(newOrderLine2);
         var savedMilkOrder2 = milkOrderRepository.saveAndFlush(newMilkOrder2);
