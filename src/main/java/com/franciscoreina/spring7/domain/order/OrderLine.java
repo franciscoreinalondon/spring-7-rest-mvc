@@ -13,8 +13,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -25,6 +25,10 @@ import lombok.Setter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
+
+import static com.franciscoreina.spring7.domain.base.DomainAssert.notNull;
+import static com.franciscoreina.spring7.domain.base.DomainAssert.isNonNegative;
+import static com.franciscoreina.spring7.domain.base.DomainAssert.isPositive;
 
 @Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
@@ -39,7 +43,7 @@ public class OrderLine extends BaseEntity {
     // Business Attributes
 
     @NotNull
-    @Min(value = 1, message = "Requested quantity must be greater than 0")
+    @Positive(message = "Requested quantity must be greater than 0")
     @Column(nullable = false)
     private Integer requestedQuantity;
 
@@ -49,6 +53,7 @@ public class OrderLine extends BaseEntity {
     private Integer assignedQuantity;
 
     @Builder.Default
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderLineStatus orderLineStatus = OrderLineStatus.NEW;
@@ -74,8 +79,8 @@ public class OrderLine extends BaseEntity {
     // Factory Method
 
     public static OrderLine createOrderLine(Milk milk, Integer quantity) {
-        validateNotNull(milk, "Milk is required");
-        validateNotNull(quantity, "Quantity is required");
+        notNull(milk, "Milk is required");
+        notNull(quantity, "Quantity is required");
 
         return OrderLine.builder()
                 .milk(milk)
@@ -89,35 +94,32 @@ public class OrderLine extends BaseEntity {
     // Business Methods (Rich Model)
 
     void setMilkOrder(MilkOrder milkOrder) {
-        validateNotNull(milkOrder, "MilkOrder is required");
+        notNull(milkOrder, "MilkOrder is required");
         this.milkOrder = milkOrder;
     }
 
+    // Triggered by client when client update the amount in a order
     void updateQuantity(Integer newQuantity) {
-        if (newQuantity == null || newQuantity < 1) {
-            throw new IllegalArgumentException("Quantity must be at least 1");
-        }
+        isPositive(newQuantity, "Quantity must be at least 1");
         this.requestedQuantity = newQuantity;
     }
 
-    public void assignQuantity(Integer quantity) {//tbr
-        if (quantity == null || quantity < 0) throw new IllegalArgumentException("Quantity cannot be negative");
-        if (this.assignedQuantity + quantity > this.requestedQuantity) {
-            throw new IllegalStateException("Cannot assign more stock than ordered");
-        }
+    // Triggered by inventory system to reserve the stock
+    public void assignQuantity(Integer quantity) {
+        isNonNegative(quantity, "Quantity cannot be negative");
+        validateAssignedQuantity(quantity, "Cannot assign more stock than ordered");
+
         this.assignedQuantity += quantity;
 
         // Si llegamos al total, podríamos cambiar el estado automáticamente
         if (this.assignedQuantity.equals(this.requestedQuantity)) {
-            this.orderLineStatus = OrderLineStatus.FULFILLED;
+            this.orderLineStatus = OrderLineStatus.NEW;
         }
     }
 
-    // Utilities
-
-    private static void validateNotNull(Object value, String message) {
-        if (value == null) {
-            throw new IllegalArgumentException(message);
+    private void validateAssignedQuantity(Integer quantity, String message) {
+        if (this.assignedQuantity + quantity > this.requestedQuantity) {
+            throw new IllegalStateException(message);
         }
     }
 

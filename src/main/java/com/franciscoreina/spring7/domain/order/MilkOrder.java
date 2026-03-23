@@ -31,6 +31,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import static com.franciscoreina.spring7.domain.base.DomainAssert.notBlank;
+import static com.franciscoreina.spring7.domain.base.DomainAssert.notNull;
+
 @Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
 @AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
@@ -57,11 +60,13 @@ public class MilkOrder extends BaseEntity {
 
     // JPA Relationships
 
+    @NotNull
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
     @Builder.Default
+    @NotNull
     @OneToMany(mappedBy = "milkOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<OrderLine> orderLines = new HashSet<>();
 
@@ -71,8 +76,8 @@ public class MilkOrder extends BaseEntity {
     // Factory Method
 
     public static MilkOrder createMilkOrder(Customer customer, String customerRef) {
-        validateNotNull(customer, "Customer is required");
-        validateNotBlank(customerRef, "CustomerRef is required");
+        notNull(customer, "Customer is required");
+        notBlank(customerRef, "CustomerRef is required");
 
         return MilkOrder.builder()
                 .customer(customer)
@@ -88,8 +93,8 @@ public class MilkOrder extends BaseEntity {
     }
 
     public void addOrderLine(OrderLine orderLine) {
-        validateNotNull(orderLine, "OrderLine is required");
-        checkOrderIsModifiable();
+        notNull(orderLine, "OrderLine is required");
+        checkOrderIsModifiable("Order already has a shipment");
 
         if (this.orderLines.add(orderLine)) {
             orderLine.setMilkOrder(this);
@@ -98,8 +103,8 @@ public class MilkOrder extends BaseEntity {
     }
 
     public void removeOrderLine(OrderLine orderLine) {
-        validateNotNull(orderLine, "OrderLine is required");
-        checkOrderIsModifiable();
+        notNull(orderLine, "OrderLine is required");
+        checkOrderIsModifiable("Order already has a shipment");
 
         if (this.orderLines.remove(orderLine)) {
             // orderLine.setMilkOrder(null); <- not needed, orphanRemoval = true
@@ -108,9 +113,9 @@ public class MilkOrder extends BaseEntity {
     }
 
     public void updateOrderLineQuantity(OrderLine orderLine, Integer newQuantity) {
-        validateNotNull(orderLine, "OrderLine is required");
-        validateNotNull(newQuantity, "New quantity is required");
-        checkOrderIsModifiable();
+        notNull(orderLine, "OrderLine is required");
+        notNull(newQuantity, "New quantity is required");
+        checkOrderIsModifiable("Order already has a shipment");
         checkOrderLineBelongsToOrder(orderLine, "OrderLine does not belong to this order");
 
         orderLine.updateQuantity(newQuantity);
@@ -118,30 +123,18 @@ public class MilkOrder extends BaseEntity {
     }
 
     public void addOrderShipment(OrderShipment orderShipment) {
-        validateNotNull(orderShipment, "OrderShipment is required");
-        checkOrderIsModifiable();
+        notNull(orderShipment, "OrderShipment is required");
+        checkOrderIsModifiable("Order already has a shipment");
 
-        this.orderShipment = orderShipment;
         orderShipment.setMilkOrder(this);
+        this.orderShipment = orderShipment;
     }
 
     // Utilities
 
-    private static void validateNotBlank(String value, String message) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(message);
-        }
-    }
-
-    private static void validateNotNull(Object value, String message) {
-        if (value == null) {
-            throw new IllegalArgumentException(message);
-        }
-    }
-
-    private void checkOrderIsModifiable() {
+    private void checkOrderIsModifiable(String message) {
         if (this.orderShipment != null) {
-            throw new IllegalStateException("Order already has a shipment");
+            throw new IllegalStateException(message);
         }
     }
 

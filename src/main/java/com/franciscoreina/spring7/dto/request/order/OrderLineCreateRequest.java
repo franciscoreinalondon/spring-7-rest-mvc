@@ -5,6 +5,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -12,7 +13,7 @@ import java.util.UUID;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record OrderLineCreateRequest(
         @NotNull
-        @Min(value = 1, message = "Requested quantity must be greater than 0")
+        @Positive(message = "Requested quantity must be greater than 0")
         Integer requestedQuantity,
 
         @NotNull

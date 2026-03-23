@@ -16,6 +16,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import static com.franciscoreina.spring7.domain.base.DomainAssert.notBlank;
+
 @Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
 @AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
@@ -42,8 +44,8 @@ public class Customer extends BaseEntity {
     // Factory Method
 
     public static Customer createCustomer(String name, String email) {
-        validateNotBlank(name, "Name is required");
-        validateNotBlank(email, "Email is required");
+        notBlank(name, "Name is required");
+        notBlank(email, "Email is required");
 
         return Customer.builder()
                 .name(name.trim())
@@ -54,22 +56,16 @@ public class Customer extends BaseEntity {
     // Business Methods (Rich Model)
 
     public void renameTo(String newName) {
-        validateNotBlank(newName, "Name cannot be empty");
+        notBlank(newName, "Name cannot be empty");
         this.name = newName.trim();
     }
 
     public void changeEmailTo(String newEmail) {
-        validateNotBlank(newEmail, "Email cannot be empty");
+        notBlank(newEmail, "Email cannot be empty");
         this.email = normalizeEmail(newEmail);
     }
 
     // Utilities
-
-    private static void validateNotBlank(String value, String message) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(message);
-        }
-    }
 
     private static String normalizeEmail(String email) {
         return email.toLowerCase().trim();

@@ -14,6 +14,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
@@ -26,10 +27,15 @@ import lombok.Setter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
+import static com.franciscoreina.spring7.domain.base.DomainAssert.isNonNegative;
+import static com.franciscoreina.spring7.domain.base.DomainAssert.isPositive;
+import static com.franciscoreina.spring7.domain.base.DomainAssert.notBlank;
+import static com.franciscoreina.spring7.domain.base.DomainAssert.notEmpty;
+import static com.franciscoreina.spring7.domain.base.DomainAssert.notNull;
 
 @Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
@@ -72,6 +78,7 @@ public class Milk extends BaseEntity {
     // JPA Relationships
 
     @Builder.Default
+    @NotEmpty
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "milk_category",
             joinColumns = @JoinColumn(name = "milk_id"),
@@ -81,12 +88,12 @@ public class Milk extends BaseEntity {
     // Factory Method
 
     public static Milk createMilk(String name, MilkType milkType, String upc, BigDecimal price, Integer stock, Set<Category> initialCategories) {
-        validateNotBlank(name, "Name is required");
-        validateNotNull(milkType, "MilkType is required");
-        validateNotBlank(upc, "UPC is required");
-        validateNotNull(price, "Price is required");
-        validateNotNull(stock, "Stock is required");
-        validateNotEmpty(initialCategories, "At least one category is required");
+        notBlank(name, "Name is required");
+        notNull(milkType, "MilkType is required");
+        notBlank(upc, "UPC is required");
+        notNull(price, "Price is required");
+        notNull(stock, "Stock is required");
+        notEmpty(initialCategories, "At least one category is required");
 
         var milk = Milk.builder()
                 .name(name.trim())
@@ -107,34 +114,26 @@ public class Milk extends BaseEntity {
     }
 
     public void addCategory(Category category) {
-        validateNotNull(category, "Category is required");
+        notNull(category, "Category is required");
         this.categories.add(category);
     }
 
     public void removeCategory(Category category) {
-        if (categories.size() <= 1) {
-            throw new IllegalStateException("A milk product must have at least one category");
-        }
+        isPositive(categories.size(), "Milk product must have at least one category");
         this.categories.remove(category);
+    }
+
+    public void decreaseStock(Integer amount) {
+        isNonNegative(amount, "Amount must be positive");
+        checkStockAvailable(amount);
+        this.stock -= amount;
     }
 
     // Utilities
 
-    private static void validateNotBlank(String value, String message) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(message);
-        }
-    }
-
-    private static void validateNotNull(Object value, String message) {
-        if (value == null) {
-            throw new IllegalArgumentException(message);
-        }
-    }
-
-    private static void validateNotEmpty(Collection<?> collection, String message) {
-        if (collection == null || collection.isEmpty()) {
-            throw new IllegalArgumentException(message);
+    private void checkStockAvailable(Integer amount) {
+        if (this.stock < amount) {
+            throw new IllegalStateException("Not enough stock available");
         }
     }
 

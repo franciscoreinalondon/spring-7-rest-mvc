@@ -15,6 +15,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import static com.franciscoreina.spring7.domain.base.DomainAssert.notBlank;
+
 @Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
 @AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
@@ -35,19 +37,11 @@ public class Category extends BaseEntity {
     // Factory Method
 
     public static Category createCategory(String description) {
-        validateNotBlank(description, "Description is required");
+        notBlank(description, "Description is required");
 
         return Category.builder()
                 .description(description.trim())
                 .build();
-    }
-
-    // Utilities
-
-    private static void validateNotBlank(String value, String message) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(message);
-        }
     }
 
     // Equals / HashCode
