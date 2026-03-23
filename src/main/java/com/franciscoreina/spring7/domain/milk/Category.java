@@ -1,13 +1,10 @@
 package com.franciscoreina.spring7.domain.milk;
 
+import com.franciscoreina.spring7.domain.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Version;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
@@ -16,12 +13,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
@@ -31,23 +23,7 @@ import java.util.UUID;
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "category")
-public class Category {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(updatable = false)
-    private UUID id;
-
-    @Version
-    private Integer version;
-
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @LastModifiedDate
-    @Column(nullable = false)
-    private Instant updatedAt;
+public class Category extends BaseEntity {
 
     // Business Attributes
 
@@ -80,7 +56,7 @@ public class Category {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Category that)) return false;
-        return id != null && id.equals(that.id);
+        return getId() != null && getId().equals(that.getId());
     }
 
     @Override

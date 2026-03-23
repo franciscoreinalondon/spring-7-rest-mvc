@@ -1,18 +1,16 @@
 package com.franciscoreina.spring7.domain.milk;
 
+import com.franciscoreina.spring7.domain.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
-import jakarta.persistence.Version;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
@@ -24,42 +22,24 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
+import lombok.Setter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 @Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
 @AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
 @Getter
+@Setter(AccessLevel.NONE) // Defensive programming
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "milk")
-public class Milk {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(updatable = false)
-    private UUID id;
-
-    @Version
-    private Integer version;
-
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @LastModifiedDate
-    @Column(nullable = false)
-    private Instant updatedAt;
+public class Milk extends BaseEntity {
 
     // Business Attributes
 
@@ -92,7 +72,7 @@ public class Milk {
     // JPA Relationships
 
     @Builder.Default
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "milk_category",
             joinColumns = @JoinColumn(name = "milk_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id"))
@@ -164,7 +144,7 @@ public class Milk {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Milk that)) return false;
-        return id != null && id.equals(that.id);
+        return getId() != null && getId().equals(that.getId());
     }
 
     @Override

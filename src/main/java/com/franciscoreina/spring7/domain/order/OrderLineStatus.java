@@ -1,5 +1,9 @@
 package com.franciscoreina.spring7.domain.order;
 
 public enum OrderLineStatus {
-    NEW, COMPLETE
+    NEW,           // Added to order, not yet validated
+    ALLOCATED,     // Stock reserved (stockAllocated > 0)
+    OUT_OF_STOCK,  // Not enough stock available
+    FULFILLED,     // Ready to ship (fully allocated)
+    CANCELLED      // Line cancelled
 }

@@ -1,20 +1,17 @@
 package com.franciscoreina.spring7.domain.order;
 
+import com.franciscoreina.spring7.domain.base.BaseEntity;
 import com.franciscoreina.spring7.domain.customer.Customer;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Version;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
@@ -26,41 +23,23 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
+import lombok.Setter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 @Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
 @AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
 @Getter
+@Setter(AccessLevel.NONE) // Defensive programming
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "milk_order")
-public class MilkOrder {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(updatable = false)
-    private UUID id;
-
-    @Version
-    private Integer version;
-
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @LastModifiedDate
-    @Column(nullable = false)
-    private Instant updatedAt;
+public class MilkOrder extends BaseEntity {
 
     // Business Attributes
 
@@ -110,7 +89,7 @@ public class MilkOrder {
 
     public void addOrderLine(OrderLine orderLine) {
         validateNotNull(orderLine, "OrderLine is required");
-        checkOrderIsModifiable("Cannot add lines to a shipped order");
+        checkOrderIsModifiable();
 
         if (this.orderLines.add(orderLine)) {
             orderLine.setMilkOrder(this);
@@ -120,10 +99,10 @@ public class MilkOrder {
 
     public void removeOrderLine(OrderLine orderLine) {
         validateNotNull(orderLine, "OrderLine is required");
-        checkOrderIsModifiable("Cannot remove lines to a shipped order");
+        checkOrderIsModifiable();
 
         if (this.orderLines.remove(orderLine)) {
-            orderLine.setMilkOrder(null);
+            // orderLine.setMilkOrder(null); <- not needed, orphanRemoval = true
             this.paymentAmount = getTotalAmount();
         }
     }
@@ -131,7 +110,7 @@ public class MilkOrder {
     public void updateOrderLineQuantity(OrderLine orderLine, Integer newQuantity) {
         validateNotNull(orderLine, "OrderLine is required");
         validateNotNull(newQuantity, "New quantity is required");
-        checkOrderIsModifiable("Cannot update quantity on a shipped order");
+        checkOrderIsModifiable();
         checkOrderLineBelongsToOrder(orderLine, "OrderLine does not belong to this order");
 
         orderLine.updateQuantity(newQuantity);
@@ -140,7 +119,7 @@ public class MilkOrder {
 
     public void addOrderShipment(OrderShipment orderShipment) {
         validateNotNull(orderShipment, "OrderShipment is required");
-        checkOrderIsModifiable("Order already has a shipment");
+        checkOrderIsModifiable();
 
         this.orderShipment = orderShipment;
         orderShipment.setMilkOrder(this);
@@ -160,9 +139,9 @@ public class MilkOrder {
         }
     }
 
-    private void checkOrderIsModifiable(String message) {
+    private void checkOrderIsModifiable() {
         if (this.orderShipment != null) {
-            throw new IllegalStateException(message);
+            throw new IllegalStateException("Order already has a shipment");
         }
     }
 
@@ -185,7 +164,7 @@ public class MilkOrder {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof MilkOrder that)) return false;
-        return id != null && id.equals(that.id);
+        return getId() != null && getId().equals(that.getId());
     }
 
     @Override

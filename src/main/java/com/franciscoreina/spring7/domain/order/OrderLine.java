@@ -1,18 +1,16 @@
 package com.franciscoreina.spring7.domain.order;
 
+import com.franciscoreina.spring7.domain.base.BaseEntity;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Version;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
@@ -23,40 +21,22 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
+import lombok.Setter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.UUID;
 
 @Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
 @AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
 @Getter
+@Setter(AccessLevel.NONE) // Defensive programming
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "milk_order_line")
-public class OrderLine {
+public class OrderLine extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(nullable = false)
-    private UUID id;
-
-    @Version
-    private Integer version;
-
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @LastModifiedDate
-    @Column(nullable = false)
-    private Instant updatedAt;
-
-    // Entity attributes
+    // Business Attributes
 
     @NotNull
     @Min(value = 1, message = "Quantity on hand must be greater than 0")
@@ -81,27 +61,35 @@ public class OrderLine {
 
     // JPA Relationships
 
-    @ManyToOne(optional = false)
+    @NotNull
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "milk_order_id", nullable = false)
     private MilkOrder milkOrder;
 
-    @ManyToOne(optional = false)
+    @NotNull
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "milk_id", nullable = false)
     private Milk milk;
 
-    // Methods
+    // Factory Method
 
     public static OrderLine createOrderLine(Milk milk, Integer quantity) {
+        validateNotNull(milk, "Milk is required");
+        validateNotNull(quantity, "Quantity is required");
+
         return OrderLine.builder()
                 .milk(milk)
                 .orderQuantity(quantity)
                 .priceAtPurchase(milk.getPrice())
-                .stockAllocated(0)// tbf
+                .stockAllocated(0)//tbf
                 .orderLineStatus(OrderLineStatus.NEW)
                 .build();
     }
 
+    // Business Methods (Rich Model)
+
     void setMilkOrder(MilkOrder milkOrder) {
+        validateNotNull(milkOrder, "MilkOrder is required");
         this.milkOrder = milkOrder;
     }
 
@@ -112,11 +100,34 @@ public class OrderLine {
         this.orderQuantity = newQuantity;
     }
 
+    public void allocateStock(Integer quantity) {
+        if (quantity == null || quantity < 0) throw new IllegalArgumentException("Quantity cannot be negative");
+        if (this.stockAllocated + quantity > this.orderQuantity) {
+            throw new IllegalStateException("Cannot allocate more stock than ordered");
+        }
+        this.stockAllocated += quantity;
+
+        // Si llegamos al total, podríamos cambiar el estado automáticamente
+        if (this.stockAllocated.equals(this.orderQuantity)) {
+            this.orderLineStatus = OrderLineStatus.FULFILLED;
+        }
+    }
+
+    // Utilities
+
+    private static void validateNotNull(Object value, String message) {
+        if (value == null) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    // Equals / HashCode
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof OrderLine that)) return false;
-        return id != null && id.equals(that.id);
+        return super.getId() != null && super.getId().equals(that.getId());
     }
 
     @Override
