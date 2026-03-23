@@ -8,10 +8,11 @@ import lombok.Builder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Builder
 public record CustomerPatchRequest(
+
         @Size(max = 50)
         String name,
 
-        @Email(message = "Invalid email format")
+        @Email
         @Size(max = 120)
         String email
 ) {

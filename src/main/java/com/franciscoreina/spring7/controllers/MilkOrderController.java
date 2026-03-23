@@ -1,7 +1,7 @@
 package com.franciscoreina.spring7.controllers;
 
 import com.franciscoreina.spring7.api.ApiPaths;
-import com.franciscoreina.spring7.dto.request.order.MilkOrderCreateRequest;
+import com.franciscoreina.spring7.dto.request.order.MilkOrderRequest;
 import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
 import com.franciscoreina.spring7.services.MilkOrderService;
 import jakarta.validation.Valid;
@@ -28,7 +28,7 @@ public class MilkOrderController {
     private final MilkOrderService milkOrderService;
 
     @PostMapping
-    public ResponseEntity<Void> create(@Valid @RequestBody MilkOrderCreateRequest request) {
+    public ResponseEntity<Void> create(@Valid @RequestBody MilkOrderRequest request) {
         var milkOrderResponse = milkOrderService.create(request);
         var location = URI.create(ApiPaths.MILK_ORDERS + "/" + milkOrderResponse.id());
 

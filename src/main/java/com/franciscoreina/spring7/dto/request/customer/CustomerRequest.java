@@ -9,13 +9,14 @@ import lombok.Builder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Builder
 public record CustomerRequest(
+
         @NotBlank
         @Size(max = 50)
         String name,
 
         @NotBlank
-        @Email(message = "Invalid email format")
         @Size(max = 120)
+        @Email
         String email
 ) {
 }

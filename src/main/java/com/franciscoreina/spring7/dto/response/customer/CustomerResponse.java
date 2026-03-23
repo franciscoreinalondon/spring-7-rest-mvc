@@ -9,6 +9,7 @@ import java.util.UUID;
 public record CustomerResponse(
         UUID id,
         Instant createdAt,
+        // Business Attributes
         String name,
         String email
 ) {

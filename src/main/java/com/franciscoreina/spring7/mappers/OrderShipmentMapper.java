@@ -1,7 +1,7 @@
 package com.franciscoreina.spring7.mappers;
 
 import com.franciscoreina.spring7.domain.order.OrderShipment;
-import com.franciscoreina.spring7.dto.request.order.OrderShipmentCreateRequest;
+import com.franciscoreina.spring7.dto.request.order.OrderShipmentRequest;
 import com.franciscoreina.spring7.dto.response.order.OrderShipmentResponse;
 import org.mapstruct.Mapping;
 
@@ -11,7 +11,7 @@ public interface OrderShipmentMapper {
     @Mapping(target = "version", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    OrderShipment toEntity(OrderShipmentCreateRequest orderShipmentCreateRequest);
+    OrderShipment toEntity(OrderShipmentRequest orderShipmentCreateRequest);
 
     OrderShipmentResponse toResponse(OrderShipment orderShipment);
 

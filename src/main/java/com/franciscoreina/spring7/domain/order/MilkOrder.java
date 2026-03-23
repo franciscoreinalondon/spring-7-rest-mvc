@@ -13,11 +13,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -52,7 +52,7 @@ public class MilkOrder extends BaseEntity {
     private String customerRef;
 
     @NotNull
-    @DecimalMin("0.00")
+    @PositiveOrZero
     @Digits(integer = 10, fraction = 2)
     @Column(nullable = false, precision = 14, scale = 2)
     private BigDecimal paymentAmount;

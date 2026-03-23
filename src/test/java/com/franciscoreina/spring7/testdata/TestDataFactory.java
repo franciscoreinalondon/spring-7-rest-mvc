@@ -10,7 +10,7 @@ import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
-import com.franciscoreina.spring7.dto.request.order.MilkOrderCreateRequest;
+import com.franciscoreina.spring7.dto.request.order.MilkOrderRequest;
 import com.franciscoreina.spring7.dto.request.order.OrderLineCreateRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
@@ -19,6 +19,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -197,15 +198,23 @@ public class TestDataFactory {
 
     //tbf
     public static OrderLineCreateRequest getOrderLineCreateRequest(UUID milkId) {
-        return new OrderLineCreateRequest(2, milkId, new BigDecimal(0));
+        return new OrderLineCreateRequest(2, milkId);
     }
 
-    public static MilkOrderCreateRequest getMilkOrderCreateRequest(UUID customerId, OrderLineCreateRequest orderLineCreateRequest) {
-        return new MilkOrderCreateRequest("1234TDF".toString(), new BigDecimal("10.00"), customerId, Set.of(orderLineCreateRequest), null);
+    public static MilkOrderRequest getMilkOrderCreateRequest(UUID customerId, OrderLineCreateRequest orderLineCreateRequest) {
+        return new MilkOrderRequest("1234TDF".toString(), customerId, Set.of(orderLineCreateRequest));
     }
 
     public static MilkOrderResponse getMilkOrderResponse(MilkOrder milkOrder) {
-        return new MilkOrderResponse(milkOrder.getId(), milkOrder.getVersion(), milkOrder.getCustomerRef(), milkOrder.getPaymentAmount(), milkOrder.getCreatedAt(), milkOrder.getUpdatedAt(), milkOrder.getCustomer().getId(), milkOrder.getOrderLines().stream().map(OrderLine::getId).collect(Collectors.toSet()), milkOrder.getOrderShipment() != null ? milkOrder.getOrderShipment().getId() : null);
+        return new MilkOrderResponse(
+                milkOrder.getId(),
+                milkOrder.getCreatedAt(),
+                milkOrder.getCustomerRef(),
+                milkOrder.getPaymentAmount(),
+                milkOrder.getMilkOrderStatus(),
+                milkOrder.getCustomer().getId(),
+                milkOrder.getOrderLines().stream().map(OrderLine::getId).collect(Collectors.toSet()),
+                milkOrder.getOrderShipment() != null ? milkOrder.getOrderShipment().getId() : null);
     }
 
 // ---------------

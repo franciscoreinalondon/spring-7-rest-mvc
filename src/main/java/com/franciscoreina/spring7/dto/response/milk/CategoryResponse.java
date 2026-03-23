@@ -9,6 +9,7 @@ import java.util.UUID;
 public record CategoryResponse(
         UUID id,
         Instant createdAt,
+        // Business Attributes
         String description
 ) {
 }

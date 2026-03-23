@@ -4,7 +4,7 @@ import com.franciscoreina.spring7.api.ApiPaths;
 import com.franciscoreina.spring7.domain.customer.Customer;
 import com.franciscoreina.spring7.domain.order.MilkOrder;
 import com.franciscoreina.spring7.domain.order.OrderLine;
-import com.franciscoreina.spring7.dto.request.order.MilkOrderCreateRequest;
+import com.franciscoreina.spring7.dto.request.order.MilkOrderRequest;
 import com.franciscoreina.spring7.dto.request.order.OrderLineCreateRequest;
 import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
 import com.franciscoreina.spring7.services.MilkOrderService;
@@ -51,7 +51,7 @@ class MilkOrderControllerTest {
     Customer savedCustomer;
     OrderLine savedOrderLine;
     MilkOrder savedMilkOrder;
-    MilkOrderCreateRequest milkOrderCreateRequest;
+    MilkOrderRequest milkOrderCreateRequest;
     MilkOrderResponse milkOrderResponse;
     OrderLineCreateRequest orderLineCreateRequest;
 

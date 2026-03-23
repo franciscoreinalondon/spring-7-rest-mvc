@@ -12,11 +12,13 @@ import java.util.UUID;
 public record MilkResponse(
         UUID id,
         Instant createdAt,
+        // Business Attributes
         String name,
         MilkType milkType,
         String upc,
         BigDecimal price,
         Integer stock,
+        // JPA Relationships
         Set<UUID> categoryIds
 ) {
 }

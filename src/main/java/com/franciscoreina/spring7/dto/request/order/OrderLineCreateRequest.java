@@ -1,27 +1,23 @@
 package com.franciscoreina.spring7.dto.request.order;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import lombok.Builder;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Builder
 public record OrderLineCreateRequest(
+
         @NotNull
-        @Positive(message = "Requested quantity must be greater than 0")
+        @Positive
         Integer requestedQuantity,
 
-        @NotNull
-        UUID milkId,
+        // JPA Relationships
 
         @NotNull
-        @DecimalMin("0.00")
-        @Digits(integer = 10, fraction = 2)
-        BigDecimal priceAtPurchase
+        UUID milkId
 ) {
 }

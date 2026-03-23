@@ -2,7 +2,7 @@ package com.franciscoreina.spring7.services;
 
 import com.franciscoreina.spring7.domain.order.MilkOrder;
 import com.franciscoreina.spring7.domain.order.OrderLine;
-import com.franciscoreina.spring7.dto.request.order.MilkOrderCreateRequest;
+import com.franciscoreina.spring7.dto.request.order.MilkOrderRequest;
 import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.mappers.MilkOrderMapper;
@@ -28,7 +28,7 @@ public class MilkOrderServiceImpl implements MilkOrderService {
     private final MilkOrderMapper milkOrderMapper;
 
     @Override
-    public MilkOrderResponse create(MilkOrderCreateRequest request) {
+    public MilkOrderResponse create(MilkOrderRequest request) {
         var savedCustomer = customerRepository.findById(request.customerId())
                 .orElseThrow(() -> new NotFoundException("Customer not found: " + request.customerId()));
 

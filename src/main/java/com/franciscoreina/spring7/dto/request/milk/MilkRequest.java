@@ -19,6 +19,7 @@ import java.util.UUID;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Builder
 public record MilkRequest(
+
         @NotBlank
         @Size(max = 50)
         String name,
@@ -32,13 +33,15 @@ public record MilkRequest(
         String upc,
 
         @NotNull
-        @Positive(message = "Price must be greater than 0")
+        @Positive
         @Digits(integer = 10, fraction = 2)
         BigDecimal price,
 
         @NotNull
         @PositiveOrZero
         Integer stock,
+
+        // JPA Relationships
 
         @NotEmpty
         Set<@NotNull UUID> categoryIds

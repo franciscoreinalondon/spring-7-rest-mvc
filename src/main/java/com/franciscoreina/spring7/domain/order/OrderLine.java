@@ -10,7 +10,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -56,7 +55,7 @@ public class OrderLine extends BaseEntity {
     private OrderLineStatus orderLineStatus = OrderLineStatus.NEW;
 
     @NotNull
-    @DecimalMin("0.00")
+    @Positive(message = "Price at purchase must be greater than 0")
     @Digits(integer = 10, fraction = 2)
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal priceAtPurchase;

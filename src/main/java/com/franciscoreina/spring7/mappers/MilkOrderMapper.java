@@ -4,16 +4,13 @@ import com.franciscoreina.spring7.domain.customer.Customer;
 import com.franciscoreina.spring7.domain.order.MilkOrder;
 import com.franciscoreina.spring7.domain.order.OrderLine;
 import com.franciscoreina.spring7.domain.order.OrderShipment;
-import com.franciscoreina.spring7.dto.request.order.MilkOrderCreateRequest;
+import com.franciscoreina.spring7.dto.request.order.MilkOrderRequest;
 import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
-import org.mapstruct.AfterMapping;
 import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 import org.mapstruct.ObjectFactory;
 
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -22,7 +19,7 @@ import java.util.stream.Collectors;
 public interface MilkOrderMapper {
 
     @ObjectFactory
-    default MilkOrder createMilkOrder(MilkOrderCreateRequest request, @Context Customer customer) {
+    default MilkOrder createMilkOrder(MilkOrderRequest request, @Context Customer customer) {
         return MilkOrder.createMilkOrder(customer, request.customerRef());
     }
 
