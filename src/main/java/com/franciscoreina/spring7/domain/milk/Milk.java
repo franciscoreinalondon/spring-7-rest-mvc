@@ -84,22 +84,22 @@ public class Milk extends BaseEntity {
 
     // Factory Method
 
-    public static Milk createMilk(String name, MilkType milkType, String upc, BigDecimal price, Integer stock, Set<Category> initialCategories) {
+    public static Milk createMilk(String name, MilkType milkType, String upc, BigDecimal price, Integer stock, Set<Category> categories) {
         notBlank(name, "Name is required");
         notNull(milkType, "MilkType is required");
         notBlank(upc, "UPC is required");
         notNull(price, "Price is required");
         notNull(stock, "Stock is required");
-        notEmpty(initialCategories, "At least one category is required");
+        notEmpty(categories, "At least one category is required");
 
-        var milk = Milk.builder()
+        Milk milk = Milk.builder()
                 .name(name.trim())
                 .milkType(milkType)
                 .upc(upc.trim())
                 .price(price)
                 .stock(stock)
                 .build();
-        initialCategories.forEach(milk::addCategory);
+        categories.forEach(milk::addCategory);
 
         return milk;
     }

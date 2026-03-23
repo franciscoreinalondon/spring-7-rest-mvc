@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notBlank;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notNull;
@@ -23,6 +24,7 @@ import static com.franciscoreina.spring7.domain.base.DomainAssert.notNull;
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
 @AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
 @Getter
+@Setter(AccessLevel.NONE) // Defensive programming
 @Entity
 @Table(name = "milk_order_shipment")
 public class OrderShipment extends BaseEntity {
@@ -43,11 +45,13 @@ public class OrderShipment extends BaseEntity {
 
     // Factory Method
 
-    public static OrderShipment createOrderShipment(String trackingNumber) {
+    public static OrderShipment createOrderShipment(String trackingNumber, MilkOrder milkOrder) {
         notBlank(trackingNumber, "Tracking number is required");
+        notNull(milkOrder, "MilkOrder is required");
 
         return OrderShipment.builder()
                 .trackingNumber(trackingNumber.trim())
+                .milkOrder(milkOrder)
                 .build();
     }
 
