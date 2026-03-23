@@ -36,4 +36,10 @@ public final class DomainAssert {
             throw new IllegalArgumentException(message);
         }
     }
+
+    public static <T> void cannotRemoveLastElement(Collection<T> collection, T element, String message) {
+        if (collection != null && collection.contains(element) && collection.size() <= 1) {
+            throw new IllegalStateException(message);
+        }
+    }
 }

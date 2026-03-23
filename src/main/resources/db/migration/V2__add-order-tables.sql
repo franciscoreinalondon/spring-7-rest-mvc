@@ -11,6 +11,8 @@ create table milk_order (
                       customer_id binary(16) not null,
                       customer_ref varchar(50) not null unique,
                       payment_amount decimal(14,2) not null,
+                      milk_order_status enum ('NEW', 'CONFIRMED', 'SHIPPED', 'CANCELLED') not null,
+
                       primary key (id)
 ) engine=InnoDB;
 
@@ -23,7 +25,7 @@ create table milk_order_line (
                       milk_order_id binary(16) not null,
                       requested_quantity integer not null,
                       assigned_quantity integer not null,
-                      order_line_status enum ('NEW', 'COMPLETE') not null,
+                      order_line_status enum ('NEW', 'ALLOCATED', 'OUT_OF_STOCK') not null,
                       price_at_purchase decimal(12,2) not null,
                       primary key (id)
 ) engine=InnoDB;

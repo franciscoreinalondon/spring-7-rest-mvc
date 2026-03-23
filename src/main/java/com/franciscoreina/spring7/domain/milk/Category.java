@@ -3,7 +3,6 @@ package com.franciscoreina.spring7.domain.milk;
 import com.franciscoreina.spring7.domain.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -13,7 +12,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notBlank;
 
@@ -22,7 +20,6 @@ import static com.franciscoreina.spring7.domain.base.DomainAssert.notBlank;
 @AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
 @Getter
 @Setter
-@EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "category")
 public class Category extends BaseEntity {

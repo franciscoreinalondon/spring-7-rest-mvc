@@ -3,7 +3,6 @@ package com.franciscoreina.spring7.domain.milk;
 import com.franciscoreina.spring7.domain.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -24,15 +23,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import static com.franciscoreina.spring7.domain.base.DomainAssert.cannotRemoveLastElement;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.isNonNegative;
-import static com.franciscoreina.spring7.domain.base.DomainAssert.isPositive;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notBlank;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notEmpty;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notNull;
@@ -42,7 +40,6 @@ import static com.franciscoreina.spring7.domain.base.DomainAssert.notNull;
 @AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
 @Getter
 @Setter(AccessLevel.NONE) // Defensive programming
-@EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "milk")
 public class Milk extends BaseEntity {
@@ -119,7 +116,7 @@ public class Milk extends BaseEntity {
     }
 
     public void removeCategory(Category category) {
-        isPositive(categories.size(), "Milk product must have at least one category");
+        cannotRemoveLastElement(categories, category, "Milk product must have at least one category");
         this.categories.remove(category);
     }
 

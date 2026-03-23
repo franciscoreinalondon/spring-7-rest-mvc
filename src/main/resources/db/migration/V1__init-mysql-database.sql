@@ -22,7 +22,7 @@ create table milk (
                       id binary(16) not null,
                       name varchar(50) not null,
                       upc varchar(50) not null,
-                      milk_type enum ('WHOLE','SEMI_SKIMMED','SKIMMED','LACTOSE_FREE','A2','ORGANIC_WHOLE','GOAT','HIGH_PROTEIN') not null,
+                      milk_type enum ('A2', 'GOAT', 'HIGH_PROTEIN', 'LACTOSE_FREE', 'ORGANIC_WHOLE', 'SEMI_SKIMMED', 'SKIMMED', 'WHOLE') not null,
                       primary key (id)
 ) engine=InnoDB;
 

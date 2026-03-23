@@ -5,7 +5,8 @@ import com.franciscoreina.spring7.domain.customer.Customer;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -24,7 +25,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -39,7 +39,6 @@ import static com.franciscoreina.spring7.domain.base.DomainAssert.notNull;
 @AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
 @Getter
 @Setter(AccessLevel.NONE) // Defensive programming
-@EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "milk_order")
 public class MilkOrder extends BaseEntity {
@@ -57,6 +56,12 @@ public class MilkOrder extends BaseEntity {
     @Digits(integer = 10, fraction = 2)
     @Column(nullable = false, precision = 14, scale = 2)
     private BigDecimal paymentAmount;
+
+    @Builder.Default
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MilkOrderStatus milkOrderStatus = MilkOrderStatus.NEW;
 
     // JPA Relationships
 

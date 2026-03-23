@@ -4,7 +4,6 @@ import com.franciscoreina.spring7.domain.base.BaseEntity;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -22,20 +21,18 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 
-import static com.franciscoreina.spring7.domain.base.DomainAssert.notNull;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.isNonNegative;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.isPositive;
+import static com.franciscoreina.spring7.domain.base.DomainAssert.notNull;
 
 @Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
 @AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
 @Getter
 @Setter(AccessLevel.NONE) // Defensive programming
-@EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "milk_order_line")
 public class OrderLine extends BaseEntity {
@@ -80,6 +77,7 @@ public class OrderLine extends BaseEntity {
 
     public static OrderLine createOrderLine(Milk milk, Integer quantity) {
         notNull(milk, "Milk is required");
+        notNull(milk.getPrice(), "Price milk is required");
         notNull(quantity, "Quantity is required");
 
         return OrderLine.builder()
