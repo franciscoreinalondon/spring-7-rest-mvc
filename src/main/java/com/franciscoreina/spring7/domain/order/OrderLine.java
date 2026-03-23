@@ -105,6 +105,13 @@ public class OrderLine {
         this.milkOrder = milkOrder;
     }
 
+    void updateQuantity(Integer newQuantity) {
+        if (newQuantity == null || newQuantity < 1) {
+            throw new IllegalArgumentException("Quantity must be at least 1");
+        }
+        this.orderQuantity = newQuantity;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -62,7 +62,7 @@ public class MilkOrder {
     @Column(nullable = false)
     private Instant updatedAt;
 
-    // Entity attributes
+    // Business Attributes
 
     @NotBlank
     @Size(max = 50)
@@ -89,29 +89,27 @@ public class MilkOrder {
     @OneToOne(mappedBy = "milkOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private OrderShipment orderShipment;
 
-    // Methods
+    // Factory Method
 
     public static MilkOrder createMilkOrder(Customer customer, String customerRef) {
-        if (customer == null) throw new IllegalArgumentException("Customer cannot be null");
-        if (customerRef == null || customerRef.isBlank())
-            throw new IllegalArgumentException("Customer reference is required");
+        validateNotNull(customer, "Customer is required");
+        validateNotBlank(customerRef, "CustomerRef is required");
 
         return MilkOrder.builder()
                 .customer(customer)
-                .customerRef(customerRef)
+                .customerRef(customerRef.trim().toUpperCase())
                 .paymentAmount(BigDecimal.ZERO)
                 .build();
     }
 
-    public void setCustomer(Customer customer) {
-        this.customer = customer;
-    }
+    // Business Methods (Rich Model)
 
     public Set<OrderLine> getOrderLines() {
         return Collections.unmodifiableSet(orderLines);
     }
 
     public void addOrderLine(OrderLine orderLine) {
+        validateNotNull(orderLine, "OrderLine is required");
         checkOrderIsModifiable("Cannot add lines to a shipped order");
 
         if (this.orderLines.add(orderLine)) {
@@ -121,11 +119,44 @@ public class MilkOrder {
     }
 
     public void removeOrderLine(OrderLine orderLine) {
+        validateNotNull(orderLine, "OrderLine is required");
         checkOrderIsModifiable("Cannot remove lines to a shipped order");
 
         if (this.orderLines.remove(orderLine)) {
             orderLine.setMilkOrder(null);
             this.paymentAmount = getTotalAmount();
+        }
+    }
+
+    public void updateOrderLineQuantity(OrderLine orderLine, Integer newQuantity) {
+        validateNotNull(orderLine, "OrderLine is required");
+        validateNotNull(newQuantity, "New quantity is required");
+        checkOrderIsModifiable("Cannot update quantity on a shipped order");
+        checkOrderLineBelongsToOrder(orderLine, "OrderLine does not belong to this order");
+
+        orderLine.updateQuantity(newQuantity);
+        this.paymentAmount = getTotalAmount();
+    }
+
+    public void addOrderShipment(OrderShipment orderShipment) {
+        validateNotNull(orderShipment, "OrderShipment is required");
+        checkOrderIsModifiable("Order already has a shipment");
+
+        this.orderShipment = orderShipment;
+        orderShipment.setMilkOrder(this);
+    }
+
+    // Utilities
+
+    private static void validateNotBlank(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    private static void validateNotNull(Object value, String message) {
+        if (value == null) {
+            throw new IllegalArgumentException(message);
         }
     }
 
@@ -135,21 +166,20 @@ public class MilkOrder {
         }
     }
 
-    public BigDecimal getTotalAmount() {
+    private void checkOrderLineBelongsToOrder(OrderLine orderLine, String message) {
+        if (!this.orderLines.contains(orderLine)) {
+            throw new IllegalStateException(message);
+        }
+    }
+
+    private BigDecimal getTotalAmount() {
         return orderLines.stream()
-                .map(line -> line.getPriceAtPurchase().multiply(BigDecimal.valueOf(line.getOrderQuantity())))
+                .map(line -> line.getPriceAtPurchase()
+                        .multiply(BigDecimal.valueOf(line.getOrderQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public void addOrderShipment(OrderShipment orderShipment) {
-        checkOrderIsModifiable("Order already has a shipment");
-        if (orderShipment == null) {
-            throw new IllegalArgumentException("Shipment cannot be null");
-        }
-
-        this.orderShipment = orderShipment;
-        orderShipment.setMilkOrder(this);
-    }
+    // Equals / HashCode
 
     @Override
     public boolean equals(Object o) {
