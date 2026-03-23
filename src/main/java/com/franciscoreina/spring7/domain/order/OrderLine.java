@@ -98,13 +98,13 @@ public class OrderLine extends BaseEntity {
         this.milkOrder = milkOrder;
     }
 
-    // Triggered by client when client update the amount in a order
+    //  Updates the requested quantity based on customer intent.
     void updateQuantity(Integer newQuantity) {
         isPositive(newQuantity, "Quantity must be at least 1");
         this.requestedQuantity = newQuantity;
     }
 
-    // Triggered by inventory system to reserve the stock
+    // Allocates available inventory to fulfill the requested quantity.
     public void assignQuantity(Integer quantity) {
         isNonNegative(quantity, "Quantity cannot be negative");
         validateAssignedQuantity(quantity, "Cannot assign more stock than ordered");
@@ -113,7 +113,7 @@ public class OrderLine extends BaseEntity {
 
         // Si llegamos al total, podríamos cambiar el estado automáticamente
         if (this.assignedQuantity.equals(this.requestedQuantity)) {
-            this.orderLineStatus = OrderLineStatus.NEW;
+            this.orderLineStatus = OrderLineStatus.ALLOCATED;
         }
     }
 

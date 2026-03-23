@@ -56,12 +56,12 @@ public class Customer extends BaseEntity {
     // Business Methods (Rich Model)
 
     public void renameTo(String newName) {
-        notBlank(newName, "Name cannot be empty");
+        notBlank(newName, "Name is required");
         this.name = newName.trim();
     }
 
     public void changeEmailTo(String newEmail) {
-        notBlank(newEmail, "Email cannot be empty");
+        notBlank(newEmail, "Email is required");
         this.email = normalizeEmail(newEmail);
     }
 

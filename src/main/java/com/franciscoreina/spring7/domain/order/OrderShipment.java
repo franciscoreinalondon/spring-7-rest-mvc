@@ -9,23 +9,28 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+import static com.franciscoreina.spring7.domain.base.DomainAssert.notBlank;
+import static com.franciscoreina.spring7.domain.base.DomainAssert.notNull;
+
+@Builder(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
 @Getter
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "milk_order_shipment")
 public class OrderShipment extends BaseEntity {
 
-    // Entity attributes
+    // Business Attributes
 
     @NotBlank
     @Size(max = 50)
@@ -34,15 +39,29 @@ public class OrderShipment extends BaseEntity {
 
     // JPA Relationships
 
+    @NotNull
     @OneToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "milk_order_id", nullable = false, unique = true)
     private MilkOrder milkOrder;
 
-    // Methods
+    // Factory Method
+
+    public static OrderShipment createOrderShipment(String trackingNumber) {
+        notBlank(trackingNumber, "Tracking number is required");
+
+        return OrderShipment.builder()
+                .trackingNumber(trackingNumber.trim())
+                .build();
+    }
+
+    // Business Methods (Rich Model)
 
     void setMilkOrder(MilkOrder milkOrder) {
+        notNull(milkOrder, "MilkOrder is required");
         this.milkOrder = milkOrder;
     }
+
+    // Equals / HashCode
 
     @Override
     public boolean equals(Object o) {
