@@ -1,6 +1,7 @@
 package com.franciscoreina.spring7.testdata;
 
 import com.franciscoreina.spring7.domain.customer.Customer;
+import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.domain.order.MilkOrder;
@@ -19,7 +20,7 @@ import org.springframework.util.ResourceUtils;
 import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
+import java.util.Set;
 
 /**
  * Persists test data into the database for integration tests.
@@ -106,13 +107,14 @@ public class IntegrationTestDataFactory {
     // The mapper logic is mostly academic, since some properties are filled
     // with placeholder values and do not represent realistic domain data.
     private Milk mapToBeer(MilkCsvRecord record) {
-        return Milk.builder()
-                .name(record.getMilk())
-                .milkType(parseMilkType(record.getStyle()))
-                .price(BigDecimal.TEN)
-                .upc(record.getRow().toString())
-                .stock(record.getCount())
-                .build();
+        var savedCategory = categoryRepository.save(TestDataFactory.getNewCategory());
+        return Milk.createMilk(
+                record.getMilk(),
+                parseMilkType(record.getStyle()),
+                record.getRow().toString(),
+                BigDecimal.TEN,
+                record.getCount(),
+                Set.of(savedCategory)); //tbr
     }
 
     private MilkType parseMilkType(String style) {

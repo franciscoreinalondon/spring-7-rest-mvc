@@ -56,10 +56,10 @@ public class Category {
     @Column(nullable = false, length = 50)
     private String description;
 
-    // Business Methods (Rich Model)
+    // Factory Method
 
     public static Category createCategory(String description) {
-        validatePresence(description, "Description is required");
+        validateNotBlank(description, "Description is required");
 
         return Category.builder()
                 .description(description.trim())
@@ -68,7 +68,7 @@ public class Category {
 
     // Utilities
 
-    private static void validatePresence(String value, String message) {
+    private static void validateNotBlank(String value, String message) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(message);
         }

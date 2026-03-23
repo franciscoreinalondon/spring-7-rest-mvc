@@ -1,6 +1,7 @@
 package com.franciscoreina.spring7.bootstrap;
 
 import com.franciscoreina.spring7.config.JpaConfig;
+import com.franciscoreina.spring7.repositories.CategoryRepository;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
 import com.franciscoreina.spring7.repositories.MilkOrderRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
@@ -18,6 +19,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import({JpaConfig.class, MilkCsvServiceImpl.class})
 @DataJpaTest
 public class BootstrapDataTest {
+
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     @Autowired
     private CustomerRepository customerRepository;
@@ -39,6 +43,7 @@ public class BootstrapDataTest {
     @BeforeEach
     void setUp() {
         bootstrapData = new BootstrapData(
+                categoryRepository,
                 customerRepository,
                 milkRepository,
                 milkOrderRepository,
@@ -50,6 +55,7 @@ public class BootstrapDataTest {
     void run() throws Exception {
         bootstrapData.run("");
 
+        assertThat(categoryRepository.count()).isEqualTo(3);
         assertThat(customerRepository.count()).isEqualTo(3);
         assertThat(milkRepository.count()).isEqualTo(503);
         assertThat(milkOrderRepository.count()).isEqualTo(3);

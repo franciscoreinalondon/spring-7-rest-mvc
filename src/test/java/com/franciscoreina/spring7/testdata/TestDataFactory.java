@@ -102,15 +102,42 @@ public class TestDataFactory {
     // ---------------
 
     public static Milk getNewMilk(Category category) {
-        return Milk.builder().name("Milk name").milkType(MilkType.SEMI_SKIMMED).upc(randomUpc()).price(new BigDecimal("1.20")).stock(100).categories(Set.of(category)).build();
+        var newMilk = Milk.createMilk(
+                "Milk name",
+                MilkType.SEMI_SKIMMED,
+                randomUpc(),
+                new BigDecimal("1.20"),
+                100,
+                Set.of(category));
+        return newMilk;
     }
 
     public static Milk getNewMilk(String upc, Category category) {
-        return Milk.builder().name("Milk name").milkType(MilkType.SEMI_SKIMMED).upc(upc).price(new BigDecimal("1.20")).stock(100).categories(Set.of(category)).build();
+        var newMilk = Milk.createMilk(
+                "Milk name",
+                MilkType.SEMI_SKIMMED,
+                upc,
+                new BigDecimal("1.20"),
+                100,
+                Set.of(category));
+        return newMilk;
     }
 
     public static Milk getSavedMilk(Milk milk) {
-        return Milk.builder().id(UUID.randomUUID()).version(0).name(milk.getName()).milkType(milk.getMilkType()).upc(milk.getUpc()).price(milk.getPrice()).stock(milk.getStock()).categories(milk.getCategories()).createdAt(Instant.now()).updatedAt(Instant.now()).build();
+        var savedMilk = Milk.createMilk(
+                milk.getName(),
+                milk.getMilkType(),
+                milk.getUpc(),
+                milk.getPrice(),
+                milk.getStock(),
+                milk.getCategories());
+
+        ReflectionTestUtils.setField(savedMilk, "id", UUID.randomUUID());
+        ReflectionTestUtils.setField(savedMilk, "version", 0);
+        ReflectionTestUtils.setField(savedMilk, "createdAt", Instant.now());
+        ReflectionTestUtils.setField(savedMilk, "updatedAt", Instant.now());
+
+        return savedMilk;
     }
 
     public static MilkCreateRequest getMilkCreateRequest(Milk milk) {

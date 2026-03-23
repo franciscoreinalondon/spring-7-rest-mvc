@@ -8,6 +8,7 @@ import com.franciscoreina.spring7.dto.request.milk.MilkUpdateRequest;
 import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.mappers.MilkMapper;
+import com.franciscoreina.spring7.repositories.CategoryRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,18 +16,25 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
 public class MilkServiceImpl implements MilkService {
 
+    private final CategoryRepository categoryRepository;
     private final MilkRepository milkRepository;
     private final MilkMapper milkMapper;
 
     @Override
     public MilkResponse create(MilkCreateRequest request) {
-        var savedMilk = milkRepository.save(milkMapper.toEntity(request));
+        var initialCategories = new HashSet<>(categoryRepository.findAllById(request.categoryIds()));
+        if (initialCategories.isEmpty()) {
+            throw new NotFoundException("None of the provided categories were found");
+        }
+
+        var savedMilk = milkRepository.save(milkMapper.toEntity(request, initialCategories));
         return milkMapper.toResponse(savedMilk);
     }
 

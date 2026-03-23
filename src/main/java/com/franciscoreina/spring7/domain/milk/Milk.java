@@ -19,27 +19,27 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
 @Getter
-@Setter
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "milk")
@@ -61,7 +61,7 @@ public class Milk {
     @Column(nullable = false)
     private Instant updatedAt;
 
-    // Entity attributes
+    // Business Attributes
 
     @NotBlank
     @Size(max = 50)
@@ -98,19 +98,67 @@ public class Milk {
             inverseJoinColumns = @JoinColumn(name = "category_id"))
     private Set<Category> categories = new HashSet<>();
 
-    // Methods
+    // Factory Method
+
+    public static Milk createMilk(String name, MilkType milkType, String upc, BigDecimal price, Integer stock, Set<Category> initialCategories) {
+        validateNotBlank(name, "Name is required");
+        validateNotNull(milkType, "MilkType is required");
+        validateNotBlank(upc, "UPC is required");
+        validateNotNull(price, "Price is required");
+        validateNotNull(stock, "Stock is required");
+        validateNotEmpty(initialCategories, "At least one category is required");
+
+        var milk = Milk.builder()
+                .name(name.trim())
+                .milkType(milkType)
+                .upc(upc.trim())
+                .price(price)
+                .stock(stock)
+                .build();
+        initialCategories.forEach(milk::addCategory);
+
+        return milk;
+    }
+
+    // Business Methods (Rich Model)
 
     public Set<Category> getCategories() {
         return Collections.unmodifiableSet(categories);
     }
 
     public void addCategory(Category category) {
-        categories.add(category);
+        validateNotNull(category, "Category is required");
+        this.categories.add(category);
     }
 
     public void removeCategory(Category category) {
-        categories.remove(category);
+        if (categories.size() <= 1) {
+            throw new IllegalStateException("A milk product must have at least one category");
+        }
+        this.categories.remove(category);
     }
+
+    // Utilities
+
+    private static void validateNotBlank(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    private static void validateNotNull(Object value, String message) {
+        if (value == null) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    private static void validateNotEmpty(Collection<?> collection, String message) {
+        if (collection == null || collection.isEmpty()) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    // Equals / HashCode
 
     @Override
     public boolean equals(Object o) {

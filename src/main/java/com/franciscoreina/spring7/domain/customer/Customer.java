@@ -16,7 +16,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.jspecify.annotations.NonNull;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -62,11 +61,11 @@ public class Customer {
     @Column(nullable = false, length = 120, unique = true)
     private String email;
 
-    // Business Methods (Rich Model)
+    // Factory Method
 
     public static Customer createCustomer(String name, String email) {
-        validatePresence(name, "Name is required");
-        validatePresence(email, "Email is required");
+        validateNotBlank(name, "Name is required");
+        validateNotBlank(email, "Email is required");
 
         return Customer.builder()
                 .name(name.trim())
@@ -74,19 +73,21 @@ public class Customer {
                 .build();
     }
 
+    // Business Methods (Rich Model)
+
     public void renameTo(String newName) {
-        validatePresence(newName, "Name cannot be empty");
+        validateNotBlank(newName, "Name cannot be empty");
         this.name = newName.trim();
     }
 
     public void changeEmailTo(String newEmail) {
-        validatePresence(newEmail, "Email cannot be empty");
+        validateNotBlank(newEmail, "Email cannot be empty");
         this.email = normalizeEmail(newEmail);
     }
 
     // Utilities
 
-    private static void validatePresence(String value, String message) {
+    private static void validateNotBlank(String value, String message) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(message);
         }

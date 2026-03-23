@@ -1,11 +1,13 @@
 package com.franciscoreina.spring7.bootstrap;
 
 import com.franciscoreina.spring7.domain.customer.Customer;
+import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.domain.order.MilkOrder;
 import com.franciscoreina.spring7.domain.order.OrderLine;
 import com.franciscoreina.spring7.dto.file.MilkCsvRecord;
+import com.franciscoreina.spring7.repositories.CategoryRepository;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
 import com.franciscoreina.spring7.repositories.MilkOrderRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
@@ -20,12 +22,14 @@ import org.springframework.util.ResourceUtils;
 import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 
 @Profile("!integration-test")
 @RequiredArgsConstructor
 @Component
 public class BootstrapData implements CommandLineRunner {
 
+    private final CategoryRepository categoryRepository;
     private final CustomerRepository customerRepository;
     private final MilkRepository milkRepository;
     private final MilkOrderRepository milkOrderRepository;
@@ -34,10 +38,21 @@ public class BootstrapData implements CommandLineRunner {
     @Transactional
     @Override
     public void run(String... args) throws Exception {
+        loadCategoryData();
         loadCustomerData();
         loadMilkData();
         loadOrderData();
         loadCsvData();
+    }
+
+    private void loadCategoryData() {
+        if (categoryRepository.count() > 0) {
+            return;
+        }
+
+        categoryRepository.save(Category.createCategory("Description 1"));
+        categoryRepository.save(Category.createCategory("Description 2"));
+        categoryRepository.save(Category.createCategory("Description 3"));
     }
 
     private void loadCustomerData() {
@@ -55,30 +70,31 @@ public class BootstrapData implements CommandLineRunner {
             return;
         }
 
-        milkRepository.save(Milk.builder()
-                .name("Organic Whole Milk")
-                .milkType(MilkType.WHOLE)
-                .upc("111111111111")
-                .price(new BigDecimal("1.89"))
-                .stock(120)
-                .build());
+        var savedCategory = categoryRepository.findAll().getFirst();
 
-        milkRepository.save(Milk.builder()
-                .name("Semi-Skimmed Farm Milk")
-                .milkType(MilkType.SEMI_SKIMMED)
-                .upc("222222222222")
-                .price(new BigDecimal("1.49"))
-                .stock(80)
-                .build());
+        milkRepository.save(Milk.createMilk(
+                "Organic Whole Milk",
+                MilkType.WHOLE,
+                "111111111111",
+                new BigDecimal("1.89"),
+                120,
+                Set.of(savedCategory)));
 
-        milkRepository.save(Milk.builder()
-                .name("Lactose Free Skimmed Milk")
-                .milkType(MilkType.SKIMMED)
-                .upc("333333333333")
-                .price(new BigDecimal("2.10"))
-                .stock(60)
-                .build());
+        milkRepository.save(Milk.createMilk(
+                "Semi-Skimmed Farm Milk",
+                MilkType.SEMI_SKIMMED,
+                "222222222222",
+                new BigDecimal("1.49"),
+                80,
+                Set.of(savedCategory)));
 
+        milkRepository.save(Milk.createMilk(
+                "Lactose Free Skimmed Milk",
+                MilkType.SKIMMED,
+                "333333333333",
+                new BigDecimal("2.10"),
+                60,
+                Set.of(savedCategory)));
     }
 
     private void loadOrderData() {
@@ -114,7 +130,6 @@ public class BootstrapData implements CommandLineRunner {
                         OrderLine.createOrderLine(milk2, 1)
                 ))
         );
-
     }
 
     public MilkOrder createMilkOrder(Customer customer, String customerRef, List<OrderLine> lines) {
@@ -138,13 +153,14 @@ public class BootstrapData implements CommandLineRunner {
     // The mapper logic is mostly academic, since some properties are filled
     // with placeholder values and do not represent realistic domain data.
     private Milk mapToBeer(MilkCsvRecord record) {
-        return Milk.builder()
-                .name(record.getMilk())
-                .milkType(parseMilkType(record.getStyle()))
-                .price(BigDecimal.TEN)
-                .upc(record.getRow().toString())
-                .stock(record.getCount())
-                .build();
+        var savedCategory = categoryRepository.findAll().getFirst();
+        return Milk.createMilk(
+                record.getMilk(),
+                parseMilkType(record.getStyle()),
+                record.getRow().toString(),
+                BigDecimal.TEN,
+                record.getCount(),
+                Set.of(savedCategory));
     }
 
     private MilkType parseMilkType(String style) {
