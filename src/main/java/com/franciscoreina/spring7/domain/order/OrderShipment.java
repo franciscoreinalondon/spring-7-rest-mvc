@@ -57,6 +57,11 @@ public class OrderShipment extends BaseEntity {
 
     // Business Methods (Rich Model)
 
+    public void updateTrackingNumber(String trackingNumber) {
+        notBlank(trackingNumber, "Tracking number is required");
+        this.trackingNumber = trackingNumber.trim();
+    }
+
     void setMilkOrder(MilkOrder milkOrder) {
         notNull(milkOrder, "MilkOrder is required");
         this.milkOrder = milkOrder;

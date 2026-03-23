@@ -1,5 +1,6 @@
 package com.franciscoreina.spring7.domain.base;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 
 public final class DomainAssert {
@@ -33,6 +34,12 @@ public final class DomainAssert {
 
     public static void isPositive(Integer value, String message) {
         if (value == null || value <= 0) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    public static void isPositive(BigDecimal value, String message) {
+        if (value == null || value.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException(message);
         }
     }

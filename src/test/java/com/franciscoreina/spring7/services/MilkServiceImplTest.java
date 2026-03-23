@@ -246,6 +246,7 @@ public class MilkServiceImplTest {
     void update_updatesEntity_whenMilkExists() {
         // Arrange
         var savedMilkId = savedMilk.getId();
+        given(categoryRepository.findAllById(updateRequest.categoryIds())).willReturn(List.of(savedCategory));
         given(milkRepository.findById(savedMilkId)).willReturn(Optional.of(savedMilk));
 
         // Act
@@ -253,7 +254,7 @@ public class MilkServiceImplTest {
 
         // Assert
         verify(milkRepository).findById(savedMilkId);
-        verify(milkMapper).updateEntity(savedMilk, updateRequest);
+        verify(milkMapper).updateEntity(savedMilk, updateRequest, Set.of(savedCategory));
         verify(milkRepository).save(savedMilk);
     }
 
@@ -272,6 +273,7 @@ public class MilkServiceImplTest {
     @Test
     void update_propagatesDataIntegrityException_whenRepoRejects() {
         // Arrange
+        given(categoryRepository.findAllById(updateRequest.categoryIds())).willReturn(List.of(savedCategory));
         given(milkRepository.findById(savedMilk.getId())).willReturn(Optional.of(savedMilk));
         given(milkRepository.save(savedMilk)).willThrow(new DataIntegrityViolationException("Upc Duplicated"));
 
@@ -280,7 +282,7 @@ public class MilkServiceImplTest {
                 .isInstanceOf(DataIntegrityViolationException.class);
 
         verify(milkRepository).findById(savedMilk.getId());
-        verify(milkMapper).updateEntity(savedMilk, updateRequest);
+        verify(milkMapper).updateEntity(savedMilk, updateRequest, Set.of(savedCategory));
         verify(milkRepository).save(savedMilk);
     }
 
@@ -295,7 +297,7 @@ public class MilkServiceImplTest {
 
         // Assert
         verify(milkRepository).findById(savedMilkId);
-        verify(milkMapper).patchEntity(savedMilk, patchRequest);
+        verify(milkMapper).patchEntity(savedMilk, patchRequest, null);
         verify(milkRepository).save(savedMilk);
     }
 
@@ -323,7 +325,7 @@ public class MilkServiceImplTest {
                 .isInstanceOf(DataIntegrityViolationException.class);
 
         verify(milkRepository).findById(savedMilk.getId());
-        verify(milkMapper).patchEntity(savedMilk, patchRequest);
+        verify(milkMapper).patchEntity(savedMilk, patchRequest, null);
         verify(milkRepository).save(savedMilk);
     }
 

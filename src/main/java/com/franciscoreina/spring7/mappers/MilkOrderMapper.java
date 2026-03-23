@@ -3,56 +3,37 @@ package com.franciscoreina.spring7.mappers;
 import com.franciscoreina.spring7.domain.customer.Customer;
 import com.franciscoreina.spring7.domain.order.MilkOrder;
 import com.franciscoreina.spring7.domain.order.OrderLine;
-import com.franciscoreina.spring7.domain.order.OrderShipment;
 import com.franciscoreina.spring7.dto.request.order.MilkOrderRequest;
 import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
-import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.ObjectFactory;
 
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-@Mapper(uses = {Customer.class})
+@Mapper
 public interface MilkOrderMapper {
 
-    @ObjectFactory
-    default MilkOrder createMilkOrder(MilkOrderRequest request, @Context Customer customer) {
-        return MilkOrder.createMilkOrder(customer, request.customerRef());
+    default MilkOrder toEntity(MilkOrderRequest request, Customer customer) {
+        if (request == null || customer == null) return null;
+
+        return MilkOrder.createMilkOrder(
+                customer,
+                request.customerRef()
+        );
     }
 
-    @Mapping(target = "customerId", source = "customer")
+    //tbd: update to modify customerRef
+
+    @Mapping(target = "customerId", source = "customer.id")
     @Mapping(target = "orderLineIds", source = "orderLines")
-    @Mapping(target = "orderShipmentId", source = "orderShipment")
+    @Mapping(target = "orderShipmentId", source = "orderShipment.id")
     MilkOrderResponse toResponse(MilkOrder milkOrder);
 
-    default UUID map(Customer customer) {
-        return customer != null ? customer.getId() : null;
+    /**
+     * MapStruct automatically identifies and applies this helper method by matching
+     * the source (OrderLine) and target (UUID) types required to resolve the collection mapping.
+     */
+    default UUID mapOrderLineToId(OrderLine orderLine) {
+        return orderLine == null ? null : orderLine.getId();
     }
-
-    default Set<UUID> map(Set<OrderLine> orderLines) {
-        return orderLines == null
-                ? Set.of()
-                : orderLines.stream()
-                .map(OrderLine::getId)
-                .collect(Collectors.toSet());
-    }
-
-    default UUID map(OrderShipment orderShipment) {
-        return orderShipment != null ? orderShipment.getId() : null;
-    }
-
-//
-//    @AfterMapping
-//    default void addLines(MilkOrderCreateRequest request, @MappingTarget MilkOrder order) {
-//        if (request.getOrderLines() != null) {
-//            request.getOrderLines().forEach(lineDto -> {
-//                // Aquí llamarías a tu lógica para convertir DTO a OrderLine
-//                // y usarías order.addOrderLine(linea);
-//                // Esto asegura que el paymentAmount se calcule bien automáticamente
-//            });
-//        }
-//    }
 }

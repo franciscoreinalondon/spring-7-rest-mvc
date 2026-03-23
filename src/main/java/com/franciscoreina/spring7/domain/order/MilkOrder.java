@@ -86,7 +86,7 @@ public class MilkOrder extends BaseEntity {
 
         return MilkOrder.builder()
                 .customer(customer)
-                .customerRef(customerRef.trim().toUpperCase())
+                .customerRef(normalizeCustomerRef(customerRef))
                 .paymentAmount(BigDecimal.ZERO)
                 .build();
     }
@@ -112,7 +112,9 @@ public class MilkOrder extends BaseEntity {
         checkOrderIsModifiable("Order already has a shipment");
 
         if (this.orderLines.remove(orderLine)) {
-            // orderLine.setMilkOrder(null); <- not needed, orphanRemoval = true
+            // Not required for Hibernate (orphanRemoval = true),
+            // but keeps the object graph consistent in memory
+            orderLine.setMilkOrder(null);
             this.paymentAmount = getTotalAmount();
         }
     }
@@ -136,6 +138,10 @@ public class MilkOrder extends BaseEntity {
     }
 
     // Utilities
+
+    private static String normalizeCustomerRef(String customerRef) {
+        return customerRef.toUpperCase().trim();
+    }
 
     private void checkOrderIsModifiable(String message) {
         if (this.orderShipment != null) {

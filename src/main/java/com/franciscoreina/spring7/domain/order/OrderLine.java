@@ -44,7 +44,7 @@ public class OrderLine extends BaseEntity {
     private Integer requestedQuantity;
 
     @NotNull
-    @PositiveOrZero()
+    @PositiveOrZero
     @Column(nullable = false)
     private Integer assignedQuantity;
 
@@ -74,14 +74,15 @@ public class OrderLine extends BaseEntity {
 
     // Factory Method
 
-    public static OrderLine createOrderLine(Milk milk, Integer quantity) {
+    public static OrderLine createOrderLine(Milk milk, Integer requestedQuantity) {
         notNull(milk, "Milk is required");
         notNull(milk.getPrice(), "Price milk is required");
-        notNull(quantity, "Quantity is required");
+        notNull(requestedQuantity, "Requested quantity is required");
+        isNonNegative(requestedQuantity, "Requested quantity cannot be negative");
 
         return OrderLine.builder()
                 .milk(milk)
-                .requestedQuantity(quantity)
+                .requestedQuantity(requestedQuantity)
                 .priceAtPurchase(milk.getPrice())
                 .assignedQuantity(0)
                 .orderLineStatus(OrderLineStatus.NEW)
@@ -101,6 +102,7 @@ public class OrderLine extends BaseEntity {
         this.requestedQuantity = newQuantity;
     }
 
+    //tbr
     // Allocates available inventory to fulfill the requested quantity.
     public void assignQuantity(Integer quantity) {
         isNonNegative(quantity, "Quantity cannot be negative");

@@ -1,5 +1,6 @@
 package com.franciscoreina.spring7.services;
 
+import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.dto.request.milk.MilkRequest;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -29,8 +31,8 @@ public class MilkServiceImpl implements MilkService {
     @Override
     public MilkResponse create(MilkRequest request) {
         var initialCategories = new HashSet<>(categoryRepository.findAllById(request.categoryIds()));
-        if (initialCategories.isEmpty()) {
-            throw new NotFoundException("None of the provided categories were found");
+        if (initialCategories.size() != request.categoryIds().size()) {
+            throw new RuntimeException("One or more categories not found");
         }
 
         var savedMilk = milkRepository.save(milkMapper.toEntity(request, initialCategories));
@@ -68,7 +70,11 @@ public class MilkServiceImpl implements MilkService {
     @Override
     public void update(UUID milkId, MilkRequest request) {
         var milkToUpdate = getMilkOrThrow(milkId);
-        milkMapper.updateEntity(milkToUpdate, request);
+        var categories = new HashSet<>(categoryRepository.findAllById(request.categoryIds()));
+        if (categories.size() != request.categoryIds().size()) {
+            throw new RuntimeException("One or more categories not found");
+        }
+        milkMapper.updateEntity(milkToUpdate, request, categories);
         milkRepository.save(milkToUpdate);
     }
 
@@ -76,7 +82,15 @@ public class MilkServiceImpl implements MilkService {
     @Override
     public void patch(UUID milkId, MilkPatchRequest request) {
         var milkToPatch = getMilkOrThrow(milkId);
-        milkMapper.patchEntity(milkToPatch, request);
+        Set<Category> categories = null;
+        if (request.categoryIds() != null && !request.categoryIds().isEmpty()) {
+            categories = new HashSet<>(categoryRepository.findAllById(request.categoryIds()));
+            if (categories.size() != request.categoryIds().size()) {
+                throw new RuntimeException("One or more categories not found");
+            }
+        }
+
+        milkMapper.patchEntity(milkToPatch, request, categories);
         milkRepository.save(milkToPatch);
     }
 

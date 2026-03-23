@@ -2,27 +2,21 @@ package com.franciscoreina.spring7.mappers;
 
 import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
-import com.franciscoreina.spring7.dto.request.milk.MilkRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
+import com.franciscoreina.spring7.dto.request.milk.MilkRequest;
 import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
-import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.Set;
+import java.util.UUID;
 
-@Mapper(uses = {CategoryMapper.class})
+@Mapper
 public interface MilkMapper {
 
-//    @Mapping(target = "id", ignore = true)
-//    @Mapping(target = "version", ignore = true)
-//    @Mapping(target = "createdAt", ignore = true)
-//    @Mapping(target = "updatedAt", ignore = true)
-//    Milk toEntity(MilkCreateRequest milkCreateRequest);
-
-    default Milk toEntity(MilkRequest request, Set<Category> initialCategories) {
-        if (request == null) return null;
+    default Milk toEntity(MilkRequest request, Set<Category> categories) {
+        if (request == null || categories == null) return null;
 
         return Milk.createMilk(
                 request.name(),
@@ -30,16 +24,46 @@ public interface MilkMapper {
                 request.upc(),
                 request.price(),
                 request.stock(),
-                initialCategories
+                categories
         );
     }
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateEntity(@MappingTarget Milk target, MilkRequest milkRequest);
+    default void updateEntity(@MappingTarget Milk target, MilkRequest request, Set<Category> newCategories) {
+        if (target == null || request == null || newCategories == null) return;
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void patchEntity(@MappingTarget Milk target, MilkPatchRequest milkPatchRequest);
+        target.renameTo(request.name());
+        target.updateMilkType(request.milkType());
+        target.updateUpc(request.upc());
+        target.updatePrice(request.price());
+        target.updateStock(request.stock());
 
+        target.getCategories().clear();
+        newCategories.forEach(target::addCategory);
+    }
+
+    default void patchEntity(@MappingTarget Milk target, MilkPatchRequest request, Set<Category> newCategories) {
+        if (target == null || request == null) return;
+
+        if (request.name() != null) target.renameTo(request.name());
+        if (request.milkType() != null) target.updateMilkType(request.milkType());
+        if (request.upc() != null) target.updateUpc(request.upc());
+        if (request.price() != null) target.updatePrice(request.price());
+        if (request.stock() != null) target.updateStock(request.stock());
+
+        if (newCategories != null && !newCategories.isEmpty()) {
+            target.getCategories().clear();
+            newCategories.forEach(target::addCategory);
+        }
+    }
+
+    @Mapping(target = "categoryIds", source = "categories")
     MilkResponse toResponse(Milk milk);
 
+    /**
+     * MapStruct automatically identifies and applies this helper method by matching
+     * the source (Category) and target (UUID) types required to resolve the collection mapping.
+     */
+    default UUID mapCategoryToId(Category category) {
+        return category == null ? null : category.getId();
+    }
 }

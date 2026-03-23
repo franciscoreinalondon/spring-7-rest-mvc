@@ -30,7 +30,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static com.franciscoreina.spring7.domain.base.DomainAssert.cannotRemoveLastElement;
-import static com.franciscoreina.spring7.domain.base.DomainAssert.isNonNegative;
+import static com.franciscoreina.spring7.domain.base.DomainAssert.isPositive;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notBlank;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notEmpty;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notNull;
@@ -95,7 +95,7 @@ public class Milk extends BaseEntity {
         Milk milk = Milk.builder()
                 .name(name.trim())
                 .milkType(milkType)
-                .upc(upc.trim())
+                .upc(normalizeUpc(upc))
                 .price(price)
                 .stock(stock)
                 .build();
@@ -105,6 +105,38 @@ public class Milk extends BaseEntity {
     }
 
     // Business Methods (Rich Model)
+
+    public void renameTo(String newName) {
+        notBlank(newName, "Name is required");
+        this.name = newName.trim();
+    }
+
+    public void updateMilkType(MilkType milkType) {
+        notNull(milkType, "MilkType is required");
+        this.milkType = milkType;
+    }
+
+    public void updateUpc(String newUpc) {
+        notBlank(newUpc, "Upc is required");
+        this.upc = normalizeUpc(newUpc);
+    }
+
+    public void updatePrice(BigDecimal newPrice) {
+        notNull(newPrice, "Price is required");
+        isPositive(newPrice, "Price must be greater than 0");
+        this.price = newPrice;
+    }
+
+    public void updateStock(Integer newStock) {
+        notNull(newStock, "Stock is required");
+        this.stock = newStock;
+    }
+
+    public void decreaseStock(Integer amount) {
+        isPositive(amount, "Amount must be at least 1");
+        checkStockAvailable(amount);
+        this.stock -= amount;
+    }
 
     public Set<Category> getCategories() {
         return Collections.unmodifiableSet(categories);
@@ -120,13 +152,11 @@ public class Milk extends BaseEntity {
         this.categories.remove(category);
     }
 
-    public void decreaseStock(Integer amount) {
-        isNonNegative(amount, "Amount must be positive");
-        checkStockAvailable(amount);
-        this.stock -= amount;
-    }
-
     // Utilities
+
+    private static String normalizeUpc(String upc) {
+        return upc.toUpperCase().trim();
+    }
 
     private void checkStockAvailable(Integer amount) {
         if (this.stock < amount) {

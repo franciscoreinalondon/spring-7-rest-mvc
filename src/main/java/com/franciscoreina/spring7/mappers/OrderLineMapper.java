@@ -7,15 +7,23 @@ import com.franciscoreina.spring7.dto.response.order.OrderLineResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(uses = {Milk.class})
+/**
+ * No update mapping: OrderLine must be modified through the aggregate (MilkOrder)
+ * to enforce domain invariants.
+ */
+@Mapper
 public interface OrderLineMapper {
 
-//    @Mapping(target = "id", ignore = true)
-//    @Mapping(target = "version", ignore = true)
-//    @Mapping(target = "createdAt", ignore = true)
-//    @Mapping(target = "updatedAt", ignore = true)
-//    OrderLine toEntity(OrderLineCreateRequest orderLineCreateRequest);
+    default OrderLine toEntity(OrderLineCreateRequest request, Milk milk) {
+        if (request == null || milk == null) return null;
 
+        return OrderLine.createOrderLine(
+                milk,
+                request.requestedQuantity()
+        );
+    }
+
+    @Mapping(target = "milkOrderId", source = "milkOrder.id")
+    @Mapping(target = "milkId", source = "milk.id")
     OrderLineResponse toResponse(OrderLine orderLine);
-
 }

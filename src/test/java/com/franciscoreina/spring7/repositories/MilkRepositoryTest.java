@@ -3,17 +3,13 @@ package com.franciscoreina.spring7.repositories;
 import com.franciscoreina.spring7.config.JpaConfig;
 import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
-import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.testdata.TestDataFactory;
 import jakarta.persistence.EntityManager;
-import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 import java.util.UUID;
