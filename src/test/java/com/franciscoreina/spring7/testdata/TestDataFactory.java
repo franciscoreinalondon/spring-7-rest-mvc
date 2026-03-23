@@ -190,7 +190,7 @@ public class TestDataFactory {
 
         ReflectionTestUtils.setField(savedMilkOrder, "paymentAmount",
                 savedOrderLines.stream().map(
-                        ol -> ol.getMilk().getPrice().multiply(BigDecimal.valueOf(ol.getOrderQuantity())))
+                        ol -> ol.getMilk().getPrice().multiply(BigDecimal.valueOf(ol.getRequestedQuantity())))
                         .reduce(BigDecimal.ZERO, BigDecimal::add));
 
         savedOrderLines.forEach(savedMilkOrder::addOrderLine);

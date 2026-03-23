@@ -8,8 +8,8 @@ import java.util.UUID;
 public record OrderLineResponse(
         UUID id,
         Integer version,
-        Integer orderQuantity,
-        Integer stockAllocated,
+        Integer requestedQuantity,
+        Integer assignedQuantity,
         OrderLineStatus orderLineStatus,
         Instant createdAt,
         Instant updatedAt,

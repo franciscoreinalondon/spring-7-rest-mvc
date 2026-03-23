@@ -38,7 +38,7 @@ public class MilkOrderServiceImpl implements MilkOrderService {
             var milk = milkRepository.findById(lineRequest.milkId())
                     .orElseThrow(() -> new NotFoundException("Milk not found: " + lineRequest.milkId()));
 
-            var orderLine = OrderLine.createOrderLine(milk, lineRequest.orderQuantity());
+            var orderLine = OrderLine.createOrderLine(milk, lineRequest.requestedQuantity());
             milkOrder.addOrderLine(orderLine);
         }
 

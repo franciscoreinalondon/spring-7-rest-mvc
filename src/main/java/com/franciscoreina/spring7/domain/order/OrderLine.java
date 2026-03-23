@@ -39,14 +39,14 @@ public class OrderLine extends BaseEntity {
     // Business Attributes
 
     @NotNull
-    @Min(value = 1, message = "Quantity on hand must be greater than 0")
+    @Min(value = 1, message = "Requested quantity must be greater than 0")
     @Column(nullable = false)
-    private Integer orderQuantity;
+    private Integer requestedQuantity;
 
     @NotNull
     @PositiveOrZero()
     @Column(nullable = false)
-    private Integer stockAllocated;
+    private Integer assignedQuantity;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
@@ -79,9 +79,9 @@ public class OrderLine extends BaseEntity {
 
         return OrderLine.builder()
                 .milk(milk)
-                .orderQuantity(quantity)
+                .requestedQuantity(quantity)
                 .priceAtPurchase(milk.getPrice())
-                .stockAllocated(0)//tbf
+                .assignedQuantity(0)
                 .orderLineStatus(OrderLineStatus.NEW)
                 .build();
     }
@@ -97,18 +97,18 @@ public class OrderLine extends BaseEntity {
         if (newQuantity == null || newQuantity < 1) {
             throw new IllegalArgumentException("Quantity must be at least 1");
         }
-        this.orderQuantity = newQuantity;
+        this.requestedQuantity = newQuantity;
     }
 
-    public void allocateStock(Integer quantity) {
+    public void assignQuantity(Integer quantity) {//tbr
         if (quantity == null || quantity < 0) throw new IllegalArgumentException("Quantity cannot be negative");
-        if (this.stockAllocated + quantity > this.orderQuantity) {
-            throw new IllegalStateException("Cannot allocate more stock than ordered");
+        if (this.assignedQuantity + quantity > this.requestedQuantity) {
+            throw new IllegalStateException("Cannot assign more stock than ordered");
         }
-        this.stockAllocated += quantity;
+        this.assignedQuantity += quantity;
 
         // Si llegamos al total, podríamos cambiar el estado automáticamente
-        if (this.stockAllocated.equals(this.orderQuantity)) {
+        if (this.assignedQuantity.equals(this.requestedQuantity)) {
             this.orderLineStatus = OrderLineStatus.FULFILLED;
         }
     }

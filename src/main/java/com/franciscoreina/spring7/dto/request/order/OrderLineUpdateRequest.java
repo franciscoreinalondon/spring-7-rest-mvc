@@ -9,8 +9,8 @@ import java.util.UUID;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record OrderLineUpdateRequest(
         @NotNull
-        @Min(value = 1, message = "Quantity on hand must be greater than 0")
-        Integer orderQuantity,
+        @Min(value = 1, message = "Requested quantity must be greater than 0")
+        Integer requestedQuantity,
 
         @NotNull
         UUID milkId

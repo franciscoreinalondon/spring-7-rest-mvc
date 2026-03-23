@@ -154,7 +154,7 @@ public class MilkOrder extends BaseEntity {
     private BigDecimal getTotalAmount() {
         return orderLines.stream()
                 .map(line -> line.getPriceAtPurchase()
-                        .multiply(BigDecimal.valueOf(line.getOrderQuantity())))
+                        .multiply(BigDecimal.valueOf(line.getRequestedQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 

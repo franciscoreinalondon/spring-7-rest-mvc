@@ -21,8 +21,8 @@ create table milk_order_line (
                       id binary(16) not null,
                       milk_id binary(16) not null,
                       milk_order_id binary(16) not null,
-                      order_quantity integer not null,
-                      stock_allocated integer not null,
+                      requested_quantity integer not null,
+                      assigned_quantity integer not null,
                       order_line_status enum ('NEW', 'COMPLETE') not null,
                       price_at_purchase decimal(12,2) not null,
                       primary key (id)
