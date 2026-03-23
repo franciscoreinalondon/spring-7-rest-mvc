@@ -1,7 +1,7 @@
 package com.franciscoreina.spring7.integration;
 
 import com.franciscoreina.spring7.api.ApiPaths;
-import com.franciscoreina.spring7.dto.request.customer.CustomerUpdateRequest;
+import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.exceptions.ApiError;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
@@ -188,7 +188,7 @@ public class CustomerIT extends AbstractIntegrationTest {
     void update_whenIdNotExists_returnsNotFound() {
         // Arrange
         var savedCustomer = dataFactory.persistCustomer();
-        var updateRequest = new CustomerUpdateRequest("Updated Name", savedCustomer.getEmail());
+        var updateRequest = new CustomerRequest("Updated Name", savedCustomer.getEmail());
 
         // Act + Assert
         putRequest(ApiPaths.CUSTOMERS + "/" + UUID.randomUUID(), updateRequest)

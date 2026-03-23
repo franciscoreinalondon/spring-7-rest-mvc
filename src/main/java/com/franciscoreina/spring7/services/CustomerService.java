@@ -1,22 +1,21 @@
 package com.franciscoreina.spring7.services;
 
-import com.franciscoreina.spring7.dto.request.customer.CustomerCreateRequest;
+import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
-import com.franciscoreina.spring7.dto.request.customer.CustomerUpdateRequest;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface CustomerService {
 
-    CustomerResponse create(CustomerCreateRequest request);
+    CustomerResponse create(CustomerRequest request);
 
     CustomerResponse getById(UUID customerId);
 
     List<CustomerResponse> list();
 
-    void update(UUID customerId, CustomerUpdateRequest request);
+    void update(UUID customerId, CustomerRequest request);
 
     void patch(UUID customerId, CustomerPatchRequest request);
 

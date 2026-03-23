@@ -1,9 +1,8 @@
 package com.franciscoreina.spring7.mappers;
 
 import com.franciscoreina.spring7.domain.customer.Customer;
-import com.franciscoreina.spring7.dto.request.customer.CustomerCreateRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
-import com.franciscoreina.spring7.dto.request.customer.CustomerUpdateRequest;
+import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -12,7 +11,7 @@ import org.mapstruct.MappingTarget;
 @Mapper
 public interface CustomerMapper {
 
-    default Customer toEntity(CustomerCreateRequest request) {
+    default Customer toEntity(CustomerRequest request) {
         if (request == null) return null;
 
         return Customer.createCustomer(
@@ -33,7 +32,7 @@ public interface CustomerMapper {
     @Mapping(target = "version", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    default void updateEntity(@MappingTarget Customer target, CustomerUpdateRequest request) {
+    default void updateEntity(@MappingTarget Customer target, CustomerRequest request) {
         if (request == null) return;
 
         // Llamamos a tus métodos de negocio en lugar de setters

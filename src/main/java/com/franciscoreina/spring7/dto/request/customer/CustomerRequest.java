@@ -8,7 +8,7 @@ import lombok.Builder;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Builder
-public record CustomerUpdateRequest(
+public record CustomerRequest(
         @NotBlank
         @Size(max = 50)
         String name,

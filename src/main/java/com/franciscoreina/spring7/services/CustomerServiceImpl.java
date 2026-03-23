@@ -1,9 +1,8 @@
 package com.franciscoreina.spring7.services;
 
 import com.franciscoreina.spring7.domain.customer.Customer;
-import com.franciscoreina.spring7.dto.request.customer.CustomerCreateRequest;
+import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
-import com.franciscoreina.spring7.dto.request.customer.CustomerUpdateRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.mappers.CustomerMapper;
@@ -23,7 +22,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerMapper customerMapper;
 
     @Override
-    public CustomerResponse create(CustomerCreateRequest request) {
+    public CustomerResponse create(CustomerRequest request) {
         var savedCustomer = customerRepository.save(customerMapper.toEntity(request));
         return customerMapper.toResponse(savedCustomer);
     }
@@ -41,7 +40,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Transactional
     @Override
-    public void update(UUID customerId, CustomerUpdateRequest request) {
+    public void update(UUID customerId, CustomerRequest request) {
         var customerToUpdate = getCustomerOrThrow(customerId);
         customerMapper.updateEntity(customerToUpdate, request);
         customerRepository.save(customerToUpdate);

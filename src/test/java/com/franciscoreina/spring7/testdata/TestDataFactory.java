@@ -6,9 +6,8 @@ import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.domain.order.MilkOrder;
 import com.franciscoreina.spring7.domain.order.OrderLine;
-import com.franciscoreina.spring7.dto.request.customer.CustomerCreateRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
-import com.franciscoreina.spring7.dto.request.customer.CustomerUpdateRequest;
+import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkCreateRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkUpdateRequest;
@@ -54,16 +53,16 @@ public class TestDataFactory {
          return savedCustomer;
     }
 
-    public static CustomerCreateRequest getCustomerCreateRequest(Customer customer) {
-        return new CustomerCreateRequest(customer.getName(), customer.getEmail());
+    public static CustomerRequest getCustomerCreateRequest(Customer customer) {
+        return new CustomerRequest(customer.getName(), customer.getEmail());
     }
 
-    public static CustomerCreateRequest getCustomerCreateRequestNullName() {
-        return new CustomerCreateRequest(null, "customer_" + UUID.randomUUID() + "@domain.com");
+    public static CustomerRequest getCustomerCreateRequestNullName() {
+        return new CustomerRequest(null, "customer_" + UUID.randomUUID() + "@domain.com");
     }
 
-    public static CustomerUpdateRequest getCustomerUpdateRequest(Customer customer) {
-        return new CustomerUpdateRequest(customer.getName(), customer.getEmail());
+    public static CustomerRequest getCustomerUpdateRequest(Customer customer) {
+        return new CustomerRequest(customer.getName(), customer.getEmail());
     }
 
     public static CustomerPatchRequest getCustomerPatchRequestWithName() {
@@ -75,7 +74,7 @@ public class TestDataFactory {
     }
 
     public static CustomerResponse getCustomerResponse(Customer customer) {
-        return new CustomerResponse(customer.getId(), customer.getVersion(), customer.getName(), customer.getEmail(), customer.getCreatedAt(), customer.getUpdatedAt());
+        return new CustomerResponse(customer.getId(), customer.getName(), customer.getEmail(), customer.getCreatedAt());
     }
 
     // ---------------

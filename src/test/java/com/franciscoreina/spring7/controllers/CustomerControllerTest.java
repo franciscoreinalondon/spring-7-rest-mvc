@@ -2,9 +2,8 @@ package com.franciscoreina.spring7.controllers;
 
 import com.franciscoreina.spring7.api.ApiPaths;
 import com.franciscoreina.spring7.domain.customer.Customer;
-import com.franciscoreina.spring7.dto.request.customer.CustomerCreateRequest;
+import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
-import com.franciscoreina.spring7.dto.request.customer.CustomerUpdateRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.services.CustomerService;
@@ -53,8 +52,8 @@ public class CustomerControllerTest {
 
     Customer newCustomer;
     Customer savedCustomer;
-    CustomerCreateRequest createRequest;
-    CustomerUpdateRequest updateRequest;
+    CustomerRequest createRequest;
+    CustomerRequest updateRequest;
     CustomerPatchRequest patchRequest;
     CustomerResponse response;
 
