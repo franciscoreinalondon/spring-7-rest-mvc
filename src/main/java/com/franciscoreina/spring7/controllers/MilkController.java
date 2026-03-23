@@ -2,9 +2,8 @@ package com.franciscoreina.spring7.controllers;
 
 import com.franciscoreina.spring7.api.ApiPaths;
 import com.franciscoreina.spring7.domain.milk.MilkType;
-import com.franciscoreina.spring7.dto.request.milk.MilkCreateRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
-import com.franciscoreina.spring7.dto.request.milk.MilkUpdateRequest;
+import com.franciscoreina.spring7.dto.request.milk.MilkRequest;
 import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.services.MilkService;
 import jakarta.validation.Valid;
@@ -34,7 +33,7 @@ public class MilkController {
     private final MilkService milkService;
 
     @PostMapping
-    public ResponseEntity<Void> create(@Valid @RequestBody MilkCreateRequest request) {
+    public ResponseEntity<Void> create(@Valid @RequestBody MilkRequest request) {
         var milkResponse = milkService.create(request);
         var location = URI.create(ApiPaths.MILKS + "/" + milkResponse.id());
 
@@ -55,7 +54,7 @@ public class MilkController {
     }
 
     @PutMapping(ApiPaths.MILK_ID)
-    public ResponseEntity<Void> update(@PathVariable("milkId") UUID milkId, @Valid @RequestBody MilkUpdateRequest request) {
+    public ResponseEntity<Void> update(@PathVariable("milkId") UUID milkId, @Valid @RequestBody MilkRequest request) {
         milkService.update(milkId, request);
 
         return ResponseEntity.noContent().build();

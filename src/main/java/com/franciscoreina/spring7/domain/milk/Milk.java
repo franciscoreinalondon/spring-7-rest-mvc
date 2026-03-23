@@ -10,11 +10,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
@@ -62,7 +62,7 @@ public class Milk extends BaseEntity {
     private String upc;
 
     @NotNull
-    @DecimalMin("0.00")
+    @Positive(message = "Price must be greater than 0")
     @Digits(integer = 10, fraction = 2)
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;

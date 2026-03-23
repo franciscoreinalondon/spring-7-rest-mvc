@@ -2,9 +2,8 @@ package com.franciscoreina.spring7.mappers;
 
 import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
-import com.franciscoreina.spring7.dto.request.milk.MilkCreateRequest;
+import com.franciscoreina.spring7.dto.request.milk.MilkRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
-import com.franciscoreina.spring7.dto.request.milk.MilkUpdateRequest;
 import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
@@ -22,7 +21,7 @@ public interface MilkMapper {
 //    @Mapping(target = "updatedAt", ignore = true)
 //    Milk toEntity(MilkCreateRequest milkCreateRequest);
 
-    default Milk toEntity(MilkCreateRequest request, Set<Category> initialCategories) {
+    default Milk toEntity(MilkRequest request, Set<Category> initialCategories) {
         if (request == null) return null;
 
         return Milk.createMilk(
@@ -36,7 +35,7 @@ public interface MilkMapper {
     }
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateEntity(@MappingTarget Milk target, MilkUpdateRequest milkUpdateRequest);
+    void updateEntity(@MappingTarget Milk target, MilkRequest milkRequest);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(@MappingTarget Milk target, MilkPatchRequest milkPatchRequest);

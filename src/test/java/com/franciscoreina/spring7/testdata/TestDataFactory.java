@@ -8,9 +8,8 @@ import com.franciscoreina.spring7.domain.order.MilkOrder;
 import com.franciscoreina.spring7.domain.order.OrderLine;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
-import com.franciscoreina.spring7.dto.request.milk.MilkCreateRequest;
+import com.franciscoreina.spring7.dto.request.milk.MilkRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
-import com.franciscoreina.spring7.dto.request.milk.MilkUpdateRequest;
 import com.franciscoreina.spring7.dto.request.order.MilkOrderCreateRequest;
 import com.franciscoreina.spring7.dto.request.order.OrderLineCreateRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
@@ -74,7 +73,7 @@ public class TestDataFactory {
     }
 
     public static CustomerResponse getCustomerResponse(Customer customer) {
-        return new CustomerResponse(customer.getId(), customer.getName(), customer.getEmail(), customer.getCreatedAt());
+        return new CustomerResponse(customer.getId(),  customer.getCreatedAt(), customer.getName(), customer.getEmail());
     }
 
     // ---------------
@@ -139,16 +138,16 @@ public class TestDataFactory {
         return savedMilk;
     }
 
-    public static MilkCreateRequest getMilkCreateRequest(Milk milk) {
-        return new MilkCreateRequest(milk.getName(), milk.getMilkType(), milk.getUpc(), milk.getPrice(), milk.getStock(), milk.getCategories().stream().map(Category::getId).collect(Collectors.toSet()));
+    public static MilkRequest getMilkCreateRequest(Milk milk) {
+        return new MilkRequest(milk.getName(), milk.getMilkType(), milk.getUpc(), milk.getPrice(), milk.getStock(), milk.getCategories().stream().map(Category::getId).collect(Collectors.toSet()));
     }
 
-    public static MilkCreateRequest getMilkCreateRequestNullName() {
-        return new MilkCreateRequest(null, MilkType.SEMI_SKIMMED, randomUpc(), new BigDecimal("1.20"), 100, Set.of(UUID.randomUUID()));
+    public static MilkRequest getMilkCreateRequestNullName() {
+        return new MilkRequest(null, MilkType.SEMI_SKIMMED, randomUpc(), new BigDecimal("1.20"), 100, Set.of(UUID.randomUUID()));
     }
 
-    public static MilkUpdateRequest getMilkUpdateRequest(Milk milk) {
-        return new MilkUpdateRequest(milk.getName(), milk.getMilkType(), milk.getUpc(), milk.getPrice(), milk.getStock(), milk.getCategories().stream().map(Category::getId).collect(Collectors.toSet()));
+    public static MilkRequest getMilkUpdateRequest(Milk milk) {
+        return new MilkRequest(milk.getName(), milk.getMilkType(), milk.getUpc(), milk.getPrice(), milk.getStock(), milk.getCategories().stream().map(Category::getId).collect(Collectors.toSet()));
     }
 
     public static MilkPatchRequest getMilkPatchRequestWithName() {
@@ -160,7 +159,7 @@ public class TestDataFactory {
     }
 
     public static MilkResponse getMilkResponse(Milk milk) {
-        return new MilkResponse(milk.getId(), milk.getVersion(), milk.getName(), milk.getMilkType(), milk.getUpc(), milk.getPrice(), milk.getStock(), milk.getCreatedAt(), milk.getUpdatedAt(), milk.getCategories().stream().map(Category::getId).collect(Collectors.toSet()));
+        return new MilkResponse(milk.getId(), milk.getCreatedAt(), milk.getName(), milk.getMilkType(), milk.getUpc(), milk.getPrice(), milk.getStock(), milk.getCategories().stream().map(Category::getId).collect(Collectors.toSet()));
     }
 
     // ---------------

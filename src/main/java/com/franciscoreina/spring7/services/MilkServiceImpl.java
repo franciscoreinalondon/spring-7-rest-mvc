@@ -2,9 +2,8 @@ package com.franciscoreina.spring7.services;
 
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
-import com.franciscoreina.spring7.dto.request.milk.MilkCreateRequest;
+import com.franciscoreina.spring7.dto.request.milk.MilkRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
-import com.franciscoreina.spring7.dto.request.milk.MilkUpdateRequest;
 import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.mappers.MilkMapper;
@@ -28,7 +27,7 @@ public class MilkServiceImpl implements MilkService {
     private final MilkMapper milkMapper;
 
     @Override
-    public MilkResponse create(MilkCreateRequest request) {
+    public MilkResponse create(MilkRequest request) {
         var initialCategories = new HashSet<>(categoryRepository.findAllById(request.categoryIds()));
         if (initialCategories.isEmpty()) {
             throw new NotFoundException("None of the provided categories were found");
@@ -67,7 +66,7 @@ public class MilkServiceImpl implements MilkService {
 
     @Transactional
     @Override
-    public void update(UUID milkId, MilkUpdateRequest request) {
+    public void update(UUID milkId, MilkRequest request) {
         var milkToUpdate = getMilkOrThrow(milkId);
         milkMapper.updateEntity(milkToUpdate, request);
         milkRepository.save(milkToUpdate);

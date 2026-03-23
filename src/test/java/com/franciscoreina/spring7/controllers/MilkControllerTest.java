@@ -4,9 +4,8 @@ import com.franciscoreina.spring7.api.ApiPaths;
 import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
-import com.franciscoreina.spring7.dto.request.milk.MilkCreateRequest;
+import com.franciscoreina.spring7.dto.request.milk.MilkRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
-import com.franciscoreina.spring7.dto.request.milk.MilkUpdateRequest;
 import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.services.MilkService;
@@ -65,8 +64,8 @@ public class MilkControllerTest {
     Category savedCategory;
     Milk newMilk;
     Milk savedMilk;
-    MilkCreateRequest createRequest;
-    MilkUpdateRequest updateRequest;
+    MilkRequest createRequest;
+    MilkRequest updateRequest;
     MilkPatchRequest patchRequest;
     MilkResponse response;
 

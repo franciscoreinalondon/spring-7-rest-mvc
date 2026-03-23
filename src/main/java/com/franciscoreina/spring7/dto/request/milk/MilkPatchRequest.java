@@ -2,17 +2,20 @@ package com.franciscoreina.spring7.dto.request.milk;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.franciscoreina.spring7.domain.milk.MilkType;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 
 import java.math.BigDecimal;
 import java.util.Set;
 import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Builder
 public record MilkPatchRequest(
         @Size(max = 50)
         String name,
@@ -23,13 +26,13 @@ public record MilkPatchRequest(
         @Pattern(regexp = "^[0-9A-Za-z]+$")
         String upc,
 
-        @DecimalMin(value = "0.00", inclusive = false)
+        @Positive(message = "Price must be greater than 0")
         @Digits(integer = 10, fraction = 2)
         BigDecimal price,
 
         @PositiveOrZero
         Integer stock,
 
-        Set<UUID> categoriesId
+        Set<@NotNull UUID> categoryIds
 ) {
 }
