@@ -83,11 +83,18 @@ public class TestDataFactory {
     // ---------------
 
     public static Category getNewCategory() {
-        return Category.builder().description("Dairy Products").build();
+        return Category.createCategory("Dairy Products");
     }
 
     public static Category getSavedCategory(Category category) {
-        return Category.builder().id(UUID.randomUUID()).version(0).description(category.getDescription()).createdAt(Instant.now()).updatedAt(Instant.now()).build();
+        var savedCategory = Category.createCategory(category.getDescription());
+
+        ReflectionTestUtils.setField(savedCategory, "id", UUID.randomUUID());
+        ReflectionTestUtils.setField(savedCategory, "version", 0);
+        ReflectionTestUtils.setField(savedCategory, "createdAt", Instant.now());
+        ReflectionTestUtils.setField(savedCategory, "updatedAt", Instant.now());
+
+        return savedCategory;
     }
 
     // ---------------

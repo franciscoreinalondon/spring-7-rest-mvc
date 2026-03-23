@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,9 +23,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.Instant;
 import java.util.UUID;
 
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
 @Getter
 @Setter
 @EntityListeners(AuditingEntityListener.class)
@@ -48,14 +49,32 @@ public class Category {
     @Column(nullable = false)
     private Instant updatedAt;
 
-    // Entity attributes
+    // Business Attributes
 
     @NotBlank
     @Size(max = 50)
     @Column(nullable = false, length = 50)
     private String description;
 
-    // Methods
+    // Business Methods (Rich Model)
+
+    public static Category createCategory(String description) {
+        validatePresence(description, "Description is required");
+
+        return Category.builder()
+                .description(description.trim())
+                .build();
+    }
+
+    // Utilities
+
+    private static void validatePresence(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    // Equals / HashCode
 
     @Override
     public boolean equals(Object o) {
