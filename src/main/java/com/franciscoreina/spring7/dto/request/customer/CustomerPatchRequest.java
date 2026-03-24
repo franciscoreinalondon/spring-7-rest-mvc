@@ -12,7 +12,7 @@ public record CustomerPatchRequest(
         @Size(max = 50)
         String name,
 
-        @Email
+        @Email(message = "Email must be valid")
         @Size(max = 120)
         String email
 ) {

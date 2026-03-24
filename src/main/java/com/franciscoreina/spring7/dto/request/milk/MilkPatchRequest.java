@@ -27,11 +27,11 @@ public record MilkPatchRequest(
         @Pattern(regexp = "^[0-9A-Za-z]+$")
         String upc,
 
-        @Positive
+        @Positive(message = "Requested quantity must be greater than 0")
         @Digits(integer = 10, fraction = 2)
         BigDecimal price,
 
-        @PositiveOrZero
+        @PositiveOrZero(message = "Requested quantity can not be negative")
         Integer stock,
 
         // JPA Relationships

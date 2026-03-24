@@ -12,7 +12,7 @@ import java.util.UUID;
 public record OrderLineCreateRequest(
 
         @NotNull
-        @Positive
+        @Positive(message = "Requested quantity must be greater than 0")
         Integer requestedQuantity,
 
         // JPA Relationships

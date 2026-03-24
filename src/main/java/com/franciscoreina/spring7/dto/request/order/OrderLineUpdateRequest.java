@@ -10,7 +10,7 @@ import lombok.Builder;
 public record OrderLineUpdateRequest(
 
         @NotNull
-        @Positive
+        @Positive(message = "Requested quantity must be greater than 0")
         Integer requestedQuantity
 ) {
 }

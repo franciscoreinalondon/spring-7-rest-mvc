@@ -33,12 +33,12 @@ public record MilkRequest(
         String upc,
 
         @NotNull
-        @Positive
+        @Positive(message = "Requested quantity must be greater than 0")
         @Digits(integer = 10, fraction = 2)
         BigDecimal price,
 
         @NotNull
-        @PositiveOrZero
+        @PositiveOrZero(message = "Requested quantity can not be negative")
         Integer stock,
 
         // JPA Relationships
