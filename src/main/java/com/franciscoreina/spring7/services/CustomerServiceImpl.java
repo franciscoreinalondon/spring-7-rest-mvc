@@ -8,10 +8,11 @@ import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.mappers.CustomerMapper;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -34,24 +35,26 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public List<CustomerResponse> list() {
-        return customerRepository.findAll().stream().map(customerMapper::toResponse).toList();
+    public Page<CustomerResponse> list(String name, String email, Pageable pageable) {
+        return customerRepository.findAll(pageable).map(customerMapper::toResponse);
     }
 
     @Transactional
     @Override
-    public void update(UUID customerId, CustomerRequest request) {
+    public CustomerResponse update(UUID customerId, CustomerRequest request) {
         var customerToUpdate = getCustomerOrThrow(customerId);
         customerMapper.updateEntity(customerToUpdate, request);
         customerRepository.save(customerToUpdate);
+        return customerMapper.toResponse(customerToUpdate);
     }
 
     @Transactional
     @Override
-    public void patch(UUID customerId, CustomerPatchRequest request) {
+    public CustomerResponse patch(UUID customerId, CustomerPatchRequest request) {
         var customerToPatch = getCustomerOrThrow(customerId);
         customerMapper.patchEntity(customerToPatch, request);
         customerRepository.save(customerToPatch);
+        return customerMapper.toResponse(customerToPatch);
     }
 
     @Override

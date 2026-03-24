@@ -3,8 +3,9 @@ package com.franciscoreina.spring7.services;
 import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface CustomerService {
@@ -13,11 +14,11 @@ public interface CustomerService {
 
     CustomerResponse getById(UUID customerId);
 
-    List<CustomerResponse> list();
+    Page<CustomerResponse> list(String name, String email, Pageable pageable);
 
-    void update(UUID customerId, CustomerRequest request);
+    CustomerResponse update(UUID customerId, CustomerRequest request);
 
-    void patch(UUID customerId, CustomerPatchRequest request);
+    CustomerResponse patch(UUID customerId, CustomerPatchRequest request);
 
     void delete(UUID customerId);
 
