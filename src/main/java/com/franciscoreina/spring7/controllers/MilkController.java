@@ -8,6 +8,7 @@ import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.services.MilkService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.net.URI;
 import java.util.UUID;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping(ApiPaths.MILKS)
@@ -34,6 +36,8 @@ public class MilkController {
 
     @PostMapping
     public ResponseEntity<Void> create(@Valid @RequestBody MilkRequest request) {
+        log.info("Creating milk with name and upc: {}, {}", request.name(), request.upc());
+
         var milkResponse = milkService.create(request);
         var location = URI.create(ApiPaths.MILKS + "/" + milkResponse.id());
 
@@ -42,6 +46,8 @@ public class MilkController {
 
     @GetMapping(ApiPaths.MILK_ID)
     public MilkResponse getById(@PathVariable("milkId") UUID milkId) {
+        log.info("Getting milk by id: {}", milkId);
+
         return milkService.getById(milkId);
     }
 
@@ -50,25 +56,28 @@ public class MilkController {
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "milkType", required = false) MilkType milkType,
             Pageable pageable) {
+        log.info("Getting all milks");
+
         return milkService.list(name, milkType, pageable);
     }
 
     @PutMapping(ApiPaths.MILK_ID)
-    public ResponseEntity<Void> update(@PathVariable("milkId") UUID milkId, @Valid @RequestBody MilkRequest request) {
-        milkService.update(milkId, request);
+    public MilkResponse update(@PathVariable("milkId") UUID milkId, @Valid @RequestBody MilkRequest request) {
+        log.info("Updating milk with id: {}", milkId);
 
-        return ResponseEntity.noContent().build();
+        return milkService.update(milkId, request);
     }
 
     @PatchMapping(ApiPaths.MILK_ID)
-    public ResponseEntity<Void> patch(@PathVariable("milkId") UUID milkId, @Valid @RequestBody MilkPatchRequest request) {
-        milkService.patch(milkId, request);
+    public MilkResponse patch(@PathVariable("milkId") UUID milkId, @Valid @RequestBody MilkPatchRequest request) {
+        log.info("Patching milk with id: {}", milkId);
 
-        return ResponseEntity.noContent().build();
+        return milkService.patch(milkId, request);
     }
 
     @DeleteMapping(ApiPaths.MILK_ID)
     public ResponseEntity<Void> delete(@PathVariable("milkId") UUID milkId) {
+        log.info("Deleting customer with id: {}", milkId);
         milkService.delete(milkId);
 
         return ResponseEntity.noContent().build();

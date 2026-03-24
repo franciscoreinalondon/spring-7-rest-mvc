@@ -17,9 +17,9 @@ public interface MilkService {
 
     Page<MilkResponse> list(String name, MilkType milkType, Pageable pageable);
 
-    void update(UUID milkId, MilkRequest request);
+    MilkResponse update(UUID milkId, MilkRequest request);
 
-    void patch(UUID milkId, MilkPatchRequest request);
+    MilkResponse patch(UUID milkId, MilkPatchRequest request);
 
     void delete(UUID milkId);
 

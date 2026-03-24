@@ -68,7 +68,7 @@ public class MilkServiceImpl implements MilkService {
 
     @Transactional
     @Override
-    public void update(UUID milkId, MilkRequest request) {
+    public MilkResponse update(UUID milkId, MilkRequest request) {
         var milkToUpdate = getMilkOrThrow(milkId);
         var categories = new HashSet<>(categoryRepository.findAllById(request.categoryIds()));
         if (categories.size() != request.categoryIds().size()) {
@@ -76,11 +76,12 @@ public class MilkServiceImpl implements MilkService {
         }
         milkMapper.updateEntity(milkToUpdate, request, categories);
         milkRepository.save(milkToUpdate);
+        return milkMapper.toResponse(milkToUpdate);
     }
 
     @Transactional
     @Override
-    public void patch(UUID milkId, MilkPatchRequest request) {
+    public MilkResponse patch(UUID milkId, MilkPatchRequest request) {
         var milkToPatch = getMilkOrThrow(milkId);
         Set<Category> categories = null;
         if (request.categoryIds() != null && !request.categoryIds().isEmpty()) {
@@ -92,6 +93,8 @@ public class MilkServiceImpl implements MilkService {
 
         milkMapper.patchEntity(milkToPatch, request, categories);
         milkRepository.save(milkToPatch);
+
+        return milkMapper.toResponse(milkToPatch);
     }
 
     @Override
