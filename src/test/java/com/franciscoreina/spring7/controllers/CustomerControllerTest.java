@@ -1,28 +1,30 @@
 package com.franciscoreina.spring7.controllers;
 
 import com.franciscoreina.spring7.api.ApiPaths;
-import com.franciscoreina.spring7.domain.customer.Customer;
-import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
+import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.services.CustomerService;
-import com.franciscoreina.spring7.testdata.TestDataFactory;
-import org.junit.jupiter.api.BeforeEach;
+import org.instancio.Instancio;
+import org.instancio.Model;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.security.oauth2.server.resource.autoconfigure.servlet.OAuth2ResourceServerAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.UUID;
 
+import static org.instancio.Select.field;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
@@ -32,7 +34,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -43,314 +44,285 @@ public class CustomerControllerTest {
 
     @Autowired
     MockMvc mockMvc;
-
     @Autowired
     ObjectMapper objectMapper;
-
     @MockitoBean
     CustomerService customerService;
 
-    Customer newCustomer;
-    Customer savedCustomer;
-    CustomerRequest createRequest;
-    CustomerRequest updateRequest;
-    CustomerPatchRequest patchRequest;
-    CustomerResponse response;
+    // We use a model to ensure that email are valid in all tests
+    private static final Model<CustomerRequest> REQUEST_MODEL = Instancio.of(CustomerRequest.class)
+            .generate(field(CustomerRequest::email), gen -> gen.net().email())
+            .toModel();
 
-    @BeforeEach
-    void setUp() {
-        newCustomer = TestDataFactory.getNewCustomer();
-        savedCustomer = TestDataFactory.getSavedCustomer(newCustomer);
-        createRequest = TestDataFactory.getCustomerCreateRequest(newCustomer);
-        updateRequest = TestDataFactory.getCustomerUpdateRequest(savedCustomer);
-        patchRequest = TestDataFactory.getCustomerPatchRequestWithName();
-        response = TestDataFactory.getCustomerResponse(savedCustomer);
+    private static final Model<CustomerPatchRequest> PATCH_MODEL = Instancio.of(CustomerPatchRequest.class)
+            .generate(field(CustomerPatchRequest::email), gen -> gen.net().email())
+            .toModel();
+
+    // ---------------
+    //    POSITIVE
+    // ---------------
+
+    @Nested
+    class PositiveTests {
+
+        @Test
+        void postCustomer_returns201_whenValidRequest() throws Exception {
+            // Arrange
+            var request = Instancio.create(REQUEST_MODEL);
+            var response = Instancio.create(CustomerResponse.class);
+
+            given(customerService.create(request)).willReturn(response);
+
+            // Act + Assert
+            mockMvc.perform(post(ApiPaths.CUSTOMERS)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isCreated())
+                    .andExpect(header().string("Location", ApiPaths.CUSTOMERS + "/" + response.id()))
+                    .andExpect(jsonPath("$.id").value(response.id().toString()));
+        }
+
+        @Test
+        void getCustomerById_returns200_whenExists() throws Exception {
+            // Arrange
+            var response = Instancio.create(CustomerResponse.class);
+
+            given(customerService.getById(response.id())).willReturn(response);
+
+            // Act + Assert
+            mockMvc.perform(get(ApiPaths.CUSTOMERS + "/{id}", response.id()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(response.id().toString()));
+        }
+
+        @Test
+        void listCustomers_returns200_withData() throws Exception {
+            // Arrange
+            var page = new PageImpl<>(Instancio.ofList(CustomerResponse.class).size(2).create());
+
+            given(customerService.list(any(), any(), any())).willReturn(page);
+
+            // Act + Assert
+            mockMvc.perform(get(ApiPaths.CUSTOMERS))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content.size()").value(2));
+        }
+
+        @Test
+        void putCustomer_returns200_whenExists() throws Exception {
+            // Arrange
+            var id = UUID.randomUUID();
+            var request = Instancio.create(REQUEST_MODEL);
+            var response = Instancio.of(CustomerResponse.class).set(field(CustomerResponse::id), id).create();
+
+            given(customerService.update(id, request)).willReturn(response);
+
+            // Act + Assert
+            mockMvc.perform(put(ApiPaths.CUSTOMERS + "/{id}", id)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(id.toString()));
+        }
+
+        @Test
+        void patchCustomer_returns200_whenExists() throws Exception {
+            // Arrange
+            var id = UUID.randomUUID();
+            var patch = Instancio.create(PATCH_MODEL);
+            var response = Instancio.of(CustomerResponse.class).set(field(CustomerResponse::id), id).create();
+
+            given(customerService.patch(id, patch)).willReturn(response);
+
+            // Act + Assert
+            mockMvc.perform(patch(ApiPaths.CUSTOMERS + "/{id}", id)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(patch)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(id.toString()));
+        }
+
+        @Test
+        void deleteCustomer_returns204() throws Exception {
+            // Arrange
+            var id = UUID.randomUUID();
+
+            // Act + Assert
+            mockMvc.perform(delete(ApiPaths.CUSTOMERS + "/{id}", id))
+                    .andExpect(status().isNoContent());
+
+            // Assert
+            verify(customerService).delete(id);
+        }
     }
 
-    @Test
-    void postCustomer_returns201_andLocationHeader_whenRequestValid() throws Exception {
-        // Arrange
-        given(customerService.create(createRequest)).willReturn(response);
+    // ---------------
+    //    NEGATIVE
+    // ---------------
 
-        // Act
-        mockMvc.perform(post(ApiPaths.CUSTOMERS)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsBytes(createRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(header().string("Location", ApiPaths.CUSTOMERS + "/" + response.id()));
+    @Nested
+    class NegativeTests {
 
-        // Assert
-        verify(customerService).create(createRequest);
-    }
+        @Test
+        void postCustomer_returns400_whenInvalidData() throws Exception {
+            // Arrange
+            var invalidRequest = CustomerRequest.builder()
+                    .name(" ")
+                    .email("Invalid email")
+                    .build();
 
+            // Act + Assert
+            mockMvc.perform(post(ApiPaths.CUSTOMERS)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(invalidRequest)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors.name").exists())
+                    .andExpect(jsonPath("$.errors.email").exists());
 
-//    @Test
-//    void postCustomer_returns400_whenNameNull() throws Exception {
-//        // Arrange
-//        newCustomer.updateName(null);
-//        var wrongCreateRequest = TestDataFactory.getCustomerCreateRequest(newCustomer);
-//
-//        // Act
-//        mockMvc.perform(post(ApiPaths.CUSTOMERS)
-//                        .accept(MediaType.APPLICATION_JSON)
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsBytes(wrongCreateRequest)))
-//                .andExpect(status().isBadRequest());
-//
-//        // Assert
-//        verifyNoInteractions(customerService);
-//    }
+            // Assert
+            verifyNoInteractions(customerService);
+        }
 
-//    @Test
-//    void postCustomer_returns409_whenEmailDuplicated() throws Exception {
-//        // Arrange
-//        willThrow(new DataIntegrityViolationException("Email Duplicated")).given(customerService).create(createRequest);
-//
-//        // Act
-//        mockMvc.perform(post(ApiPaths.CUSTOMERS)
-//                        .accept(MediaType.APPLICATION_JSON)
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsBytes(createRequest)))
-//                .andExpect(status().isConflict());
-//
-//        // Assert
-//        verify(customerService).create(createRequest);
-//    }
+        @Test
+        void postCustomer_returns409_whenDuplicatedEmail() throws Exception {
+            // Arrange
+            var request = Instancio.create(REQUEST_MODEL);
 
-    @Test
-    void getCustomerById_returns200_andBody_whenExists() throws Exception {
-        // Arrange
-        var savedCustomerId = savedCustomer.getId();
-        given(customerService.getById(savedCustomerId)).willReturn(response);
+            given(customerService.create(request)).willThrow(new DataIntegrityViolationException("Conflict"));
 
-        // Act
-        mockMvc.perform(get(ApiPaths.CUSTOMERS + "/" + savedCustomerId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(response.id().toString()))
-                .andExpect(jsonPath("$.name").value(response.name()))
-                .andExpect(jsonPath("$.email").value(response.email()));
+            // Act + Assert
+            mockMvc.perform(post(ApiPaths.CUSTOMERS)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isConflict());
+        }
 
-        // Assert
-        verify(customerService).getById(savedCustomerId);
-    }
+        @Test
+        void getCustomer_returns404_whenNotFound() throws Exception {
+            // Arrange
+            var id = UUID.randomUUID();
 
-    @Test
-    void getCustomerById_returns404_whenMissing() throws Exception {
-        // Arrange
-        var savedCustomerId = savedCustomer.getId();
-        given(customerService.getById(savedCustomerId)).willThrow(NotFoundException.class);
+            given(customerService.getById(id)).willThrow(new NotFoundException("Not found"));
 
-        // Act
-        mockMvc.perform(get(ApiPaths.CUSTOMERS + "/" + savedCustomerId))
-                .andExpect(status().isNotFound());
+            // Act + Assert
+            mockMvc.perform(get(ApiPaths.CUSTOMERS + "/{id}", id))
+                    .andExpect(status().isNotFound());
+        }
 
-        // Assert
-        verify(customerService).getById(savedCustomerId);
-    }
+        @Test
+        void putCustomer_returns400_whenInvalidData() throws Exception {
+            // Arrange
+            var id = UUID.randomUUID();
+            var invalidRequest = CustomerRequest.builder()
+                    .name(" ")
+                    .email("Invalid email")
+                    .build();
 
-//    @Test
-//    void listCustomers_returns200_andArray_whenExists() throws Exception {
-//        // Arrange
-//        var savedCustomer2 = TestDataFactory.getSavedCustomer(TestDataFactory.getNewCustomer());
-//        var response2 = TestDataFactory.getCustomerResponse(savedCustomer2);
-//        var responseList = List.of(response, response2);
-//
-//        given(customerService.list(, , )).willReturn(responseList);
-//
-//        // Act
-//        mockMvc.perform(get(ApiPaths.CUSTOMERS))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.size()").value(2))
-//                .andExpect(jsonPath("$[0].id").value(response.id().toString()))
-//                .andExpect(jsonPath("$[0].email").value(response.email()))
-//                .andExpect(jsonPath("$[1].id").value(response2.id().toString()))
-//                .andExpect(jsonPath("$[1].email").value(response2.email()));
-//
-//        // Assert
-//        verify(customerService).list(, , );
-//    }
+            // Act + Assert
+            mockMvc.perform(put(ApiPaths.CUSTOMERS + "/{id}", id)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(invalidRequest)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors.name").exists())
+                    .andExpect(jsonPath("$.errors.email").exists());
 
-//    @Test
-//    void listCustomers_returns200_andEmptyArray_whenNotExists() throws Exception {
-//        // Arrange
-//        given(customerService.list(, , )).willReturn(Collections.emptyList());
-//
-//        // Act
-//        mockMvc.perform(get(ApiPaths.CUSTOMERS))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.size()").value(0));
-//
-//        // Assert
-//        verify(customerService).list(, , );
-//    }
+            // Assert
+            verifyNoInteractions(customerService);
+        }
 
-    @Test
-    void putCustomer_returns204_whenRequestValid_andExists() throws Exception {
-        // Arrange
-        var savedCustomerId = savedCustomer.getId();
+        @Test
+        void putCustomer_returns404_whenNotFound() throws Exception {
+            // Arrange
+            var id = UUID.randomUUID();
+            var request = Instancio.create(REQUEST_MODEL);
 
-        // Act
-        mockMvc.perform(put(ApiPaths.CUSTOMERS + "/" + savedCustomerId)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateRequest)))
-                .andExpect(status().isNoContent())
-                .andExpect(content().string(""));
+            given(customerService.update(id, request)).willThrow(new NotFoundException("Not found"));
 
-        // Assert
-        verify(customerService).update(savedCustomerId, updateRequest);
-    }
+            // Act + Assert
+            mockMvc.perform(put(ApiPaths.CUSTOMERS + "/{id}", id)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNotFound());
+        }
 
-//    @Test
-//    void putCustomer_returns400_whenNameNull() throws Exception {
-//        // Arrange
-//        var savedCustomerId = savedCustomer.getId();
-//        savedCustomer.updateName(null);
-//        var wrongUpdateRequest = TestDataFactory.getCustomerUpdateRequest(savedCustomer);
-//
-//        // Act
-//        mockMvc.perform(put(ApiPaths.CUSTOMERS + "/" + savedCustomerId)
-//                        .accept(MediaType.APPLICATION_JSON)
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsString(wrongUpdateRequest)))
-//                .andExpect(status().isBadRequest());
-//
-//        // Assert
-//        verifyNoInteractions(customerService);
-//    }
+        @Test
+        void putCustomer_returns409_whenDuplicatedEmail() throws Exception {
+            // Arrange
+            var id = UUID.randomUUID();
+            var request = Instancio.create(REQUEST_MODEL);
 
-    @Test
-    void putCustomer_returns404_whenMissing() throws Exception {
-        // Arrange
-        var savedCustomerId = savedCustomer.getId();
-        willThrow(NotFoundException.class).given(customerService).update(savedCustomerId, updateRequest);
+            given(customerService.update(id, request)).willThrow(new DataIntegrityViolationException("Conflict"));
 
-        // Act
-        mockMvc.perform(put(ApiPaths.CUSTOMERS + "/" + savedCustomerId)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateRequest)))
-                .andExpect(status().isNotFound());
+            // Act + Assert
+            mockMvc.perform(put(ApiPaths.CUSTOMERS + "/{id}", id)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isConflict());
+        }
 
-        // Assert
-        verify(customerService).update(savedCustomerId, updateRequest);
-    }
+        @Test
+        void patchCustomer_returns400_whenInvalidData() throws Exception {
+            // Arrange
+            var id = UUID.randomUUID();
+            var invalidRequest = CustomerPatchRequest.builder()
+                    .email("Invalid email")
+                    .build();
 
-    @Test
-    void putCustomer_returns409_whenEmailDuplicated() throws Exception {
-        // Arrange
-        var savedCustomerId = savedCustomer.getId();
-        willThrow(new DataIntegrityViolationException("Email Duplicated")).given(customerService).update(savedCustomerId, updateRequest);
+            // Act + Assert
+            mockMvc.perform(patch(ApiPaths.CUSTOMERS + "/{id}", id)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(invalidRequest)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors.email").exists());
 
-        // Act
-        mockMvc.perform(put(ApiPaths.CUSTOMERS + "/" + savedCustomerId)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateRequest)))
-                .andExpect(status().isConflict());
+            // Assert
+            verifyNoInteractions(customerService);
+        }
 
-        // Assert
-        verify(customerService).update(savedCustomerId, updateRequest);
-    }
+        @Test
+        void patchCustomer_returns404_whenNotFound() throws Exception {
+            // Arrange
+            var id = UUID.randomUUID();
+            var patch = Instancio.create(PATCH_MODEL);
 
-    @Test
-    void patchCustomer_returns204_whenRequestValid_andExists() throws Exception {
-        // Arrange
-        var savedCustomerId = savedCustomer.getId();
+            given(customerService.patch(id, patch)).willThrow(new NotFoundException("Not found"));
 
-        // Act
-        mockMvc.perform(patch(ApiPaths.CUSTOMERS + "/" + savedCustomerId)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(patchRequest)))
-                .andExpect(status().isNoContent())
-                .andExpect(content().string(""));
+            // Act + Assert
+            mockMvc.perform(patch(ApiPaths.CUSTOMERS + "/{id}", id)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(patch)))
+                    .andExpect(status().isNotFound());
+        }
 
+        @Test
+        void patchCustomer_returns409_whenEmailDuplicated() throws Exception {
+            // Arrange
+            var id = UUID.randomUUID();
+            var invalidRequest = Instancio.create(PATCH_MODEL);
 
-        // Assert
-        verify(customerService).patch(savedCustomerId, patchRequest);
-    }
+            given(customerService.patch(id, invalidRequest)).willThrow(new DataIntegrityViolationException("Conflict"));
 
-    @Test
-    void patchCustomer_returns400_whenEmailInvalid() throws Exception {
-        // Arrange
-        var savedCustomerId = savedCustomer.getId();
-        var wrongPatchRequest = TestDataFactory.getCustomerPatchRequestInvalidEmail();
+            // Act + Assert
+            mockMvc.perform(patch(ApiPaths.CUSTOMERS + "/{id}", id)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(invalidRequest)))
+                    .andExpect(status().isConflict());
+        }
 
-        // Act
-        mockMvc.perform(patch(ApiPaths.CUSTOMERS + "/" + savedCustomerId)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(wrongPatchRequest)))
-                .andExpect(status().isBadRequest());
+        @Test
+        void deleteCustomer_returns404_whenNotFound() throws Exception {
+            // Arrange
+            var id = UUID.randomUUID();
 
-        // Assert
-        verifyNoInteractions(customerService);
-    }
+            willThrow(new NotFoundException("Not found")).given(customerService).delete(id);
 
-    @Test
-    void patchCustomer_returns404_whenMissing() throws Exception {
-        // Arrange
-        var savedCustomerId = savedCustomer.getId();
-        willThrow(NotFoundException.class).given(customerService).patch(savedCustomerId, patchRequest);
+            // Act + Assert
+            mockMvc.perform(delete(ApiPaths.CUSTOMERS + "/{id}", id)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound());
 
-        // Act
-        mockMvc.perform(patch(ApiPaths.CUSTOMERS + "/" + savedCustomerId)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(patchRequest)))
-                .andExpect(status().isNotFound());
-
-        // Assert
-        verify(customerService).patch(savedCustomerId, patchRequest);
-    }
-
-    @Test
-    void patchCustomer_returns409_whenEmailDuplicated() throws Exception {
-        // Arrange
-        var savedCustomerId = savedCustomer.getId();
-        willThrow(new DataIntegrityViolationException("Email Duplicated")).given(customerService).patch(savedCustomerId, patchRequest);
-
-        // Act
-        mockMvc.perform(patch(ApiPaths.CUSTOMERS + "/" + savedCustomerId)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(patchRequest)))
-                .andExpect(status().isConflict());
-
-        // Assert
-        verify(customerService).patch(savedCustomerId, patchRequest);
-    }
-
-    @Test
-    void deleteCustomer_returns204_whenExists() throws Exception {
-        // Arrange
-        var savedCustomerId = savedCustomer.getId();
-
-        // Act
-        mockMvc.perform(delete(ApiPaths.CUSTOMERS + "/" + savedCustomerId)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent())
-                .andExpect(content().string(""));
-
-
-        // Assert
-        verify(customerService).delete(savedCustomerId);
-    }
-
-    @Test
-    void deleteCustomer_returns404_whenMissing() throws Exception {
-        // Arrange
-        var savedCustomerId = savedCustomer.getId();
-        willThrow(NotFoundException.class).given(customerService).delete(savedCustomerId);
-
-        // Act
-        mockMvc.perform(delete(ApiPaths.CUSTOMERS + "/" + savedCustomerId)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
-
-        // Assert
-        verify(customerService).delete(savedCustomerId);
+            // Assert
+            verify(customerService).delete(id);
+        }
     }
 }

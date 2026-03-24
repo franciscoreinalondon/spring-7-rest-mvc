@@ -16,7 +16,7 @@ public record CustomerRequest(
 
         @NotBlank
         @Size(max = 120)
-        @Email(message = "Email must be valid")
+        @Email
         String email
 ) {
 }
