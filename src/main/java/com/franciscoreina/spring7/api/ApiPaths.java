@@ -15,4 +15,8 @@ public class ApiPaths {
     // MILK ORDERS
     public static final String MILK_ORDERS = API_V1 + "/milkorders";
     public static final String MILK_ORDER_ID = "/{milkOrderId}";
+
+    // ORDER LINES
+    public static final String LINES = "/lines";
+    public static final String LINE_ID = "/{lineId}";
 }

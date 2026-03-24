@@ -3,7 +3,9 @@ package com.franciscoreina.spring7.services;
 import com.franciscoreina.spring7.domain.order.MilkOrder;
 import com.franciscoreina.spring7.domain.order.OrderLine;
 import com.franciscoreina.spring7.dto.request.order.MilkOrderRequest;
+import com.franciscoreina.spring7.dto.request.order.OrderLineCreateRequest;
 import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
+import com.franciscoreina.spring7.dto.response.order.OrderLineResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.mappers.MilkOrderMapper;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
@@ -21,11 +23,13 @@ import java.util.UUID;
 public class MilkOrderServiceImpl implements MilkOrderService {
 
     private final CustomerRepository customerRepository;
-
     private final MilkRepository milkRepository;
-
     private final MilkOrderRepository milkOrderRepository;
     private final MilkOrderMapper milkOrderMapper;
+
+    // ---------------
+    //      ORDER
+    // ---------------
 
     @Override
     public MilkOrderResponse create(MilkOrderRequest request) {
@@ -67,5 +71,24 @@ public class MilkOrderServiceImpl implements MilkOrderService {
     private MilkOrder getMilkOrThrow(UUID milkOrderId) {
         return milkOrderRepository.findById(milkOrderId)
                 .orElseThrow(() -> new NotFoundException("MilkOrder not found: " + milkOrderId));
+    }
+
+    // ---------------
+    //      ORDER
+    // ---------------
+
+    @Override
+    public OrderLineResponse create(UUID milkOrderId, OrderLineCreateRequest request) {
+        return null;
+    }
+
+    @Override
+    public OrderLineResponse patch(UUID orderLineId, OrderLineCreateRequest request) {
+        return null;
+    }
+
+    @Override
+    public void delete(UUID orderLineId) {
+
     }
 }
