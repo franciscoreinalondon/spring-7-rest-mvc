@@ -2,7 +2,7 @@ package com.franciscoreina.spring7.mappers;
 
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.order.OrderLine;
-import com.franciscoreina.spring7.dto.request.order.OrderLineCreateRequest;
+import com.franciscoreina.spring7.dto.request.order.OrderLineUpdateRequest;
 import com.franciscoreina.spring7.dto.response.order.OrderLineResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -14,7 +14,7 @@ import org.mapstruct.Mapping;
 @Mapper
 public interface OrderLineMapper {
 
-    default OrderLine toEntity(OrderLineCreateRequest request, Milk milk) {
+    default OrderLine toEntity(OrderLineUpdateRequest request, Milk milk) {
         if (request == null || milk == null) return null;
 
         return OrderLine.createOrderLine(

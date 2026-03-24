@@ -2,6 +2,7 @@ package com.franciscoreina.spring7.services;
 
 import com.franciscoreina.spring7.dto.request.order.MilkOrderRequest;
 import com.franciscoreina.spring7.dto.request.order.OrderLineCreateRequest;
+import com.franciscoreina.spring7.dto.request.order.OrderLineUpdateRequest;
 import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
 import com.franciscoreina.spring7.dto.response.order.OrderLineResponse;
 import jakarta.validation.Valid;
@@ -26,10 +27,10 @@ public interface MilkOrderService {
     //      ORDER
     // ---------------
 
-    OrderLineResponse create(UUID milkOrderId, @Valid OrderLineCreateRequest request);
+    OrderLineResponse addLine(UUID milkOrderId, @Valid OrderLineCreateRequest request);
 
-    OrderLineResponse patch(UUID orderLineId, @Valid OrderLineCreateRequest request);
+    OrderLineResponse updateLineQuantity(UUID milkOrderId, UUID orderLineId, @Valid OrderLineUpdateRequest request);
 
-    void delete(UUID orderLineId);
+    void removeLine(UUID orderLineId);
 }
 

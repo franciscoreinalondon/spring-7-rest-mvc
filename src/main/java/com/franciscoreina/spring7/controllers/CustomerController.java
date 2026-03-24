@@ -34,12 +34,12 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @PostMapping
-    public ResponseEntity<Void> create(@Valid @RequestBody CustomerRequest request) {
+    public ResponseEntity<CustomerResponse> create(@Valid @RequestBody CustomerRequest request) {
         log.info("Creating customer with email: {}", request.email());
         var customerResponse = customerService.create(request);
         var location = URI.create(ApiPaths.CUSTOMERS + "/" + customerResponse.id());
 
-        return ResponseEntity.created(location).build();
+        return ResponseEntity.created(location).body(customerResponse);
     }
 
     @GetMapping(ApiPaths.CUSTOMER_ID)

@@ -4,6 +4,7 @@ import com.franciscoreina.spring7.domain.order.MilkOrder;
 import com.franciscoreina.spring7.domain.order.OrderLine;
 import com.franciscoreina.spring7.dto.request.order.MilkOrderRequest;
 import com.franciscoreina.spring7.dto.request.order.OrderLineCreateRequest;
+import com.franciscoreina.spring7.dto.request.order.OrderLineUpdateRequest;
 import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
 import com.franciscoreina.spring7.dto.response.order.OrderLineResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
@@ -78,17 +79,17 @@ public class MilkOrderServiceImpl implements MilkOrderService {
     // ---------------
 
     @Override
-    public OrderLineResponse create(UUID milkOrderId, OrderLineCreateRequest request) {
+    public OrderLineResponse addLine(UUID milkOrderId, OrderLineCreateRequest request) {
         return null;
     }
 
     @Override
-    public OrderLineResponse patch(UUID orderLineId, OrderLineCreateRequest request) {
+    public OrderLineResponse updateLineQuantity(UUID milkOrderId, UUID orderLineId, OrderLineUpdateRequest request) {
         return null;
     }
 
     @Override
-    public void delete(UUID orderLineId) {
+    public void removeLine(UUID orderLineId) {
 
     }
 }

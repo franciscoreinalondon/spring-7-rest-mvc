@@ -35,13 +35,12 @@ public class MilkController {
     private final MilkService milkService;
 
     @PostMapping
-    public ResponseEntity<Void> create(@Valid @RequestBody MilkRequest request) {
+    public ResponseEntity<MilkResponse> create(@Valid @RequestBody MilkRequest request) {
         log.info("Creating milk with name and upc: {}, {}", request.name(), request.upc());
-
         var milkResponse = milkService.create(request);
         var location = URI.create(ApiPaths.MILKS + "/" + milkResponse.id());
 
-        return ResponseEntity.created(location).build();
+        return ResponseEntity.created(location).body(milkResponse);
     }
 
     @GetMapping(ApiPaths.MILK_ID)
