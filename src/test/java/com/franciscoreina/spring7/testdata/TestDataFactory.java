@@ -10,12 +10,8 @@ import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkRequest;
 import com.franciscoreina.spring7.dto.request.order.MilkOrderRequest;
 import com.franciscoreina.spring7.dto.request.order.OrderLineCreateRequest;
-import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
-import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -38,17 +34,6 @@ public class TestDataFactory {
         return Customer.createCustomer("Customer name", email);
     }
 
-    public static Customer getSavedCustomer(Customer customer) {
-         var savedCustomer = Customer.createCustomer(customer.getName(), customer.getEmail());
-
-        ReflectionTestUtils.setField(savedCustomer, "id", UUID.randomUUID());
-        ReflectionTestUtils.setField(savedCustomer, "version", 0);
-        ReflectionTestUtils.setField(savedCustomer, "createdAt", Instant.now());
-        ReflectionTestUtils.setField(savedCustomer, "updatedAt", Instant.now());
-
-         return savedCustomer;
-    }
-
     public static CustomerRequest getCustomerCreateRequest(Customer customer) {
         return new CustomerRequest(customer.getName(), customer.getEmail());
     }
@@ -69,27 +54,12 @@ public class TestDataFactory {
         return new CustomerPatchRequest(null, "Invalid email");
     }
 
-    public static CustomerResponse getCustomerResponse(Customer customer) {
-        return new CustomerResponse(customer.getId(),  customer.getCreatedAt(), customer.getName(), customer.getEmail());
-    }
-
     // ---------------
     //    CATEGORY
     // ---------------
 
     public static Category getNewCategory() {
         return Category.createCategory("Dairy Products");
-    }
-
-    public static Category getSavedCategory(Category category) {
-        var savedCategory = Category.createCategory(category.getDescription());
-
-        ReflectionTestUtils.setField(savedCategory, "id", UUID.randomUUID());
-        ReflectionTestUtils.setField(savedCategory, "version", 0);
-        ReflectionTestUtils.setField(savedCategory, "createdAt", Instant.now());
-        ReflectionTestUtils.setField(savedCategory, "updatedAt", Instant.now());
-
-        return savedCategory;
     }
 
     // ---------------
@@ -118,23 +88,6 @@ public class TestDataFactory {
         return newMilk;
     }
 
-    public static Milk getSavedMilk(Milk milk) {
-        var savedMilk = Milk.createMilk(
-                milk.getName(),
-                milk.getMilkType(),
-                milk.getUpc(),
-                milk.getPrice(),
-                milk.getStock(),
-                milk.getCategories());
-
-        ReflectionTestUtils.setField(savedMilk, "id", UUID.randomUUID());
-        ReflectionTestUtils.setField(savedMilk, "version", 0);
-        ReflectionTestUtils.setField(savedMilk, "createdAt", Instant.now());
-        ReflectionTestUtils.setField(savedMilk, "updatedAt", Instant.now());
-
-        return savedMilk;
-    }
-
     public static MilkRequest getMilkCreateRequest(Milk milk) {
         return new MilkRequest(milk.getName(), milk.getMilkType(), milk.getUpc(), milk.getPrice(), milk.getStock(), milk.getCategories().stream().map(Category::getId).collect(Collectors.toSet()));
     }
@@ -143,20 +96,8 @@ public class TestDataFactory {
         return new MilkRequest(null, MilkType.SEMI_SKIMMED, randomUpc(), new BigDecimal("1.20"), 100, Set.of(UUID.randomUUID()));
     }
 
-    public static MilkRequest getMilkUpdateRequest(Milk milk) {
-        return new MilkRequest(milk.getName(), milk.getMilkType(), milk.getUpc(), milk.getPrice(), milk.getStock(), milk.getCategories().stream().map(Category::getId).collect(Collectors.toSet()));
-    }
-
-    public static MilkPatchRequest getMilkPatchRequestWithName() {
-        return new MilkPatchRequest("Patch name", null, null, null, null, Set.of());
-    }
-
     public static MilkPatchRequest getMilkPatchRequestInvalidUpc() {
         return new MilkPatchRequest(null, null, TestDataFactory.randomText(55), null, null, Set.of());
-    }
-
-    public static MilkResponse getMilkResponse(Milk milk) {
-        return new MilkResponse(milk.getId(), milk.getCreatedAt(), milk.getName(), milk.getMilkType(), milk.getUpc(), milk.getPrice(), milk.getStock(), milk.getCategories().stream().map(Category::getId).collect(Collectors.toSet()));
     }
 
     // ---------------

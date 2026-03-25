@@ -2,36 +2,33 @@ package com.franciscoreina.spring7.services;
 
 import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
-import com.franciscoreina.spring7.domain.milk.MilkType;
-import com.franciscoreina.spring7.dto.request.milk.MilkRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
+import com.franciscoreina.spring7.dto.request.milk.MilkRequest;
 import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.mappers.MilkMapper;
 import com.franciscoreina.spring7.repositories.CategoryRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
-import com.franciscoreina.spring7.testdata.TestDataFactory;
-import org.junit.jupiter.api.BeforeEach;
+import org.instancio.Instancio;
+import org.instancio.Model;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.instancio.Select.field;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -40,318 +37,270 @@ public class MilkServiceImplTest {
 
     @Mock
     CategoryRepository categoryRepository;
-
     @Mock
     MilkRepository milkRepository;
-
     @Mock
     MilkMapper milkMapper;
-
     @InjectMocks
     MilkServiceImpl milkService;
 
-    Category newCategory;
-    Category savedCategory;
-    Milk newMilk;
-    Milk savedMilk;
-    MilkRequest createRequest;
-    MilkRequest updateRequest;
-    MilkPatchRequest patchRequest;
-    MilkResponse response;
+    // We use a model to ensure the categoryIds list size are constant in all tests
+    private static final Model<MilkRequest> REQUEST_MODEL = Instancio.of(MilkRequest.class)
+            .generate(field(MilkRequest::categoryIds), gen -> gen.collection().size(1))
+            .toModel();
 
-    @BeforeEach
-    void setUp() {
-        newCategory = TestDataFactory.getNewCategory();
-        savedCategory = TestDataFactory.getSavedCategory(newCategory);
-        newMilk = TestDataFactory.getNewMilk(savedCategory);
-        savedMilk = TestDataFactory.getSavedMilk(newMilk);
-        createRequest = TestDataFactory.getMilkCreateRequest(newMilk);
-        updateRequest = TestDataFactory.getMilkUpdateRequest(savedMilk);
-        patchRequest = TestDataFactory.getMilkPatchRequestWithName();
-        response = TestDataFactory.getMilkResponse(savedMilk);
+    // ---------------
+    //    POSITIVE
+    // ---------------
+
+    @Nested
+    class PositiveTests {
+
+        @Test
+        void create_shouldReturnResponse_whenRequestValid() {
+            // Arrange
+            var categories = Instancio.ofSet(Category.class).size(1).create();
+            var request = Instancio.create(REQUEST_MODEL);
+            var milk = Instancio.create(Milk.class);
+            var expectedResponse = Instancio.create(MilkResponse.class);
+
+            given(categoryRepository.findAllById(request.categoryIds())).willReturn(List.copyOf(categories));
+            given(milkMapper.toEntity(request, categories)).willReturn(milk);
+            given(milkRepository.save(milk)).willReturn(milk);
+            given(milkMapper.toResponse(milk)).willReturn(expectedResponse);
+
+            // Act
+            var response = milkService.create(request);
+
+            // Assert
+            assertThat(response).isEqualTo(expectedResponse);
+            verify(milkRepository).save(milk);
+        }
+
+        @Test
+        void getById_shouldReturnResponse_whenExists() {
+            // Arrange
+            var milk = Instancio.create(Milk.class);
+            var expectedResponse = Instancio.create(MilkResponse.class);
+
+            given(milkRepository.findById(milk.getId())).willReturn(Optional.of(milk));
+            given(milkMapper.toResponse(milk)).willReturn(expectedResponse);
+
+            // Act
+            var response = milkService.getById(milk.getId());
+
+            // Assert
+            assertThat(expectedResponse).isEqualTo(response);
+            verify(milkRepository).findById(milk.getId());
+        }
+
+        @Test
+        void list_shouldReturnPageOfResponse_whenExist() {
+            // Arrange
+            var pageable = Pageable.ofSize(10);
+            var milk1 = Instancio.create(Milk.class);
+            var milk2 = Instancio.create(Milk.class);
+            var expectedResponse1 = Instancio.create(MilkResponse.class);
+            var expectedResponse2 = Instancio.create(MilkResponse.class);
+            var expectedPage = new PageImpl<>(List.of(milk1, milk2));
+
+            given(milkRepository.findAll(pageable)).willReturn(expectedPage);
+            given(milkMapper.toResponse(milk1)).willReturn(expectedResponse1);
+            given(milkMapper.toResponse(milk2)).willReturn(expectedResponse2);
+
+            // Act
+            var page = milkService.list(null, null, pageable);
+
+            // Assert
+            assertThat(page.getContent()).hasSize(2);
+            verify(milkRepository).findAll(pageable);
+        }
+
+        @Test
+        void update_shouldUpdateMilk_whenExists() {
+            // Arrange
+            var categories = Instancio.ofSet(Category.class).size(1).create();
+            var request = Instancio.create(REQUEST_MODEL);
+            var milk = Instancio.create(Milk.class);
+            var expectedResponse = Instancio.create(MilkResponse.class);
+
+            given(categoryRepository.findAllById(request.categoryIds())).willReturn(List.copyOf(categories));
+            given(milkRepository.findById(milk.getId())).willReturn(Optional.of(milk));
+            given(milkMapper.toResponse(milk)).willReturn(expectedResponse);
+
+            // Act
+            var response = milkService.update(milk.getId(), request);
+
+            // Assert
+            assertThat(response).isEqualTo(expectedResponse);
+            verify(milkRepository).findById(milk.getId());
+            verify(milkRepository).save(milk);
+        }
+
+        @Test
+        void patch_shouldPatchMilk_whenPartialRequest() {
+            // Arrange
+            var milk = Instancio.create(Milk.class);
+            var patch = Instancio.of(MilkPatchRequest.class).set(field(MilkPatchRequest::categoryIds), null).create();
+            var expectedResponse = Instancio.create(MilkResponse.class);
+
+            given(milkRepository.findById(milk.getId())).willReturn(Optional.of(milk));
+            given(milkMapper.toResponse(milk)).willReturn(expectedResponse);
+
+            // Act
+            var response = milkService.patch(milk.getId(), patch);
+
+            // Assert
+            assertThat(response).isEqualTo(expectedResponse);
+            verify(milkRepository).save(milk);
+        }
+
+        @Test
+        void delete_shouldCallRepository_whenExists() {
+            // Arrange
+            var milk = Instancio.create(Milk.class);
+
+            given(milkRepository.findById(milk.getId())).willReturn(Optional.of(milk));
+
+            // Act
+            milkService.delete(milk.getId());
+
+            // Assert
+            verify(milkRepository).delete(milk);
+        }
     }
 
-    @Test
-    void create_returnResponse_whenRequestValid() {
-        // Arrange
-        given(categoryRepository.findAllById(any())).willReturn(List.of(savedCategory));//tbr
-        given(milkMapper.toEntity(createRequest, Set.of(savedCategory))).willReturn(newMilk);
-        given(milkRepository.save(newMilk)).willReturn(savedMilk);
-        given(milkMapper.toResponse(savedMilk)).willReturn(response);
+    // ---------------
+    //    NEGATIVE
+    // ---------------
 
-        // Act
-        var milkResponse = milkService.create(createRequest);
+    @Nested
+    class NegativeTests {
 
-        // Assert
-        assertThat(milkResponse).isSameAs(this.response);
+        @Test
+        void create_shouldThrowException_whenDataViolation() {
+            // Arrange
+            var categories = Instancio.ofSet(Category.class).size(1).create();
+            var request = Instancio.create(REQUEST_MODEL);
+            var milk = Instancio.create(Milk.class);
 
-        verify(milkMapper).toEntity(createRequest, Set.of(savedCategory));
-        verify(milkRepository).save(newMilk);
-        verify(milkMapper).toResponse(savedMilk);
-    }
+            given(categoryRepository.findAllById(request.categoryIds())).willReturn(List.copyOf(categories));
+            given(milkMapper.toEntity(request, categories)).willReturn(milk);
+            given(milkRepository.save(milk)).willThrow(new DataIntegrityViolationException("Duplicated"));
 
-    @Test
-    void create_propagatesDataIntegrityException_whenRepoRejects() {
-        // Arrange
-        given(categoryRepository.findAllById(createRequest.categoryIds())).willReturn(List.of(savedCategory));
-        given(milkMapper.toEntity(createRequest, Set.of(savedCategory))).willReturn(newMilk);
-        given(milkRepository.save(newMilk)).willThrow(new DataIntegrityViolationException("Upc Duplicated"));
+            // Act + Assert
+            assertThatThrownBy(() -> milkService.create(request))
+                    .isInstanceOf(DataIntegrityViolationException.class);
 
-        // Act-Assert
-        assertThatThrownBy(() -> milkService.create(createRequest))
-                .isInstanceOf(DataIntegrityViolationException.class);
+            verify(milkRepository).save(milk);
+        }
 
-        verify(milkMapper).toEntity(createRequest, Set.of(savedCategory));
-        verify(milkRepository).save(newMilk);
-    }
+        @Test
+        void getById_shouldThrowException_whenNotFound() {
+            // Arrange
+            var id = UUID.randomUUID();
 
-    @Test
-    void getById_returnsResponse_whenMilkExists() {
-        // Arrange
-        UUID milkId = savedMilk.getId();
-        given(milkRepository.findById(milkId)).willReturn(Optional.of(savedMilk));
-        given(milkMapper.toResponse(savedMilk)).willReturn(response);
+            given(milkRepository.findById(id)).willReturn(Optional.empty());
 
-        // Act
-        var milkResponse = milkService.getById(milkId);
+            // Act + Assert
+            assertThatThrownBy(() -> milkService.getById(id))
+                    .isInstanceOf(NotFoundException.class);
 
-        // Assert
-        assertThat(milkResponse).isSameAs(this.response);
+            verify(milkRepository).findById(id);
+        }
 
-        verify(milkRepository).findById(milkId);
-        verify(milkMapper).toResponse(savedMilk);
-    }
+        @Test
+        void update_shouldThrowException_whenCategoryMissing() {
+            // Arrange
+            var id = UUID.randomUUID();
+            var request = Instancio.create(MilkRequest.class);
+            var milk = Instancio.create(Milk.class);
 
-    @Test
-    void getById_throwsNotFound_whenMilkNotExists() {
-        // Arrange
-        given(milkRepository.findById(any(UUID.class))).willReturn(Optional.empty());
+            given(milkRepository.findById(id)).willReturn(Optional.of(milk));
+            given(categoryRepository.findAllById(request.categoryIds())).willReturn(List.of());
 
-        // Act-Assert
-        assertThatThrownBy(() -> milkService.getById(UUID.randomUUID()))
-                .isInstanceOf(NotFoundException.class);
+            // Act + Assert
+            assertThatThrownBy(() -> milkService.update(id, request))
+                    .isInstanceOf(NotFoundException.class);
+        }
 
-        verify(milkRepository).findById(any(UUID.class));
-        verifyNoInteractions(milkMapper);
-    }
+        @Test
+        void update_shouldThrowException_whenDataViolation() {
+            // Arrange
+            var categories = Instancio.ofSet(Category.class).size(1).create();
+            var request = Instancio.create(REQUEST_MODEL);
+            var milk = Instancio.create(Milk.class);
 
-    @Test
-    void list_returnsList_whenMilksExist() {
-        // Arrange
-        var savedMilk2 = TestDataFactory.getSavedMilk(TestDataFactory.getNewMilk(savedCategory));
-        var pageable = PageRequest.of(0, 20);
+            given(categoryRepository.findAllById(request.categoryIds())).willReturn(List.copyOf(categories));
+            given(milkRepository.findById(milk.getId())).willReturn(Optional.of(milk));
+            given(milkRepository.save(milk)).willThrow(new DataIntegrityViolationException("Duplicated"));
 
-        given(milkRepository.findAll(pageable)).willReturn(new PageImpl<>(List.of(savedMilk, savedMilk2)));
-        given(milkMapper.toResponse(savedMilk)).willReturn(TestDataFactory.getMilkResponse(savedMilk));
-        given(milkMapper.toResponse(savedMilk2)).willReturn(TestDataFactory.getMilkResponse(savedMilk2));
+            // Act + Assert
+            assertThatThrownBy(() -> milkService.update(milk.getId(), request))
+                    .isInstanceOf(DataIntegrityViolationException.class);
 
-        // Act
-       var milkResponseList = milkService.list(null, null, pageable);
+            verify(milkRepository).findById(milk.getId());
+            verify(milkRepository).save(milk);
+        }
 
-        // Assert
-        assertThat(milkResponseList).hasSize(2);
-        assertThat(milkResponseList.getContent().getFirst().upc()).isEqualTo(savedMilk.getUpc());
-        assertThat(milkResponseList.getContent().getLast().upc()).isEqualTo(savedMilk2.getUpc());
+        @Test
+        void update_throwsNotFound_whenMilkNotExists() {
+            // Arrange
+            var request = Instancio.create(REQUEST_MODEL);
+            var milk = Instancio.create(Milk.class);
 
-        verify(milkRepository).findAll(pageable);
-        verify(milkMapper, times(1)).toResponse(savedMilk);
-        verify(milkMapper, times(1)).toResponse(savedMilk2);
-    }
+            given(milkRepository.findById(milk.getId())).willReturn(Optional.empty());
 
-//    @Test
-//    void listByName_returnsList_whenMilksExist() {
-//        // Arrange
-//        savedMilk.setName("Skimmed name");
-//        var pageable = PageRequest.of(0, 20);
-//
-//        given(milkRepository.findAllByNameContainingIgnoreCase("Skimmed", pageable))
-//                .willReturn(new PageImpl<>(List.of(savedMilk)));
-//        given(milkMapper.toResponse(savedMilk)).willReturn(TestDataFactory.getMilkResponse(savedMilk));
-//
-//        // Act
-//        var milkResponseList = milkService.list("Skimmed", null, pageable);
-//
-//        // Assert
-//        assertThat(milkResponseList).hasSize(1);
-//        assertThat(milkResponseList.getContent().getFirst().name()).isEqualTo(savedMilk.getName());
-//
-//        verify(milkRepository).findAllByNameContainingIgnoreCase("Skimmed", pageable);
-//        verify(milkMapper, times(1)).toResponse(savedMilk);
-//    }
+            // Act + Assert
+            assertThatThrownBy(() -> milkService.update(milk.getId(), request))
+                    .isInstanceOf(NotFoundException.class);
 
-    @Test
-    void listByType_returnsList_whenMilksExist() {
-        // Arrange
-        var pageable = PageRequest.of(0, 20);
+            verifyNoInteractions(milkMapper);
+        }
 
-        given(milkRepository.findAllByMilkType(MilkType.SEMI_SKIMMED, pageable))
-                .willReturn(new PageImpl<>(List.of(savedMilk)));
-        given(milkMapper.toResponse(savedMilk)).willReturn(TestDataFactory.getMilkResponse(savedMilk));
+        @Test
+        void patch_shouldThrowException_whenDataViolation() {
+            // Arrange
+            var categories = Instancio.ofSet(Category.class).size(1).create();
+            var patch = Instancio.of(MilkPatchRequest.class).set(field(MilkPatchRequest::categoryIds), null).create();
+            var milk = Instancio.create(Milk.class);
 
-        // Act
-        var milkResponseList = milkService.list(null, MilkType.SEMI_SKIMMED, pageable);
+            given(milkRepository.findById(milk.getId())).willReturn(Optional.of(milk));
+            given(milkRepository.save(milk)).willThrow(new DataIntegrityViolationException("Duplicated"));
 
-        // Assert
-        assertThat(milkResponseList.getContent()).hasSize(1);
-        assertThat(milkResponseList.getContent().getFirst().milkType()).isEqualTo(savedMilk.getMilkType());
+            // Act + Assert
+            assertThatThrownBy(() -> milkService.patch(milk.getId(), patch))
+                    .isInstanceOf(DataIntegrityViolationException.class);
 
-        verify(milkRepository).findAllByMilkType(MilkType.SEMI_SKIMMED, pageable);
-        verify(milkMapper, times(1)).toResponse(savedMilk);
-    }
+            verify(milkRepository).findById(milk.getId());
+            verify(milkRepository).save(milk);
+        }
 
-    @Test
-    void listByNameAndType_returnsList_whenMilksExist() {
-        // Arrange Milk name
-        var savedMilk2 = TestDataFactory.getSavedMilk(TestDataFactory.getNewMilk(savedCategory));
-        var pageable = PageRequest.of(0, 20);
+        @Test
+        void patch_shouldThrowException_whenNotFound() {
+            // Arrange
+            var id = UUID.randomUUID();
+            var patch = Instancio.create(MilkPatchRequest.class);
 
-        given(milkRepository.findAllByNameContainingIgnoreCaseAndMilkType("Milk name", MilkType.SEMI_SKIMMED, pageable))
-                .willReturn(new PageImpl<>(List.of(savedMilk, savedMilk2)));
-        given(milkMapper.toResponse(savedMilk)).willReturn(TestDataFactory.getMilkResponse(savedMilk));
-        given(milkMapper.toResponse(savedMilk2)).willReturn(TestDataFactory.getMilkResponse(savedMilk2));
+            given(milkRepository.findById(id)).willReturn(Optional.empty());
 
-        // Act
-        var milkResponseList = milkService.list("Milk name", MilkType.SEMI_SKIMMED, pageable);
+            // Act + Assert
+            assertThatThrownBy(() -> milkService.patch(id, patch))
+                    .isInstanceOf(NotFoundException.class);
 
-        // Assert
-        assertThat(milkResponseList).hasSize(2);
-        assertThat(milkResponseList.getContent().getFirst().name()).isEqualTo(savedMilk.getName());
-        assertThat(milkResponseList.getContent().getFirst().milkType()).isEqualTo(savedMilk.getMilkType());
-        assertThat(milkResponseList.getContent().getLast().name()).isEqualTo(savedMilk2.getName());
-        assertThat(milkResponseList.getContent().getLast().milkType()).isEqualTo(savedMilk2.getMilkType());
+            verify(milkRepository).findById(id);
+        }
 
-        verify(milkRepository).findAllByNameContainingIgnoreCaseAndMilkType("Milk name", MilkType.SEMI_SKIMMED, pageable);
-        verify(milkMapper, times(1)).toResponse(savedMilk);
-        verify(milkMapper, times(1)).toResponse(savedMilk2);
-    }
+        @Test
+        void delete_shouldThrowException_whenNotFound() {
+            // Arrange
+            var milkId = UUID.randomUUID();
 
-    @Test
-    void list_returnsEmptyList_whenNoMilks() {
-        // Arrange
-        var pageable = PageRequest.of(0, 20);
+            given(milkRepository.findById(milkId)).willReturn(Optional.empty());
 
-        given(milkRepository.findAll(pageable)).willReturn(Page.empty());
-
-        // Act
-        var milkResponseList = milkService.list(null, null, pageable);
-
-        // Assert
-        assertThat(milkResponseList.getContent()).isEmpty();
-
-        verify(milkRepository).findAll(pageable);
-        verifyNoInteractions(milkMapper);
-    }
-
-    @Test
-    void update_updatesEntity_whenMilkExists() {
-        // Arrange
-        var savedMilkId = savedMilk.getId();
-        given(categoryRepository.findAllById(updateRequest.categoryIds())).willReturn(List.of(savedCategory));
-        given(milkRepository.findById(savedMilkId)).willReturn(Optional.of(savedMilk));
-
-        // Act
-        milkService.update(savedMilkId, updateRequest);
-
-        // Assert
-        verify(milkRepository).findById(savedMilkId);
-        verify(milkMapper).updateEntity(savedMilk, updateRequest, Set.of(savedCategory));
-        verify(milkRepository).save(savedMilk);
-    }
-
-    @Test
-    void update_throwsNotFound_whenMilkNotExists() {
-        // Arrange
-        given(milkRepository.findById(any(UUID.class))).willReturn(Optional.empty());
-
-        // Act-Assert
-        assertThatThrownBy(() -> milkService.update(UUID.randomUUID(), updateRequest))
-                .isInstanceOf(NotFoundException.class);
-
-        verifyNoInteractions(milkMapper);
-    }
-
-    @Test
-    void update_propagatesDataIntegrityException_whenRepoRejects() {
-        // Arrange
-        given(categoryRepository.findAllById(updateRequest.categoryIds())).willReturn(List.of(savedCategory));
-        given(milkRepository.findById(savedMilk.getId())).willReturn(Optional.of(savedMilk));
-        given(milkRepository.save(savedMilk)).willThrow(new DataIntegrityViolationException("Upc Duplicated"));
-
-        // Act-Assert
-        assertThatThrownBy(() -> milkService.update(savedMilk.getId(), updateRequest))
-                .isInstanceOf(DataIntegrityViolationException.class);
-
-        verify(milkRepository).findById(savedMilk.getId());
-        verify(milkMapper).updateEntity(savedMilk, updateRequest, Set.of(savedCategory));
-        verify(milkRepository).save(savedMilk);
-    }
-
-    @Test
-    void patch_updatesOnlyProvidedFields_whenMilkExists() {
-        // Arrange
-        var savedMilkId = savedMilk.getId();
-        given(milkRepository.findById(savedMilkId)).willReturn(Optional.of(savedMilk));
-
-        // Act
-        milkService.patch(savedMilkId, patchRequest);
-
-        // Assert
-        verify(milkRepository).findById(savedMilkId);
-        verify(milkMapper).patchEntity(savedMilk, patchRequest, null);
-        verify(milkRepository).save(savedMilk);
-    }
-
-    @Test
-    void patch_throwsNotFound_whenMilkNotExists() {
-        // Arrange
-        given(milkRepository.findById(any(UUID.class))).willReturn(Optional.empty());
-
-        // Act-Assert
-        assertThatThrownBy(() -> milkService.patch(UUID.randomUUID(), patchRequest))
-                .isInstanceOf(NotFoundException.class);
-
-        verify(milkRepository).findById(any(UUID.class));
-        verifyNoInteractions(milkMapper);
-    }
-
-    @Test
-    void patch_propagatesDataIntegrityException_whenRepoRejects() {
-        // Arrange
-        given(milkRepository.findById(savedMilk.getId())).willReturn(Optional.of(savedMilk));
-        given(milkRepository.save(savedMilk)).willThrow(new DataIntegrityViolationException("Upc Duplicated"));
-
-        // Act-Assert
-        assertThatThrownBy(() -> milkService.patch(savedMilk.getId(), patchRequest))
-                .isInstanceOf(DataIntegrityViolationException.class);
-
-        verify(milkRepository).findById(savedMilk.getId());
-        verify(milkMapper).patchEntity(savedMilk, patchRequest, null);
-        verify(milkRepository).save(savedMilk);
-    }
-
-    @Test
-    void delete_deletesMilk_whenMilkExists() {
-        // Arrange
-        var savedMilkId = savedMilk.getId();
-        given(milkRepository.findById(savedMilkId)).willReturn(Optional.of(savedMilk));
-
-        // Act
-        milkService.delete(savedMilkId);
-
-        // Assert
-        verify(milkRepository).findById(savedMilkId);
-        verify(milkRepository).delete(savedMilk);
-    }
-
-    @Test
-    void delete_throwsNotFound_whenMilkNotExists() {
-        // Arrange
-        given(milkRepository.findById(any(UUID.class))).willReturn(Optional.empty());
-
-        // Act-Assert
-        assertThatThrownBy(() -> milkService.delete(UUID.randomUUID()))
-                .isInstanceOf(NotFoundException.class);
-
-        verify(milkRepository).findById(any(UUID.class));
+            // Act + Assert
+            assertThatThrownBy(() -> milkService.delete(milkId))
+                    .isInstanceOf(NotFoundException.class);
+        }
     }
 }

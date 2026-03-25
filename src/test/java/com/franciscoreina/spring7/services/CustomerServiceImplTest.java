@@ -129,6 +129,7 @@ public class CustomerServiceImplTest {
             // Assert
             assertThat(response).isEqualTo(expectedResponse);
             verify(customerRepository).findById(customer.getId());
+            verify(customerRepository).save(customer);
         }
 
         @Test
@@ -147,6 +148,7 @@ public class CustomerServiceImplTest {
             // Assert
             assertThat(response).isEqualTo(expectedResponse);
             verify(customerRepository).findById(customer.getId());
+            verify(customerRepository).save(customer);
         }
 
         @Test
@@ -185,7 +187,6 @@ public class CustomerServiceImplTest {
             assertThatThrownBy(() -> customerService.create(request))
                     .isInstanceOf(DataIntegrityViolationException.class);
 
-            verify(customerMapper).toEntity(request);
             verify(customerRepository).save(customer);
         }
 
