@@ -88,7 +88,7 @@ public class MilkOrderServiceImpl implements MilkOrderService {
         var newLine = OrderLine.createOrderLine(milk, request.requestedQuantity());
 
         order.addOrderLine(newLine);
-        // Hibernate save automatically at the end of the transaction (Dirty Checking)
+        milkOrderRepository.save(order); // Hibernate persists via dirty checking; explicit save added for tests.
         return orderLineMapper.toResponse(newLine);
     }
 
@@ -99,7 +99,7 @@ public class MilkOrderServiceImpl implements MilkOrderService {
         var line = findLineOrThrow(order, orderLineId);
 
         order.updateOrderLineQuantity(line, request.requestedQuantity());
-        // Hibernate save automatically at the end of the transaction (Dirty Checking)
+        milkOrderRepository.save(order); // Hibernate persists via dirty checking; explicit save added for tests.
         return orderLineMapper.toResponse(line);
     }
 
@@ -110,7 +110,7 @@ public class MilkOrderServiceImpl implements MilkOrderService {
         var line = findLineOrThrow(order, orderLineId);
 
         order.removeOrderLine(line);
-        // Hibernate save automatically at the end of the transaction (Dirty Checking)
+        milkOrderRepository.save(order); // Hibernate persists via dirty checking; explicit save added for tests.
     }
 
     private Milk findMilkOrThrow(UUID milkId) {

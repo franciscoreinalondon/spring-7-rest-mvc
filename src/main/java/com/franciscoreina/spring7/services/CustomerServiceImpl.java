@@ -68,7 +68,7 @@ public class CustomerServiceImpl implements CustomerService {
         log.info("Updating customer id: {}", customerId);
         var customer = findCustomerOrThrow(customerId);
         customerMapper.updateEntity(customer, request);
-        // Hibernate save automatically at the end of the transaction (Dirty Checking)
+        customerRepository.save(customer); // Hibernate persists via dirty checking; explicit save added for tests.
         return customerMapper.toResponse(customer);
     }
 
@@ -78,7 +78,7 @@ public class CustomerServiceImpl implements CustomerService {
         log.info("Patching customer id: {}", customerId);
         var customer = findCustomerOrThrow(customerId);
         customerMapper.patchEntity(customer, request);
-        // Hibernate save automatically at the end of the transaction (Dirty Checking)
+        customerRepository.save(customer); // Hibernate persists via dirty checking; explicit save added for tests.
         return customerMapper.toResponse(customer);
     }
 

@@ -76,7 +76,7 @@ public class MilkServiceImpl implements MilkService {
         var milk = findMilkOrThrow(milkId);
         var categories = fetchCategoriesOrThrow(request.categoryIds());
         milkMapper.updateEntity(milk, request, categories);
-        // Hibernate save automatically at the end of the transaction (Dirty Checking)
+        milkRepository.save(milk); // Hibernate persists via dirty checking; explicit save added for tests.
         return milkMapper.toResponse(milk);
     }
 
@@ -88,7 +88,7 @@ public class MilkServiceImpl implements MilkService {
         Set<Category> categories = (request.categoryIds() != null && !request.categoryIds().isEmpty())
                 ? fetchCategoriesOrThrow(request.categoryIds()) : null;
         milkMapper.patchEntity(milk, request, categories);
-        // Hibernate save automatically at the end of the transaction (Dirty Checking)
+        milkRepository.save(milk); // Hibernate persists via dirty checking; explicit save added for tests.
         return milkMapper.toResponse(milk);
     }
 
