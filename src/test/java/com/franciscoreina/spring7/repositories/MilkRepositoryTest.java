@@ -5,11 +5,13 @@ import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.testdata.TestDataFactory;
 import jakarta.persistence.EntityManager;
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -64,32 +66,29 @@ public class MilkRepositoryTest {
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
-//    @Test
-//    public void saveMilk_throwException_whenNameIsNull() {
-//        // Arrange
-//        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
-//        Milk milk = TestDataFactory.getNewMilk(savedCategory);
-//        milk.setName(null);
-//
-//        // Act-Assert
-//        assertThatThrownBy(() -> milkRepository.saveAndFlush(milk))
-//                .isInstanceOf(ConstraintViolationException.class);
-//    }
+    @Test
+    public void saveMilk_throwException_whenNameIsNull() {
+        // Arrange
+        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+        Milk milk = TestDataFactory.getNewMilk(savedCategory);
+        ReflectionTestUtils.setField(milk, "name", null);
 
-//    @Test
-//    public void saveMilk_throwException_whenUpcIsNull() {
-//        // Arrange
-//        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
-//        Milk milk = TestDataFactory.getNewMilk(savedCategory);
-//        milk.setUpc(null);
-//
-//        // Act-Assert
-//        assertThatThrownBy(() -> milkRepository.saveAndFlush(milk))
-//                .isInstanceOf(ConstraintViolationException.class);
-//    }
+        // Act-Assert
+        assertThatThrownBy(() -> milkRepository.saveAndFlush(milk))
+                .isInstanceOf(ConstraintViolationException.class);
+    }
 
-    // Additional tests should be implemented to verify validation constraints
-    // for the remaining required attributes
+    @Test
+    public void saveMilk_throwException_whenUpcIsNull() {
+        // Arrange
+        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+        Milk milk = TestDataFactory.getNewMilk(savedCategory);
+        ReflectionTestUtils.setField(milk, "upc", null);
+
+        // Act-Assert
+        assertThatThrownBy(() -> milkRepository.saveAndFlush(milk))
+                .isInstanceOf(ConstraintViolationException.class);
+    }
 
     // ---------------
     //      FIND

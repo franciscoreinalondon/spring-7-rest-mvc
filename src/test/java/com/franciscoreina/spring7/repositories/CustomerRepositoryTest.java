@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -59,25 +60,27 @@ public class CustomerRepositoryTest {
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
-//    @Test
-//    public void saveCustomer_throwException_whenNameIsNull() {
-//        // Arrange
-//        Customer customer =  Customer.createCustomer(null, "customer_" + UUID.randomUUID() + "@domain.com");
-//
-//        // Act-Assert
-//        assertThatThrownBy(() -> customerRepository.saveAndFlush(customer))
-//                .isInstanceOf(ConstraintViolationException.class);
-//    }
+    @Test
+    public void saveCustomer_throwException_whenNameIsNull() {
+        // Arrange
+        Customer customer =  Customer.createCustomer("name", "customer_" + UUID.randomUUID() + "@domain.com");
+        ReflectionTestUtils.setField(customer, "name", null);
 
-//    @Test
-//    public void saveCustomer_throwException_whenEmailIsNull() {
-//        // Arrange
-//        Customer customer = TestDataFactory.getNewCustomer(null);
-//
-//        // Act-Assert
-//        assertThatThrownBy(() -> customerRepository.saveAndFlush(customer))
-//                .isInstanceOf(ConstraintViolationException.class);
-//    }
+        // Act-Assert
+        assertThatThrownBy(() -> customerRepository.saveAndFlush(customer))
+                .isInstanceOf(ConstraintViolationException.class);
+    }
+
+    @Test
+    public void saveCustomer_throwException_whenEmailIsNull() {
+        // Arrange
+        Customer customer =  Customer.createCustomer("name", "customer_" + UUID.randomUUID() + "@domain.com");
+        ReflectionTestUtils.setField(customer, "email", null);
+
+        // Act-Assert
+        assertThatThrownBy(() -> customerRepository.saveAndFlush(customer))
+                .isInstanceOf(ConstraintViolationException.class);
+    }
 
     @Test
     public void saveCustomer_throwException_whenEmailIsInvalid() {

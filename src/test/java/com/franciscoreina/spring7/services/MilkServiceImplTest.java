@@ -95,7 +95,7 @@ public class MilkServiceImplTest {
         }
 
         @Test
-        void list_shouldReturnPageOfResponse_whenExist() {
+        void list_shouldReturnPageOfResponse_whenNoFilter() {
             // Arrange
             var pageable = Pageable.ofSize(10);
             var milk1 = Instancio.create(Milk.class);
