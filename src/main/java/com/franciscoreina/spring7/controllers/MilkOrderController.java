@@ -71,7 +71,7 @@ public class MilkOrderController {
     public ResponseEntity<OrderLineResponse> addLine(@PathVariable("milkOrderId") UUID milkOrderId, @Valid @RequestBody OrderLineCreateRequest request) {
         log.info("Adding line for order id: {}", milkOrderId);
         var orderLineResponse = milkOrderService.addLine(milkOrderId, request);
-        var location = URI.create(ApiPaths.MILK_ORDERS + "/" + milkOrderId + "/" + ApiPaths.LINES + "/" + orderLineResponse.id());
+        var location = URI.create(ApiPaths.MILK_ORDERS + "/" + milkOrderId + ApiPaths.LINES + "/" + orderLineResponse.id());
 
         return ResponseEntity.created(location).body(orderLineResponse);
     }

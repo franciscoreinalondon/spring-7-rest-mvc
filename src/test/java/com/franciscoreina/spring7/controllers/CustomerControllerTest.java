@@ -4,6 +4,7 @@ import com.franciscoreina.spring7.api.ApiPaths;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
+import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.services.CustomerService;
 import org.instancio.Instancio;
@@ -25,6 +26,7 @@ import java.util.UUID;
 
 import static org.instancio.Select.field;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
@@ -104,6 +106,19 @@ public class CustomerControllerTest {
 
             // Act + Assert
             mockMvc.perform(get(ApiPaths.CUSTOMERS))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content.size()").value(2));
+        }
+
+        @Test
+        void listCustomers_returns200_whenFilteredByNameAndEmail() throws Exception {
+            var page = new PageImpl<>(Instancio.ofList(CustomerResponse.class).size(2).create());
+
+            // Arrange
+            given(customerService.list(eq("Customer name"), eq("test@email.com"), any())).willReturn(page);
+
+            // Act + Assert
+            mockMvc.perform(get(ApiPaths.CUSTOMERS).param("name", "Customer name").param("email", "test@email.com"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content.size()").value(2));
         }

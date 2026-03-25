@@ -1,8 +1,10 @@
 package com.franciscoreina.spring7.controllers;
 
 import com.franciscoreina.spring7.api.ApiPaths;
+import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkRequest;
+import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.services.MilkService;
@@ -25,6 +27,7 @@ import java.util.UUID;
 
 import static org.instancio.Select.field;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
@@ -95,6 +98,19 @@ public class MilkControllerTest {
 
             // Act + Assert
             mockMvc.perform(get(ApiPaths.MILKS))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content.size()").value(2));
+        }
+
+        @Test
+        void listMilks_returns200_whenFilteredByNameAndType() throws Exception {
+            var page = new PageImpl<>(Instancio.ofList(MilkResponse.class).size(2).create());
+
+            // Arrange
+            given(milkService.list(eq("Milk name"), eq(MilkType.A2), any())).willReturn(page);
+
+            // Act + Assert
+            mockMvc.perform(get(ApiPaths.MILKS).param("name", "Milk name").param("milkType", "A2"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content.size()").value(2));
         }

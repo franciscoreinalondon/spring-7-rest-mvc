@@ -16,6 +16,7 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.security.oauth2.server.resource.autoconfigure.servlet.OAuth2ResourceServerAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -26,6 +27,7 @@ import java.util.UUID;
 
 import static org.instancio.Select.field;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
@@ -101,6 +103,19 @@ class MilkOrderControllerTest {
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.content.size()").value(2));
             }
+
+            @Test
+            void listMilkOrders_returns200_whenFilteredByCustomerRef() throws Exception {
+                var page = new PageImpl<>(Instancio.ofList(MilkOrderResponse.class).size(2).create());
+
+                // Arrange
+                given(milkOrderService.list(eq("REF123"), any())).willReturn(page);
+
+                // Act + Assert
+                mockMvc.perform(get(ApiPaths.MILK_ORDERS).param("customerRef", "REF123"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.content.size()").value(2));
+            }
         }
 
         @Nested
@@ -120,6 +135,7 @@ class MilkOrderControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                         .andExpect(status().isCreated())
+                        .andExpect(header().string("Location", ApiPaths.MILK_ORDERS + "/" + id + ApiPaths.LINES + "/" + response.id()))
                         .andExpect(jsonPath("$.id").value(id.toString()));
             }
 
