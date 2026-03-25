@@ -87,9 +87,11 @@ public class MilkOrderController {
     }
 
     @DeleteMapping(ApiPaths.MILK_ORDER_ID + ApiPaths.LINES + ApiPaths.LINE_ID)
-    public ResponseEntity<Void> removeLine(@PathVariable("lineId") UUID orderLineId) {
+    public ResponseEntity<Void> removeLine(
+            @PathVariable("milkOrderId") UUID milkOrderId,
+            @PathVariable("lineId") UUID orderLineId) {
         log.info("Removing line with id: {}", orderLineId);
-        milkOrderService.removeLine(orderLineId);
+        milkOrderService.removeLine(milkOrderId, orderLineId);
 
         return ResponseEntity.noContent().build();
     }

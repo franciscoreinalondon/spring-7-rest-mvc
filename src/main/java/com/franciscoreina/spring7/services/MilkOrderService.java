@@ -31,6 +31,6 @@ public interface MilkOrderService {
 
     OrderLineResponse updateLineQuantity(UUID milkOrderId, UUID orderLineId, @Valid OrderLineUpdateRequest request);
 
-    void removeLine(UUID orderLineId);
+    void removeLine(UUID milkOrderId, UUID orderLineId);
 }
 

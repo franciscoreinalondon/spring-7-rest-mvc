@@ -89,7 +89,7 @@ public class MilkOrderServiceImpl implements MilkOrderService {
     }
 
     @Override
-    public void removeLine(UUID orderLineId) {
+    public void removeLine(UUID milkOrderId, UUID orderLineId) {
 
     }
 }

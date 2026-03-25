@@ -4,8 +4,6 @@ import com.franciscoreina.spring7.domain.customer.Customer;
 import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
-import com.franciscoreina.spring7.domain.order.MilkOrder;
-import com.franciscoreina.spring7.domain.order.OrderLine;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
@@ -14,7 +12,6 @@ import com.franciscoreina.spring7.dto.request.order.MilkOrderRequest;
 import com.franciscoreina.spring7.dto.request.order.OrderLineCreateRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
-import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
@@ -166,35 +163,6 @@ public class TestDataFactory {
     //      ORDER
     // ---------------
 
-
-    public static OrderLine getSavedOrderLine(Milk milk) {
-        var savedOrderLine = OrderLine.createOrderLine(milk, 2);
-
-        ReflectionTestUtils.setField(savedOrderLine, "id", UUID.randomUUID());
-        ReflectionTestUtils.setField(savedOrderLine, "version", 0);
-        ReflectionTestUtils.setField(savedOrderLine, "createdAt", Instant.now());
-        ReflectionTestUtils.setField(savedOrderLine, "updatedAt", Instant.now());
-
-        return savedOrderLine;
-    }
-
-    public static MilkOrder getSavedMilkOrder(Customer savedCustomer, Set<OrderLine> savedOrderLines) {
-        var savedMilkOrder = MilkOrder.createMilkOrder(savedCustomer, UUID.randomUUID().toString());
-
-        ReflectionTestUtils.setField(savedMilkOrder, "id", UUID.randomUUID());
-        ReflectionTestUtils.setField(savedMilkOrder, "version", 0);
-        ReflectionTestUtils.setField(savedMilkOrder, "createdAt", Instant.now());
-        ReflectionTestUtils.setField(savedMilkOrder, "updatedAt", Instant.now());
-
-        ReflectionTestUtils.setField(savedMilkOrder, "paymentAmount",
-                savedOrderLines.stream().map(
-                        ol -> ol.getMilk().getPrice().multiply(BigDecimal.valueOf(ol.getRequestedQuantity())))
-                        .reduce(BigDecimal.ZERO, BigDecimal::add));
-
-        savedOrderLines.forEach(savedMilkOrder::addOrderLine);
-        return savedMilkOrder;
-    }
-
     //tbf
     public static OrderLineCreateRequest getOrderLineCreateRequest(UUID milkId) {
         return new OrderLineCreateRequest(2, milkId);
@@ -202,18 +170,6 @@ public class TestDataFactory {
 
     public static MilkOrderRequest getMilkOrderCreateRequest(UUID customerId, OrderLineCreateRequest orderLineCreateRequest) {
         return new MilkOrderRequest("1234TDF".toString(), customerId, Set.of(orderLineCreateRequest));
-    }
-
-    public static MilkOrderResponse getMilkOrderResponse(MilkOrder milkOrder) {
-        return new MilkOrderResponse(
-                milkOrder.getId(),
-                milkOrder.getCreatedAt(),
-                milkOrder.getCustomerRef(),
-                milkOrder.getPaymentAmount(),
-                milkOrder.getMilkOrderStatus(),
-                milkOrder.getCustomer().getId(),
-                milkOrder.getOrderLines().stream().map(OrderLine::getId).collect(Collectors.toSet()),
-                milkOrder.getOrderShipment() != null ? milkOrder.getOrderShipment().getId() : null);
     }
 
 // ---------------
