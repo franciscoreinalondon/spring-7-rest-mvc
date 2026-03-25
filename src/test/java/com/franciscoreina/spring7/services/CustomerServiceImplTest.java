@@ -1,270 +1,278 @@
 package com.franciscoreina.spring7.services;
 
 import com.franciscoreina.spring7.domain.customer.Customer;
-import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
+import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.mappers.CustomerMapper;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
-import com.franciscoreina.spring7.testdata.TestDataFactory;
-import org.junit.jupiter.api.BeforeEach;
+import org.instancio.Instancio;
+import org.instancio.Model;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.instancio.Select.field;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 public class CustomerServiceImplTest {
 
     @Mock
     CustomerRepository customerRepository;
-
     @Mock
     CustomerMapper customerMapper;
-
     @InjectMocks
     CustomerServiceImpl customerService;
 
-    Customer newCustomer;
-    Customer savedCustomer;
-    CustomerRequest createRequest;
-    CustomerRequest updateRequest;
-    CustomerPatchRequest patchRequest;
-    CustomerResponse response;
+    // We use a model to ensure that email are valid in all tests
+    private static final Model<CustomerRequest> REQUEST_MODEL = Instancio.of(CustomerRequest.class)
+            .generate(field(CustomerRequest::email), gen -> gen.net().email())
+            .toModel();
 
-    @BeforeEach
-    void setUp() {
-        newCustomer = TestDataFactory.getNewCustomer();
-        savedCustomer = TestDataFactory.getSavedCustomer(newCustomer);
-        createRequest = TestDataFactory.getCustomerCreateRequest(newCustomer);
-        updateRequest = TestDataFactory.getCustomerUpdateRequest(savedCustomer);
-        patchRequest = TestDataFactory.getCustomerPatchRequestWithName();
-        response = TestDataFactory.getCustomerResponse(savedCustomer);
+    private static final Model<CustomerPatchRequest> PATCH_MODEL = Instancio.of(CustomerPatchRequest.class)
+            .generate(field(CustomerPatchRequest::email), gen -> gen.net().email())
+            .toModel();
+
+    // ---------------
+    //    POSITIVE
+    // ---------------
+
+    @Nested
+    class PositiveTests {
+
+        @Test
+        void create_shouldReturnResponse_whenRequestIsValid() {
+            // Arrange
+            var request = Instancio.create(REQUEST_MODEL);
+            var customer = Instancio.create(Customer.class);
+            var expectedResponse = Instancio.create(CustomerResponse.class);
+
+            given(customerMapper.toEntity(request)).willReturn(customer);
+            given(customerRepository.save(customer)).willReturn(customer);
+            given(customerMapper.toResponse(customer)).willReturn(expectedResponse);
+
+            // Act
+            var response = customerService.create(request);
+
+            // Assert
+            assertThat(response).isEqualTo(expectedResponse);
+            verify(customerRepository).save(customer);
+        }
+
+        @Test
+        void getById_shouldReturnResponse_whenExists() {
+            // Arrange
+            var customer = Instancio.create(Customer.class);
+            var expectedResponse = Instancio.create(CustomerResponse.class);
+
+            given(customerRepository.findById(customer.getId())).willReturn(Optional.of(customer));
+            given(customerMapper.toResponse(customer)).willReturn(expectedResponse);
+
+            // Act
+            var response = customerService.getById(customer.getId());
+
+            // Assert
+            assertThat(expectedResponse).isEqualTo(response);
+            verify(customerRepository).findById(customer.getId());
+        }
+
+        @Test
+        void list_shouldReturnPageOfResponse_whenExist() {
+            // Arrange
+            var pageable = Pageable.ofSize(10);
+            var customer1 = Instancio.create(Customer.class);
+            var customer2 = Instancio.create(Customer.class);
+            var expectedResponse1 = Instancio.create(CustomerResponse.class);
+            var expectedResponse2 = Instancio.create(CustomerResponse.class);
+            var expectedPage = new PageImpl<>(List.of(customer1, customer2), pageable, 1);
+
+            given(customerRepository.findAll(pageable)).willReturn(expectedPage);
+            given(customerMapper.toResponse(customer1)).willReturn(expectedResponse1);
+            given(customerMapper.toResponse(customer2)).willReturn(expectedResponse2);
+
+            // Act
+            var page = customerService.list(null, null, pageable);
+
+            // Assert
+            assertThat(page.getContent()).hasSize(2);
+            verify(customerRepository).findAll(pageable);
+        }
+
+        @Test
+        void update_shouldUpdateCustomer_whenExists() {
+            // Arrange
+            var request = Instancio.create(REQUEST_MODEL);
+            var customer = Instancio.create(Customer.class);
+            var expectedResponse = Instancio.create(CustomerResponse.class);
+
+            given(customerRepository.findById(customer.getId())).willReturn(Optional.of(customer));
+            given(customerMapper.toResponse(customer)).willReturn(expectedResponse);
+
+            // Act
+            var response = customerService.update(customer.getId(), request);
+
+            // Assert
+            assertThat(response).isEqualTo(expectedResponse);
+            verify(customerRepository).findById(customer.getId());
+        }
+
+        @Test
+        void patch_shouldPatchCustomer_whenExists() {
+            // Arrange
+            var patch = Instancio.create(PATCH_MODEL);
+            var customer = Instancio.create(Customer.class);
+            var expectedResponse = Instancio.create(CustomerResponse.class);
+
+            given(customerRepository.findById(customer.getId())).willReturn(Optional.of(customer));
+            given(customerMapper.toResponse(customer)).willReturn(expectedResponse);
+
+            // Act
+            var response = customerService.patch(customer.getId(), patch);
+
+            // Assert
+            assertThat(response).isEqualTo(expectedResponse);
+            verify(customerRepository).findById(customer.getId());
+        }
+
+        @Test
+        void delete_shouldCallRepository_whenExists() {
+            // Arrange
+            var customer = Instancio.create(Customer.class);
+
+            given(customerRepository.findById(customer.getId())).willReturn(Optional.of(customer));
+
+            // Act
+            customerService.delete(customer.getId());
+
+            // Assert
+            verify(customerRepository).findById(customer.getId());
+            verify(customerRepository).delete(customer);
+        }
     }
 
+    // ---------------
+    //    NEGATIVE
+    // ---------------
 
-    @Test
-    void create_returnResponse_whenRequestValid() {
-        // Arrange
-        given(customerMapper.toEntity(createRequest)).willReturn(newCustomer);
-        given(customerRepository.save(newCustomer)).willReturn(savedCustomer);
-        given(customerMapper.toResponse(savedCustomer)).willReturn(response);
+    @Nested
+    class NegativeTests {
 
-        // Act
-        var customerResponse = customerService.create(createRequest);
+        @Test
+        void create_shouldThrowException_whenDataViolation() {
+            // Arrange
+            var request = Instancio.create(REQUEST_MODEL);
+            var customer = Instancio.create(Customer.class);
 
-        // Assert
-        assertThat(customerResponse).isSameAs(this.response);
+            given(customerMapper.toEntity(request)).willReturn(customer);
+            given(customerRepository.save(customer)).willThrow(new DataIntegrityViolationException("Duplicated"));
 
-        verify(customerMapper).toEntity(createRequest);
-        verify(customerRepository).save(newCustomer);
-        verify(customerMapper).toResponse(savedCustomer);
-    }
+            // Act + Assert
+            assertThatThrownBy(() -> customerService.create(request))
+                    .isInstanceOf(DataIntegrityViolationException.class);
 
-    @Test
-    void create_propagatesDataIntegrityException_whenRepoRejects() {
-        // Arrange
-        given(customerMapper.toEntity(createRequest)).willReturn(newCustomer);
-        given(customerRepository.save(newCustomer)).willThrow(new DataIntegrityViolationException("Upc Duplicated"));
+            verify(customerMapper).toEntity(request);
+            verify(customerRepository).save(customer);
+        }
 
-        // Act-Assert
-        assertThatThrownBy(() -> customerService.create(createRequest))
-                .isInstanceOf(DataIntegrityViolationException.class);
+        @Test
+        void getById_shouldThrowException_whenNotFound() {
+            // Arrange
+            var id = UUID.randomUUID();
 
-        verify(customerMapper).toEntity(createRequest);
-        verify(customerRepository).save(newCustomer);
-    }
+            given(customerRepository.findById(id)).willReturn(Optional.empty());
 
-    @Test
-    void getById_returnsResponse_whenCustomerExists() {
-        // Arrange
-        var savedCustomerId = savedCustomer.getId();
-        given(customerRepository.findById(savedCustomerId)).willReturn(Optional.of(savedCustomer));
-        given(customerMapper.toResponse(savedCustomer)).willReturn(response);
+            // Act + Assert
+            assertThatThrownBy(() -> customerService.getById(id))
+                    .isInstanceOf(NotFoundException.class);
 
-        // Act
-        var customerResponse = customerService.getById(savedCustomerId);
+            verify(customerRepository).findById(id);
+        }
 
-        // Assert
-        assertThat(customerResponse).isSameAs(this.response);
+        @Test
+        void update_shouldThrowException_whenDataViolation() {
+            // Arrange
+            var request = Instancio.create(REQUEST_MODEL);
+            var customer = Instancio.create(Customer.class);
 
-        verify(customerRepository).findById(savedCustomerId);
-        verify(customerMapper).toResponse(savedCustomer);
-    }
+            given(customerRepository.findById(customer.getId())).willReturn(Optional.of(customer));
+            given(customerRepository.save(customer)).willThrow(new DataIntegrityViolationException("Duplicated"));
 
-    @Test
-    void getById_throwsNotFound_whenCustomerNotExists() {
-        // Arrange
-        given(customerRepository.findById(any(UUID.class))).willReturn(Optional.empty());
+            // Act + Assert
+            assertThatThrownBy(() -> customerService.update(customer.getId(), request))
+                    .isInstanceOf(DataIntegrityViolationException.class);
+        }
 
-        // Act-Assert
-        assertThatThrownBy(() -> customerService.getById(UUID.randomUUID()))
-                .isInstanceOf(NotFoundException.class);
+        @Test
+        void update_shouldThrowException_whenNotFound() {
+            // Arrange
+            var id = UUID.randomUUID();
+            var request = Instancio.create(REQUEST_MODEL);
 
-        verify(customerRepository).findById(any(UUID.class));
-        verifyNoInteractions(customerMapper);
-    }
+            given(customerRepository.findById(id)).willReturn(Optional.empty());
 
-//    @Test
-//    void list_returnsList_whenCustomersExist() {
-//        // Arrange
-//        var savedCustomer2 = TestDataFactory.getSavedCustomer(TestDataFactory.getNewCustomer());
-//        given(customerRepository.findAll()).willReturn(List.of(savedCustomer, savedCustomer2));
-//        given(customerMapper.toResponse(savedCustomer)).willReturn(TestDataFactory.getCustomerResponse(savedCustomer));
-//        given(customerMapper.toResponse(savedCustomer2)).willReturn(TestDataFactory.getCustomerResponse(savedCustomer2));
-//
-//        // Act
-//        var customerResponseList = customerService.list(, , );
-//
-//        // Assert
-//        assertThat(customerResponseList).hasSize(2);
-//        assertThat(customerResponseList.getFirst().email()).isEqualTo(savedCustomer.getEmail());
-//        assertThat(customerResponseList.getLast().email()).isEqualTo(savedCustomer2.getEmail());
-//
-//        verify(customerRepository).findAll();
-//        verify(customerMapper, times(1)).toResponse(savedCustomer);
-//        verify(customerMapper, times(1)).toResponse(savedCustomer2);
-//    }
+            // Act + Assert
+            assertThatThrownBy(() -> customerService.update(id, request))
+                    .isInstanceOf(NotFoundException.class);
 
-//    @Test
-//    void list_returnsEmptyList_whenNoCustomers() {
-//        // Arrange
-//        given(customerRepository.findAll()).willReturn(Collections.emptyList());
-//
-//        // Act
-//        var customerResponseList = customerService.list(, , );
-//
-//        // Assert
-//        assertThat(customerResponseList).isEmpty();
-//
-//        verify(customerRepository).findAll();
-//        verifyNoInteractions(customerMapper);
-//    }
+            verify(customerRepository).findById(id);
+        }
 
-    @Test
-    void update_updatesEntity_whenCustomerExists() {
-        // Arrange
-        var savedCustomerId = savedCustomer.getId();
-        given(customerRepository.findById(savedCustomerId)).willReturn(Optional.of(savedCustomer));
+        @Test
+        void patch_shouldThrowException_whenDataViolation() {
+            // Arrange
+            var patch = Instancio.create(PATCH_MODEL);
+            var customer = Instancio.create(Customer.class);
 
-        // Act
-        customerService.update(savedCustomerId, updateRequest);
+            given(customerRepository.findById(customer.getId())).willReturn(Optional.of(customer));
+            given(customerRepository.save(customer)).willThrow(new DataIntegrityViolationException("Duplicated"));
 
-        // Assert
-        verify(customerRepository).findById(savedCustomerId);
-        verify(customerMapper).updateEntity(savedCustomer, updateRequest);
-        verify(customerRepository).save(savedCustomer);
-    }
+            // Act + Assert
+            assertThatThrownBy(() -> customerService.patch(customer.getId(), patch))
+                    .isInstanceOf(DataIntegrityViolationException.class);
+        }
 
-    @Test
-    void update_throwsNotFound_whenCustomerNotExists() {
-        // Arrange
-        given(customerRepository.findById(any(UUID.class))).willReturn(Optional.empty());
+        @Test
+        void patch_shouldThrowException_whenNotFound() {
+            // Arrange
+            var id = UUID.randomUUID();
+            var patch = Instancio.create(PATCH_MODEL);
 
-        // Act-Assert
-        assertThatThrownBy(() -> customerService.update(UUID.randomUUID(), updateRequest))
-                .isInstanceOf(NotFoundException.class);
+            given(customerRepository.findById(id)).willReturn(Optional.empty());
 
-        verifyNoInteractions(customerMapper);
-    }
+            // Act + Assert
+            assertThatThrownBy(() -> customerService.patch(id, patch))
+                    .isInstanceOf(NotFoundException.class);
 
-    @Test
-    void update_propagatesDataIntegrityException_whenRepoRejects() {
-        // Arrange
-        given(customerRepository.findById(savedCustomer.getId())).willReturn(Optional.of(savedCustomer));
-        given(customerRepository.save(savedCustomer)).willThrow(new DataIntegrityViolationException("Upc Duplicated"));
+            verify(customerRepository).findById(id);
+        }
 
-        // Act-Assert
-        assertThatThrownBy(() -> customerService.update(savedCustomer.getId(), updateRequest))
-                .isInstanceOf(DataIntegrityViolationException.class);
+        @Test
+        void delete_shouldThrowException_whenNotFound() {
+            // Arrange
+            var id = UUID.randomUUID();
 
-        verify(customerRepository).findById(savedCustomer.getId());
-        verify(customerMapper).updateEntity(savedCustomer, updateRequest);
-        verify(customerRepository).save(savedCustomer);
-    }
+            given(customerRepository.findById(id)).willReturn(Optional.empty());
 
-    @Test
-    void patch_updatesOnlyProvidedFields_whenCustomerExists() {
-        // Arrange
-        var savedCustomerId = savedCustomer.getId();
-        given(customerRepository.findById(savedCustomerId)).willReturn(Optional.of(savedCustomer));
+            // Act + Assert
+            assertThatThrownBy(() -> customerService.delete(id))
+                    .isInstanceOf(NotFoundException.class);
 
-        // Act
-        customerService.patch(savedCustomerId, patchRequest);
-
-        // Assert
-        verify(customerRepository).findById(savedCustomerId);
-        verify(customerMapper).patchEntity(savedCustomer, patchRequest);
-        verify(customerRepository).save(savedCustomer);
-    }
-
-    @Test
-    void patch_throwsNotFound_whenCustomerNotExists() {
-        // Arrange
-        given(customerRepository.findById(any(UUID.class))).willReturn(Optional.empty());
-
-        // Act-Assert
-        assertThatThrownBy(() -> customerService.patch(UUID.randomUUID(), patchRequest))
-                .isInstanceOf(NotFoundException.class);
-
-        verify(customerRepository).findById(any(UUID.class));
-        verifyNoInteractions(customerMapper);
-    }
-
-    @Test
-    void patch_propagatesDataIntegrityException_whenRepoRejects() {
-        // Arrange
-        given(customerRepository.findById(savedCustomer.getId())).willReturn(Optional.of(savedCustomer));
-        given(customerRepository.save(savedCustomer)).willThrow(new DataIntegrityViolationException("Upc Duplicated"));
-
-        // Act-Assert
-        assertThatThrownBy(() -> customerService.patch(savedCustomer.getId(), patchRequest))
-                .isInstanceOf(DataIntegrityViolationException.class);
-
-        verify(customerRepository).findById(savedCustomer.getId());
-        verify(customerMapper).patchEntity(savedCustomer, patchRequest);
-        verify(customerRepository).save(savedCustomer);
-    }
-
-    @Test
-    void delete_deletesCustomer_whenCustomerExists() {
-        // Arrange
-        var savedCustomerId = savedCustomer.getId();
-        given(customerRepository.findById(savedCustomerId)).willReturn(Optional.of(savedCustomer));
-
-        // Act
-        customerService.delete(savedCustomerId);
-
-        // Assert
-        verify(customerRepository).findById(savedCustomerId);
-        verify(customerRepository).delete(savedCustomer);
-    }
-
-    @Test
-    void delete_throwsNotFound_whenCustomerNotExists() {
-        // Arrange
-        given(customerRepository.findById(any(UUID.class))).willReturn(Optional.empty());
-
-        // Act-Assert
-        assertThatThrownBy(() -> customerService.delete(UUID.randomUUID()))
-                .isInstanceOf(NotFoundException.class);
-
-        verify(customerRepository).findById(any(UUID.class));
+            verify(customerRepository).findById(id);
+        }
     }
 }
