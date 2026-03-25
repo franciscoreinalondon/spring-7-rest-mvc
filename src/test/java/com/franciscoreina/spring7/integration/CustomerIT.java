@@ -15,7 +15,10 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -23,12 +26,14 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
 
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("integration-test")
 @AutoConfigureWebTestClient
-public class CustomerIT extends AbstractIntegrationTest {
+public class CustomerIT extends AbstractJwtMockIntegrationTest {
 
     @Container
     @ServiceConnection
@@ -77,11 +82,8 @@ public class CustomerIT extends AbstractIntegrationTest {
         // Act + Assert
         postRequest(ApiPaths.CUSTOMERS, createRequest)
                 .expectStatus().isBadRequest()
-                .expectBody(ApiError.class)
-                .value(error -> {
-                    assertThat(error).isNotNull();
-                    assertThat(error.status()).isEqualTo(400);
-                });
+                .expectBody()
+                .jsonPath("$.errors.name").exists();
     }
 
     @Test
@@ -141,16 +143,12 @@ public class CustomerIT extends AbstractIntegrationTest {
         // Act + Assert
         getRequest(ApiPaths.CUSTOMERS)
                 .expectStatus().isOk()
-                .expectBodyList(CustomerResponse.class)
-                .value(customerResponseList -> {
-                    assertThat(customerResponseList).isNotNull();
-                    assertThat(customerResponseList).hasSize(2);
-                    assertThat(customerResponseList).allSatisfy(customerResponse -> {
-                        assertThat(customerResponse.id()).isNotNull();
-                        assertThat(customerResponse.name()).isNotBlank();
-                        assertThat(customerResponse.email()).isNotNull();
-                    });
-                });
+                .expectBody()
+                .jsonPath("$.content").isArray()
+                .jsonPath("$.content.length()").isEqualTo(2)
+                .jsonPath("$.content[*].id").isNotEmpty()
+                .jsonPath("$.content[*].name").isNotEmpty()
+                .jsonPath("$.content[*].email").isNotEmpty();
     }
 
     @Test
@@ -158,10 +156,9 @@ public class CustomerIT extends AbstractIntegrationTest {
         // Act + Assert
         getRequest(ApiPaths.CUSTOMERS)
                 .expectStatus().isOk()
-                .expectBodyList(CustomerResponse.class)
-                .value(customerResponseList -> {
-                    assertThat(customerResponseList).isEmpty();
-                });
+                .expectBody()
+                .jsonPath("$.content").isArray()
+                .jsonPath("$.content.length()").isEqualTo(0);
     }
 
     // ---------------
@@ -177,7 +174,7 @@ public class CustomerIT extends AbstractIntegrationTest {
 
         // Act
         putRequest(ApiPaths.CUSTOMERS + "/" + savedCustomer.getId(), updateRequest)
-                .expectStatus().isNoContent();
+                .expectStatus().isOk();
 
         // Assert
         var updatedCustomer = customerRepository.findById(savedCustomer.getId()).orElseThrow();
@@ -247,7 +244,7 @@ public class CustomerIT extends AbstractIntegrationTest {
 
         // Act
         patchRequest(ApiPaths.CUSTOMERS + "/" + savedCustomer.getId(), patchRequest)
-                .expectStatus().isNoContent();
+                .expectStatus().isOk();
 
         // Assert
         var updatedCustomer = customerRepository.findById(savedCustomer.getId()).orElseThrow();
@@ -263,11 +260,8 @@ public class CustomerIT extends AbstractIntegrationTest {
         // Act + Assert
         patchRequest(ApiPaths.CUSTOMERS + "/" + savedCustomer.getId(), patchRequest)
                 .expectStatus().isBadRequest()
-                .expectBody(ApiError.class)
-                .value(error -> {
-                    assertThat(error).isNotNull();
-                    assertThat(error.status()).isEqualTo(400);
-                });
+                .expectBody()
+                .jsonPath("$.errors.email").exists();
     }
 
     // ---------------

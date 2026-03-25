@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("integration-test")
 @AutoConfigureWebTestClient
-public class MilkIT extends AbstractIntegrationTest {
+public class MilkIT extends AbstractJwtMockIntegrationTest {
 
     @Container
     @ServiceConnection
@@ -83,11 +83,8 @@ public class MilkIT extends AbstractIntegrationTest {
         // Act + Assert
         postRequest(ApiPaths.MILKS, createRequest)
                 .expectStatus().isBadRequest()
-                .expectBody(ApiError.class)
-                .value(error -> {
-                    assertThat(error).isNotNull();
-                    assertThat(error.status()).isEqualTo(400);
-                });
+                .expectBody()
+                .jsonPath("$.errors.name").exists();
     }
 
     @Test
@@ -343,11 +340,8 @@ public class MilkIT extends AbstractIntegrationTest {
         // Act + Assert
         patchRequest(ApiPaths.MILKS + "/" + savedMilk.getId(), patchRequest)
                 .expectStatus().isBadRequest()
-                .expectBody(ApiError.class)
-                .value(error -> {
-                    assertThat(error).isNotNull();
-                    assertThat(error.status()).isEqualTo(400);
-                });
+                .expectBody()
+                .jsonPath("$.errors.upc").exists();
     }
 
     // ---------------
