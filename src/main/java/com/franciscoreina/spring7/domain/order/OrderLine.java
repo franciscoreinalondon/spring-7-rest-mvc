@@ -23,7 +23,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 
-import static com.franciscoreina.spring7.domain.base.DomainAssert.isNonNegative;
+import static com.franciscoreina.spring7.domain.base.DomainAssert.isPositiveOrZero;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.isPositive;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notNull;
 
@@ -78,7 +78,7 @@ public class OrderLine extends BaseEntity {
         notNull(milk, "Milk is required");
         notNull(milk.getPrice(), "Price milk is required");
         notNull(requestedQuantity, "Requested quantity is required");
-        isNonNegative(requestedQuantity, "Requested quantity cannot be negative");
+        isPositiveOrZero(requestedQuantity, "Requested quantity cannot be negative");
 
         return OrderLine.builder()
                 .milk(milk)
@@ -98,14 +98,14 @@ public class OrderLine extends BaseEntity {
 
     //  Updates the requested quantity based on customer intent.
     void updateQuantity(Integer newQuantity) {
-        isPositive(newQuantity, "Quantity must be at least 1");
+        isPositive(newQuantity, "Quantity must be greater than 0");
         this.requestedQuantity = newQuantity;
     }
 
     //tbr
     // Allocates available inventory to fulfill the requested quantity.
     public void assignQuantity(Integer quantity) {
-        isNonNegative(quantity, "Quantity cannot be negative");
+        isPositiveOrZero(quantity, "Quantity cannot be negative");
         validateAssignedQuantity(quantity, "Cannot assign more stock than ordered");
 
         this.assignedQuantity += quantity;

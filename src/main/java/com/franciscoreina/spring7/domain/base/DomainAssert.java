@@ -26,7 +26,7 @@ public final class DomainAssert {
         }
     }
 
-    public static void isNonNegative(Integer value, String message) {
+    public static void isPositiveOrZero(Integer value, String message) {
         if (value == null || value < 0) {
             throw new IllegalArgumentException(message);
         }

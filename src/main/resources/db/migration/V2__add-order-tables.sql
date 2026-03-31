@@ -12,7 +12,6 @@ create table milk_order (
                       customer_ref varchar(50) not null unique,
                       payment_amount decimal(14,2) not null,
                       milk_order_status enum ('NEW', 'CONFIRMED', 'SHIPPED', 'CANCELLED') not null,
-
                       primary key (id)
 ) engine=InnoDB;
 
@@ -37,9 +36,9 @@ alter table milk_order
 alter table milk_order_line
     add constraint fk_milk_order_line_milk_order_id
         foreign key (milk_order_id) references milk_order(id) ON DELETE CASCADE,
-    add constraint fk_milk_order_line_milk_id
-        foreign key (milk_id) references milk(id);
+    add constraint fk_milk_order_line_milks_id
+        foreign key (milk_id) references milks(id);
 
 create index idx_milk_order_customers_id on milk_order(customers_id);
 create index idx_milk_order_line_milk_order_id on milk_order_line(milk_order_id);
-create index idx_milk_order_line_milk_id on milk_order_line(milk_id);
+create index idx_milk_order_line_milks_id on milk_order_line(milk_id);

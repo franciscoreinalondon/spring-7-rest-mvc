@@ -19,7 +19,6 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,21 +26,22 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import static com.franciscoreina.spring7.domain.base.DomainAssert.cannotRemoveLastElement;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.isPositive;
+import static com.franciscoreina.spring7.domain.base.DomainAssert.isPositiveOrZero;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notBlank;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notEmpty;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notNull;
 
-@Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
-@AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // For Factory
 @Getter
 @Setter(AccessLevel.NONE) // Defensive programming
 @Entity
-@Table(name = "milk")
+@Table(name = "milks")
 public class Milk extends BaseEntity {
 
     // Business Attributes
@@ -74,31 +74,30 @@ public class Milk extends BaseEntity {
 
     // JPA Relationships
 
-    @Builder.Default
     @NotEmpty
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "milk_category",
+    @JoinTable(name = "milk_categories",
             joinColumns = @JoinColumn(name = "milk_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id"))
     private Set<Category> categories = new HashSet<>();
 
     // Factory Method
 
-    public static Milk createMilk(String name, MilkType milkType, String upc, BigDecimal price, Integer stock, Set<Category> categories) {
-        notBlank(name, "Name is required");
-        notNull(milkType, "MilkType is required");
-        notBlank(upc, "UPC is required");
-        notNull(price, "Price is required");
-        notNull(stock, "Stock is required");
-        notEmpty(categories, "At least one category is required");
+    public static Milk createMilk(String name,
+                                  MilkType milkType,
+                                  String upc,
+                                  BigDecimal price,
+                                  Integer stock,
+                                  Set<Category> categories) {
 
-        Milk milk = Milk.builder()
-                .name(name.trim())
-                .milkType(milkType)
-                .upc(normalizeUpc(upc))
-                .price(price)
-                .stock(stock)
-                .build();
+        var normalizedName = normalizeName(name);
+        var normalizedUpc = normalizeUpc(upc);
+        validateMilkType(milkType);
+        validatePrice(price);
+        validateStock(stock);
+        validateCategories(categories);
+
+        Milk milk = new Milk(normalizedName, milkType, normalizedUpc, price, stock, new HashSet<>());
         categories.forEach(milk::addCategory);
 
         return milk;
@@ -107,33 +106,30 @@ public class Milk extends BaseEntity {
     // Business Methods (Rich Model)
 
     public void renameTo(String newName) {
-        notBlank(newName, "Name is required");
-        this.name = newName.trim();
+        this.name = normalizeName(newName);
     }
 
-    public void updateMilkType(MilkType milkType) {
-        notNull(milkType, "MilkType is required");
-        this.milkType = milkType;
+    public void updateMilkType(MilkType newMilkType) {
+        validateMilkType(newMilkType);
+        this.milkType = newMilkType;
     }
 
     public void updateUpc(String newUpc) {
-        notBlank(newUpc, "Upc is required");
         this.upc = normalizeUpc(newUpc);
     }
 
     public void updatePrice(BigDecimal newPrice) {
-        notNull(newPrice, "Price is required");
-        isPositive(newPrice, "Price must be greater than 0");
+        validatePrice(newPrice);
         this.price = newPrice;
     }
 
     public void updateStock(Integer newStock) {
-        notNull(newStock, "Stock is required");
+        validateStock(newStock);
         this.stock = newStock;
     }
 
     public void decreaseStock(Integer amount) {
-        isPositive(amount, "Amount must be at least 1");
+        isPositive(amount, "Amount must be greater than 0");
         checkStockAvailable(amount);
         this.stock -= amount;
     }
@@ -154,8 +150,36 @@ public class Milk extends BaseEntity {
 
     // Utilities
 
+    private static String normalizeName(String name) {
+        notBlank(name, "Name is required");
+        return name.trim();
+    }
+
     private static String normalizeUpc(String upc) {
-        return upc.toUpperCase().trim();
+        notBlank(upc, "UPC is required");
+        return upc.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private static void validateMilkType(MilkType milkType) {
+        notNull(milkType, "MilkType is required");
+    }
+
+    private static void validatePrice(BigDecimal price) {
+        notNull(price, "Price is required");
+        isPositive(price, "Price must be greater than 0");
+
+        if (price.scale() > 2) {
+            throw new IllegalArgumentException("Price must have at most 2 decimal places");
+        }
+    }
+
+    private static void validateStock(Integer stock) {
+        notNull(stock, "Stock is required");
+        isPositiveOrZero(stock, "Stock must be 0 or greater");
+    }
+
+    private static void validateCategories(Set<Category> categories) {
+        notEmpty(categories, "At least one category is required");
     }
 
     private void checkStockAvailable(Integer amount) {
