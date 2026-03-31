@@ -9,20 +9,20 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Locale;
+
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notBlank;
 
-@Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
-@AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // For Factory
 @Getter
 @Setter(AccessLevel.NONE) // Defensive programming
 @Entity
-@Table(name = "customer")
+@Table(name = "customers")
 public class Customer extends BaseEntity {
 
     // Business Attributes
@@ -41,31 +41,41 @@ public class Customer extends BaseEntity {
     // Factory Method
 
     public static Customer createCustomer(String name, String email) {
-        notBlank(name, "Name is required");
-        notBlank(email, "Email is required");
+        var normalizedName = normalizeName(name);
+        var normalizedEmail = normalizeEmail(email);
+        validateEmailFormat(normalizedEmail);
 
-        return Customer.builder()
-                .name(name.trim())
-                .email(normalizeEmail(email))
-                .build();
+        return new Customer(normalizedName, normalizedEmail);
     }
 
     // Business Methods (Rich Model)
 
     public void renameTo(String newName) {
-        notBlank(newName, "Name is required");
-        this.name = newName.trim();
+        this.name = normalizeName(newName);
     }
 
     public void changeEmailTo(String newEmail) {
-        notBlank(newEmail, "Email is required");
-        this.email = normalizeEmail(newEmail);
+        var normalizedEmail = normalizeEmail(newEmail);
+        validateEmailFormat(normalizedEmail);
+        this.email = normalizedEmail;
     }
 
     // Utilities
 
+    private static String normalizeName(String name) {
+        notBlank(name, "Name is required");
+        return name.trim();
+    }
+
     private static String normalizeEmail(String email) {
-        return email.toLowerCase().trim();
+        notBlank(email, "Email is required");
+        return email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    public static void validateEmailFormat(String email) {
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            throw new IllegalArgumentException("Invalid email format");
+        }
     }
 
     // Equals / HashCode

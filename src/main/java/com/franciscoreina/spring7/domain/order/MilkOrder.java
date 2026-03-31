@@ -67,7 +67,7 @@ public class MilkOrder extends BaseEntity {
 
     @NotNull
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", nullable = false)
+    @JoinColumn(name = "customers_id", nullable = false)
     private Customer customer;
 
     @Builder.Default

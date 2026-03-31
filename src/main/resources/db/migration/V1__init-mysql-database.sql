@@ -1,9 +1,9 @@
 
-drop table if exists customer;
+drop table if exists customers;
 
 drop table if exists milk;
 
-create table customer (
+create table customers (
                       version integer,
                       created_at datetime(6) not null,
                       updated_at datetime(6) not null,
@@ -26,8 +26,8 @@ create table milk (
                       primary key (id)
 ) engine=InnoDB;
 
-alter table customer
-    add constraint uk_customer_email unique (email);
+alter table customers
+    add constraint uk_customers_email unique (email);
 
 alter table milk
     add constraint uk_milk_upc unique (upc);

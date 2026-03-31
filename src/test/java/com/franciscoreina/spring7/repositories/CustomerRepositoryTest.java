@@ -84,12 +84,10 @@ public class CustomerRepositoryTest {
 
     @Test
     public void saveCustomer_throwException_whenEmailIsInvalid() {
-        // Arrange
-        Customer customer = TestDataFactory.getNewCustomer("invalidEmail");
-
         // Act-Assert
-        assertThatThrownBy(() -> customerRepository.saveAndFlush(customer))
-                .isInstanceOf(ConstraintViolationException.class);
+        assertThatThrownBy(() -> Customer.createCustomer("Customer name", "invalidEmail"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Invalid email format");
     }
 
     // ---------------

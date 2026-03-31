@@ -8,7 +8,7 @@ create table milk_order (
                       created_at datetime(6) not null,
                       updated_at datetime(6) not null,
                       id binary(16) not null,
-                      customer_id binary(16) not null,
+                      customers_id binary(16) not null,
                       customer_ref varchar(50) not null unique,
                       payment_amount decimal(14,2) not null,
                       milk_order_status enum ('NEW', 'CONFIRMED', 'SHIPPED', 'CANCELLED') not null,
@@ -31,8 +31,8 @@ create table milk_order_line (
 ) engine=InnoDB;
 
 alter table milk_order
-    add constraint fk_milk_order_customer_id
-        foreign key (customer_id) references customer(id);
+    add constraint fk_milk_order_customers_id
+        foreign key (customers_id) references customers(id);
 
 alter table milk_order_line
     add constraint fk_milk_order_line_milk_order_id
@@ -40,6 +40,6 @@ alter table milk_order_line
     add constraint fk_milk_order_line_milk_id
         foreign key (milk_id) references milk(id);
 
-create index idx_milk_order_customer_id on milk_order(customer_id);
+create index idx_milk_order_customers_id on milk_order(customers_id);
 create index idx_milk_order_line_milk_order_id on milk_order_line(milk_order_id);
 create index idx_milk_order_line_milk_id on milk_order_line(milk_id);
