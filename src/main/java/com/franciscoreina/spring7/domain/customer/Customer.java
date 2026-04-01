@@ -33,7 +33,7 @@ public class Customer extends BaseEntity {
     private String name;
 
     @NotBlank
-    @Email
+    @Email(message = "Invalid email format")
     @Size(max = 120)
     @Column(nullable = false, length = 120, unique = true)
     private String email;
@@ -43,7 +43,6 @@ public class Customer extends BaseEntity {
     public static Customer createCustomer(String name, String email) {
         var normalizedName = normalizeName(name);
         var normalizedEmail = normalizeEmail(email);
-        validateEmailFormat(normalizedEmail);
 
         return new Customer(normalizedName, normalizedEmail);
     }
@@ -55,9 +54,7 @@ public class Customer extends BaseEntity {
     }
 
     public void changeEmailTo(String newEmail) {
-        var normalizedEmail = normalizeEmail(newEmail);
-        validateEmailFormat(normalizedEmail);
-        this.email = normalizedEmail;
+        this.email = normalizeEmail(newEmail);
     }
 
     // Utilities
@@ -69,13 +66,13 @@ public class Customer extends BaseEntity {
 
     private static String normalizeEmail(String email) {
         notBlank(email, "Email is required");
-        return email.trim().toLowerCase(Locale.ROOT);
-    }
+        var normalized = email.trim().toLowerCase(Locale.ROOT);
 
-    public static void validateEmailFormat(String email) {
-        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+        if (!normalized.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
             throw new IllegalArgumentException("Invalid email format");
         }
+
+        return normalized;
     }
 
     // Equals / HashCode
