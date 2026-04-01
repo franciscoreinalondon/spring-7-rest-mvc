@@ -21,7 +21,6 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -29,18 +28,19 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
+import static com.franciscoreina.spring7.domain.base.DomainAssert.isPositive;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notBlank;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notNull;
 
-@Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
-@AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // For Factory
 @Getter
 @Setter(AccessLevel.NONE) // Defensive programming
 @Entity
-@Table(name = "milk_order")
+@Table(name = "milk_orders")
 public class MilkOrder extends BaseEntity {
 
     // Business Attributes
@@ -57,20 +57,18 @@ public class MilkOrder extends BaseEntity {
     @Column(nullable = false, precision = 14, scale = 2)
     private BigDecimal paymentAmount;
 
-    @Builder.Default
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private MilkOrderStatus milkOrderStatus = MilkOrderStatus.NEW;
+    private MilkOrderStatus milkOrderStatus;
 
     // JPA Relationships
 
     @NotNull
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "customers_id", nullable = false)
+    @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
-    @Builder.Default
     @NotNull
     @OneToMany(mappedBy = "milkOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<OrderLine> orderLines = new HashSet<>();
@@ -81,14 +79,15 @@ public class MilkOrder extends BaseEntity {
     // Factory Method
 
     public static MilkOrder createMilkOrder(Customer customer, String customerRef) {
-        notNull(customer, "Customer is required");
-        notBlank(customerRef, "CustomerRef is required");
+        var normalizedCustomerRef = normalizeCustomerRef(customerRef);
+        validateCustomer(customer);
 
-        return MilkOrder.builder()
-                .customer(customer)
-                .customerRef(normalizeCustomerRef(customerRef))
-                .paymentAmount(BigDecimal.ZERO)
-                .build();
+        return new MilkOrder(normalizedCustomerRef,
+                BigDecimal.ZERO,
+                MilkOrderStatus.NEW,
+                customer,
+                new HashSet<>(),
+                null);
     }
 
     // Business Methods (Rich Model)
@@ -98,40 +97,47 @@ public class MilkOrder extends BaseEntity {
     }
 
     public void addOrderLine(OrderLine orderLine) {
-        notNull(orderLine, "OrderLine is required");
-        checkOrderIsModifiable("Order already has a shipment");
+        validateOrderLine(orderLine);
+        assertOrderIsEditable();
+        assertOrderHasShipment();
+        assertOrderLineIsNotAssignedToAnotherOrder(orderLine);
 
         if (this.orderLines.add(orderLine)) {
             orderLine.setMilkOrder(this);
-            this.paymentAmount = getTotalAmount();
+            this.paymentAmount = calculateTotalAmount();
         }
     }
 
     public void removeOrderLine(OrderLine orderLine) {
-        notNull(orderLine, "OrderLine is required");
-        checkOrderIsModifiable("Order already has a shipment");
+        validateOrderLine(orderLine);
+        assertOrderIsEditable();
+        assertOrderHasShipment();
+        assertOrderLineBelongsToOrder(orderLine);
 
         if (this.orderLines.remove(orderLine)) {
             // Not required for Hibernate (orphanRemoval = true),
             // but keeps the object graph consistent in memory
             orderLine.setMilkOrder(null);
-            this.paymentAmount = getTotalAmount();
+            this.paymentAmount = calculateTotalAmount();
         }
     }
 
     public void updateOrderLineQuantity(OrderLine orderLine, Integer newQuantity) {
-        notNull(orderLine, "OrderLine is required");
-        notNull(newQuantity, "New quantity is required");
-        checkOrderIsModifiable("Order already has a shipment");
-        checkOrderLineBelongsToOrder(orderLine, "OrderLine does not belong to this order");
+        validateOrderLine(orderLine);
+        validateQuantity(newQuantity);
+        assertOrderIsEditable();
+        assertOrderHasShipment();
+        assertOrderLineBelongsToOrder(orderLine);
 
         orderLine.updateQuantity(newQuantity);
-        this.paymentAmount = getTotalAmount();
+        this.paymentAmount = calculateTotalAmount();
     }
 
     public void addOrderShipment(OrderShipment orderShipment) {
-        notNull(orderShipment, "OrderShipment is required");
-        checkOrderIsModifiable("Order already has a shipment");
+        validateOrderShipment(orderShipment);
+        assertOrderIsEditable();
+        assertOrderHasShipment();
+        assertShipmentIsNotAssignedToAnotherOrder(orderShipment);
 
         orderShipment.setMilkOrder(this);
         this.orderShipment = orderShipment;
@@ -140,25 +146,67 @@ public class MilkOrder extends BaseEntity {
     // Utilities
 
     private static String normalizeCustomerRef(String customerRef) {
-        return customerRef.toUpperCase().trim();
+        notBlank(customerRef, "Customer ref is required");
+        var normalized = customerRef.trim().toUpperCase(Locale.ROOT);
+
+        if (!normalized.matches("^[A-Z0-9-]+$")) {
+            throw new IllegalArgumentException("Only capital letters, numbers and hyphens are allowed");
+        }
+
+        return normalized;
     }
 
-    private void checkOrderIsModifiable(String message) {
-        if (this.orderShipment != null) {
-            throw new IllegalStateException(message);
+    private static void validateCustomer(Customer customer) {
+        notNull(customer, "Customer is required");
+    }
+
+    private static void validateOrderLine(OrderLine orderLine) {
+        notNull(orderLine, "OrderLine is required");
+    }
+
+    private static void validateOrderShipment(OrderShipment orderShipment) {
+        notNull(orderShipment, "OrderShipment is required");
+    }
+
+    private static void validateQuantity(Integer newQuantity) {
+        notNull(newQuantity, "Quantity is required");
+        isPositive(newQuantity, "Quantity must be greater than 0");
+    }
+
+    private void assertOrderIsEditable() {
+        if (this.milkOrderStatus != MilkOrderStatus.NEW) {
+            throw new IllegalStateException("Only NEW orders can be modified");
         }
     }
 
-    private void checkOrderLineBelongsToOrder(OrderLine orderLine, String message) {
+    private void assertOrderLineBelongsToOrder(OrderLine orderLine) {
         if (!this.orderLines.contains(orderLine)) {
-            throw new IllegalStateException(message);
+            throw new IllegalStateException("OrderLine does not belong to this order");
         }
     }
 
-    private BigDecimal getTotalAmount() {
-        return orderLines.stream()
-                .map(line -> line.getPriceAtPurchase()
-                        .multiply(BigDecimal.valueOf(line.getRequestedQuantity())))
+    private void assertOrderLineIsNotAssignedToAnotherOrder(OrderLine orderLine) {
+        if (orderLine.getMilkOrder() != null && orderLine.getMilkOrder() != this) {
+            throw new IllegalStateException("OrderLine already belongs to another order");
+        }
+    }
+
+    private void assertOrderHasShipment() {
+        if (this.orderShipment != null) {
+            throw new IllegalStateException("Order already has a shipment");
+        }
+    }
+
+    private void assertShipmentIsNotAssignedToAnotherOrder(OrderShipment orderShipment) {
+        if (orderShipment.getMilkOrder() != null && orderShipment.getMilkOrder() != this) {
+            throw new IllegalStateException("OrderShipment does not belong to this order");
+        }
+    }
+
+    private BigDecimal calculateTotalAmount() {
+        return orderLines.stream().map(
+                        line -> line.getPriceAtPurchase()
+                                .multiply(BigDecimal.valueOf(line.getRequestedQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 

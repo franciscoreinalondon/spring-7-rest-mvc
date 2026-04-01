@@ -1,7 +1,9 @@
 package com.franciscoreina.spring7.integration;
 
 import com.franciscoreina.spring7.api.ApiPaths;
+import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
+import com.franciscoreina.spring7.repositories.CategoryRepository;
 import com.franciscoreina.spring7.testdata.IntegrationTestDataFactory;
 import com.franciscoreina.spring7.testdata.TestDataFactory;
 import jakarta.persistence.EntityManager;
@@ -13,9 +15,12 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,10 +40,16 @@ public class MilkOrderIT extends AbstractJwtMockIntegrationTest {
     @Autowired
     EntityManager entityManager;
 
+    @Autowired
+    CategoryRepository categoryRepository;
+
+    Category savedCategory;
+
     @BeforeEach
     @Override
     void setUp() {
         super.setUp();
+        savedCategory = categoryRepository.saveAndFlush(Category.createCategory(UUID.randomUUID().toString()));
     }
 
     // ---------------
@@ -49,7 +60,7 @@ public class MilkOrderIT extends AbstractJwtMockIntegrationTest {
     void create_whenValidData_returnsCreated() {
         // Arrange
         var savedCustomer = dataFactory.persistCustomer();
-        var savedMilk = dataFactory.persistMilk();
+        var savedMilk = dataFactory.persistMilk(savedCategory);
         var orderLineCreateRequest = TestDataFactory.getOrderLineCreateRequest(savedMilk.getId());
         var milkOrderCreateRequest = TestDataFactory.getMilkOrderCreateRequest(savedCustomer.getId(), orderLineCreateRequest);
 
@@ -73,7 +84,7 @@ public class MilkOrderIT extends AbstractJwtMockIntegrationTest {
     @Test
     void getById_whenIdExists_returnsMilkOrder() {
         // Arrange
-        var savedMilkOrder = dataFactory.persistMilkOrder();
+        var savedMilkOrder = dataFactory.persistMilkOrder(savedCategory);
 
         // Act + Assert
         getRequest(ApiPaths.MILK_ORDERS + "/" + savedMilkOrder.getId())

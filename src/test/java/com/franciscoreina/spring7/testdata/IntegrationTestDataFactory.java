@@ -1,6 +1,7 @@
 package com.franciscoreina.spring7.testdata;
 
 import com.franciscoreina.spring7.domain.customer.Customer;
+import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.domain.order.MilkOrder;
@@ -49,28 +50,25 @@ public class IntegrationTestDataFactory {
         return customerRepository.findAll(PageRequest.of(0, 2)).getContent();
     }
 
-    public Milk persistMilk() {
-        var savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+    public Milk persistMilk(Category savedCategory) {
         return milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
     }
 
-    public List<Milk> persistTwoMilks() {
-        var savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
+    public List<Milk> persistTwoMilks(Category savedCategory) {
         var savedMilk1 = milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
         var savedMilk2 = milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
         return List.of(savedMilk1, savedMilk2);
     }
 
-    public void loadMilkCsvDataset() throws FileNotFoundException {
+    public void loadMilkCsvDataset(Category savedCategory) throws FileNotFoundException {
         var csvFile = ResourceUtils.getFile("classpath:csvdata/milk_dataset.csv");
         var records = milkCsvService.convertCSV(csvFile);
 
-        records.forEach(record -> milkRepository.save(mapToBeer(record)));
+        records.forEach(record -> milkRepository.save(mapToBeer(record, savedCategory)));
     }
 
-    public MilkOrder persistMilkOrder() {
+    public MilkOrder persistMilkOrder(Category savedCategory) {
         var savedCustomer = customerRepository.save(TestDataFactory.getNewCustomer());
-        var savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
         var savedMilk =  milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
 
         var newOrderLine = OrderLine.createOrderLine(savedMilk, 2);
@@ -105,8 +103,7 @@ public class IntegrationTestDataFactory {
 
     // The mapper logic is mostly academic, since some properties are filled
     // with placeholder values and do not represent realistic domain data.
-    private Milk mapToBeer(MilkCsvRecord record) {
-        var savedCategory = categoryRepository.save(TestDataFactory.getNewCategory());
+    private Milk mapToBeer(MilkCsvRecord record, Category savedCategory) {
         return Milk.createMilk(
                 record.getMilk(),
                 parseMilkType(record.getStyle()),

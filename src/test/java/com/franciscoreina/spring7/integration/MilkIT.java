@@ -1,6 +1,7 @@
 package com.franciscoreina.spring7.integration;
 
 import com.franciscoreina.spring7.api.ApiPaths;
+import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.exceptions.ApiError;
 import com.franciscoreina.spring7.repositories.CategoryRepository;
@@ -45,10 +46,13 @@ public class MilkIT extends AbstractJwtMockIntegrationTest {
     @Autowired
     IntegrationTestDataFactory dataFactory;
 
+    Category savedCategory;
+
     @BeforeEach
     void setUp() {
         super.setUp();
         milkRepository.deleteAll();
+        savedCategory = categoryRepository.saveAndFlush(Category.createCategory(UUID.randomUUID().toString()));
     }
 
     // ---------------
@@ -58,7 +62,6 @@ public class MilkIT extends AbstractJwtMockIntegrationTest {
     @Test
     void create_whenValidData_returnsCreated() {
         // Arrange
-        var savedCategory = categoryRepository.save(TestDataFactory.getNewCategory());
         var newMilk = TestDataFactory.getNewMilk(savedCategory);
         var createRequest = TestDataFactory.getMilkCreateRequest(newMilk);
 
@@ -90,7 +93,7 @@ public class MilkIT extends AbstractJwtMockIntegrationTest {
     @Test
     void create_whenUpcDuplicated_returnsConflict() {
         // Arrange
-        var savedMilk = dataFactory.persistMilk();
+        var savedMilk = dataFactory.persistMilk(savedCategory);
         var milkDuplicateUpc = TestDataFactory.getNewMilk(savedMilk.getUpc(), savedMilk.getCategories().iterator().next());
         var createRequest = TestDataFactory.getMilkCreateRequest(milkDuplicateUpc);
 
@@ -111,7 +114,7 @@ public class MilkIT extends AbstractJwtMockIntegrationTest {
     @Test
     void getById_whenIdExists_returnsMilk() {
         // Arrange
-        var savedMilk = dataFactory.persistMilk();
+        var savedMilk = dataFactory.persistMilk(savedCategory);
 
         // Act + Assert
         getRequest(ApiPaths.MILKS + "/" + savedMilk.getId())
@@ -139,7 +142,7 @@ public class MilkIT extends AbstractJwtMockIntegrationTest {
     @Test
     void list_whenMilksExists_returnsDataList() {
         // Arrange
-        dataFactory.persistTwoMilks();
+        dataFactory.persistTwoMilks(savedCategory);
 
         // Act + Assert
         getRequest(ApiPaths.MILKS)
@@ -218,7 +221,7 @@ public class MilkIT extends AbstractJwtMockIntegrationTest {
     @Test
     void listByNameAndTypeUsingPage1_whenMilksExists_returnsDataList() throws FileNotFoundException {
         // Arrange
-        dataFactory.loadMilkCsvDataset();
+        dataFactory.loadMilkCsvDataset(savedCategory);
 
         // Act + Assert
         getRequest(ApiPaths.MILKS, Map.of("name", "skimmed", "milkType", "SKIMMED",
@@ -334,7 +337,7 @@ public class MilkIT extends AbstractJwtMockIntegrationTest {
     @Test
     void patch_whenInvalidUpc_returnsBadRequest() {
         // Arrange
-        var savedMilk = dataFactory.persistMilk();
+        var savedMilk = dataFactory.persistMilk(savedCategory);
         var patchRequest = TestDataFactory.getMilkPatchRequestInvalidUpc();
 
         // Act + Assert
@@ -351,7 +354,7 @@ public class MilkIT extends AbstractJwtMockIntegrationTest {
     @Test
     void delete_whenIdExists_returnsNoContent() {
         // Arrange
-        var savedMilk = dataFactory.persistMilk();
+        var savedMilk = dataFactory.persistMilk(savedCategory);
 
         // Act
         deleteRequest(ApiPaths.MILKS + "/" + savedMilk.getId())

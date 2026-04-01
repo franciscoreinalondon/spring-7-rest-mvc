@@ -38,6 +38,12 @@ public final class DomainAssert {
         }
     }
 
+    public static void isPositiveOrZero(BigDecimal value, String message) {
+        if (value == null || value.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
     public static void isPositive(BigDecimal value, String message) {
         if (value == null || value.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException(message);
