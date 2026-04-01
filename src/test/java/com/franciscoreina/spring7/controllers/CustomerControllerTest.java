@@ -4,7 +4,6 @@ import com.franciscoreina.spring7.api.ApiPaths;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
-import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.services.CustomerService;
 import org.instancio.Instancio;
@@ -181,10 +180,7 @@ public class CustomerControllerTest {
         @Test
         void postCustomer_returns400_whenInvalidData() throws Exception {
             // Arrange
-            var invalidRequest = CustomerRequest.builder()
-                    .name(" ")
-                    .email("Invalid email")
-                    .build();
+            var invalidRequest = new CustomerRequest(" ", "Invalid email");
 
             // Act + Assert
             mockMvc.perform(post(ApiPaths.CUSTOMERS)
@@ -228,10 +224,7 @@ public class CustomerControllerTest {
         void putCustomer_returns400_whenInvalidData() throws Exception {
             // Arrange
             var id = UUID.randomUUID();
-            var invalidRequest = CustomerRequest.builder()
-                    .name(" ")
-                    .email("Invalid email")
-                    .build();
+            var invalidRequest = new CustomerRequest(" ", "Invalid email");
 
             // Act + Assert
             mockMvc.perform(put(ApiPaths.CUSTOMERS + "/{id}", id)
@@ -279,9 +272,7 @@ public class CustomerControllerTest {
         void patchCustomer_returns400_whenInvalidData() throws Exception {
             // Arrange
             var id = UUID.randomUUID();
-            var invalidRequest = CustomerPatchRequest.builder()
-                    .email("Invalid email")
-                    .build();
+            var invalidRequest = new CustomerRequest(null, "Invalid email");
 
             // Act + Assert
             mockMvc.perform(patch(ApiPaths.CUSTOMERS + "/{id}", id)

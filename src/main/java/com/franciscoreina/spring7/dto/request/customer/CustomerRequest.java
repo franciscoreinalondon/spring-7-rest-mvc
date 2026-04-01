@@ -1,13 +1,9 @@
 package com.franciscoreina.spring7.dto.request.customer;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.Builder;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@Builder
 public record CustomerRequest(
 
         @NotBlank
@@ -15,8 +11,8 @@ public record CustomerRequest(
         String name,
 
         @NotBlank
+        @Email(message = "Must be a well-formed email address")
         @Size(max = 120)
-        @Email
         String email
 ) {
 }

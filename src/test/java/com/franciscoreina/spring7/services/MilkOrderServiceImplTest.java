@@ -83,11 +83,7 @@ class MilkOrderServiceImplTest {
                     .set(field(OrderLineCreateRequest::milkId), milk.getId())
                     .create();
 
-            var request = MilkOrderRequest.builder()
-                    .customerRef("REF-123")
-                    .customerId(customer.getId())
-                    .orderLines(Set.of(lineRequest))
-                    .build();
+            var request = new MilkOrderRequest("REF-123", customer.getId(), Set.of(lineRequest));
 
             var order = MilkOrder.createMilkOrder(customer, request.customerRef());
             var expectedResponse = Instancio.create(MilkOrderResponse.class);
@@ -263,11 +259,7 @@ class MilkOrderServiceImplTest {
                     .set(field(OrderLineCreateRequest::milkId), milkId)
                     .create();
 
-            var request = MilkOrderRequest.builder()
-                    .customerRef("REF-123")
-                    .customerId(customerId)
-                    .orderLines(Set.of(lineRequest))
-                    .build();
+            var request = new MilkOrderRequest("REF-123", customerId, Set.of(lineRequest));
 
             given(customerRepository.findById(customerId)).willReturn(Optional.empty());
 
@@ -289,11 +281,7 @@ class MilkOrderServiceImplTest {
                     .set(field(OrderLineCreateRequest::milkId), milkId)
                     .create();
 
-            var request = MilkOrderRequest.builder()
-                    .customerRef("REF-123")
-                    .customerId(customer.getId())
-                    .orderLines(Set.of(lineRequest))
-                    .build();
+            var request = new MilkOrderRequest("REF-123", customer.getId(), Set.of(lineRequest));
 
             var order = MilkOrder.createMilkOrder(customer, request.customerRef());
 
@@ -319,11 +307,7 @@ class MilkOrderServiceImplTest {
                     .set(field(OrderLineCreateRequest::milkId), milk.getId())
                     .create();
 
-            var request = MilkOrderRequest.builder()
-                    .customerRef("REF-123")
-                    .customerId(customer.getId())
-                    .orderLines(Set.of(lineRequest))
-                    .build();
+            var request =  new MilkOrderRequest("REF-123", customer.getId(), Set.of(lineRequest));
 
             var order = MilkOrder.createMilkOrder(customer, request.customerRef());
 

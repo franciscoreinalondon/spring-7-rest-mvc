@@ -16,7 +16,6 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.security.oauth2.server.resource.autoconfigure.servlet.OAuth2ResourceServerAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -185,10 +184,7 @@ class MilkOrderControllerTest {
             @Test
             void postMilkOrder_returns400_whenInvalidData() throws Exception {
                 // Arrange
-                var invalidRequest = MilkOrderRequest.builder()
-                        .customerRef(null)
-                        .customerId(null)
-                        .build();
+                var invalidRequest = new MilkOrderRequest(null, null, null);
 
                 // Act + Assert
                 mockMvc.perform(post(ApiPaths.MILK_ORDERS)
@@ -236,9 +232,7 @@ class MilkOrderControllerTest {
             void postOrderLine_returns400_whenInvalidData() throws Exception {
                 // Arrange
                 var id = UUID.randomUUID();
-                var invalidRequest = OrderLineCreateRequest.builder()
-                        .requestedQuantity(-1)
-                        .build();
+                var invalidRequest = new OrderLineCreateRequest(-1, id);
 
                 // Act + Assert
                 mockMvc.perform(post(ApiPaths.MILK_ORDERS + "/{id}" + ApiPaths.LINES, id)
@@ -256,9 +250,7 @@ class MilkOrderControllerTest {
                 // Arrange
                 var orderId = UUID.randomUUID();
                 var lineId = UUID.randomUUID();
-                var invalidRequest = OrderLineUpdateRequest.builder()
-                        .requestedQuantity(-1)
-                        .build();
+                var invalidRequest = new OrderLineUpdateRequest(-1);
 
                 // Act + Assert
                 mockMvc.perform(put(ApiPaths.MILK_ORDERS + "/{id}" + ApiPaths.LINES + "/{id}", orderId, lineId)

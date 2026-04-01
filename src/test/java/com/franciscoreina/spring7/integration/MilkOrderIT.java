@@ -15,7 +15,6 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -93,8 +92,8 @@ public class MilkOrderIT extends AbstractJwtMockIntegrationTest {
                 .value(response -> {
                     assertThat(response).isNotNull();
                     assertThat(response.id()).isEqualTo(savedMilkOrder.getId());
-                    assertThat(response.orderLineIds()).isNotEmpty();
-                    assertThat(response.orderLineIds().iterator().next()).isEqualTo(savedMilkOrder.getOrderLines().iterator().next().getId());
+                    assertThat(response.orderLines()).isNotEmpty();
+                    assertThat(response.orderLines().iterator().next().id()).isEqualTo(savedMilkOrder.getOrderLines().iterator().next().getId());
                 });
     }
 
@@ -111,7 +110,7 @@ public class MilkOrderIT extends AbstractJwtMockIntegrationTest {
                 .jsonPath("$.content.length()").isEqualTo(2)
                 .jsonPath("$.content[*].id").isNotEmpty()
                 .jsonPath("$.content[*].customerRef").isNotEmpty()
-                .jsonPath("$.content[*].orderLineIds").isNotEmpty();
+                .jsonPath("$.content[*].orderLines").isNotEmpty();
     }
 
 }

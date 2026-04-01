@@ -33,7 +33,7 @@ public class Customer extends BaseEntity {
     private String name;
 
     @NotBlank
-    @Email(message = "Invalid email format")
+    @Email(message = "Must be a well-formed email address")
     @Size(max = 120)
     @Column(nullable = false, length = 120, unique = true)
     private String email;
@@ -68,8 +68,8 @@ public class Customer extends BaseEntity {
         notBlank(email, "Email is required");
         var normalized = email.trim().toLowerCase(Locale.ROOT);
 
-        if (!normalized.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
-            throw new IllegalArgumentException("Invalid email format");
+        if (!normalized.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            throw new IllegalArgumentException("Must be a valid email address");
         }
 
         return normalized;

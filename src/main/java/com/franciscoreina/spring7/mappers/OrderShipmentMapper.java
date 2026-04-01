@@ -1,6 +1,5 @@
 package com.franciscoreina.spring7.mappers;
 
-import com.franciscoreina.spring7.domain.order.MilkOrder;
 import com.franciscoreina.spring7.domain.order.OrderShipment;
 import com.franciscoreina.spring7.dto.request.order.OrderShipmentRequest;
 import com.franciscoreina.spring7.dto.response.order.OrderShipmentResponse;

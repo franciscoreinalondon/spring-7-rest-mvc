@@ -14,6 +14,7 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
@@ -58,11 +59,12 @@ public class Milk extends BaseEntity {
 
     @NotBlank
     @Size(max = 50)
+    @Pattern(regexp = "^[A-Za-z0-9]+$", message = "Only letters and numbers are allowed")
     @Column(nullable = false, length = 50, unique = true)
     private String upc;
 
     @NotNull
-    @Positive(message = "Price must be greater than 0")
+    @Positive
     @Digits(integer = 10, fraction = 2)
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
@@ -157,7 +159,13 @@ public class Milk extends BaseEntity {
 
     private static String normalizeUpc(String upc) {
         notBlank(upc, "UPC is required");
-        return upc.trim().toUpperCase(Locale.ROOT);
+        var normalized = upc.trim().toUpperCase(Locale.ROOT);
+
+        if (!normalized.matches("^[A-Za-z0-9]+$")) {
+            throw new IllegalArgumentException("Only letters and numbers are allowed");
+        }
+
+        return normalized;
     }
 
     private static void validateMilkType(MilkType milkType) {

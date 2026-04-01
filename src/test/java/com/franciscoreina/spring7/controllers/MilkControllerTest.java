@@ -4,7 +4,6 @@ import com.franciscoreina.spring7.api.ApiPaths;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.dto.request.milk.MilkPatchRequest;
 import com.franciscoreina.spring7.dto.request.milk.MilkRequest;
-import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.services.MilkService;
@@ -173,14 +172,7 @@ public class MilkControllerTest {
         @Test
         void postMilk_returns400_whenInvalidData() throws Exception {
             // Arrange
-            var invalidRequest = MilkRequest.builder()
-                    .name(null)
-                    .milkType(null)
-                    .upc("Invalid upc!!!")
-                    .price(new BigDecimal("-1.00"))
-                    .stock(-1)
-                    .categoryIds(null)
-                    .build();
+            var invalidRequest = new MilkRequest(null, null, "Invalid upc!!!", new BigDecimal("-1.00"), -1, null);
 
             // Act + Assert
             mockMvc.perform(post(ApiPaths.MILKS)
@@ -228,14 +220,7 @@ public class MilkControllerTest {
         void putMilk_returns400_whenNameNull() throws Exception {
             // Arrange
             var id = UUID.randomUUID();
-            var invalidRequest = MilkPatchRequest.builder()
-                    .name(null)
-                    .milkType(null)
-                    .upc("Invalid upc!!!")
-                    .price(new BigDecimal("-1.00"))
-                    .stock(-1)
-                    .categoryIds(null)
-                    .build();
+            var invalidRequest = new MilkRequest(null, null, "Invalid upc!!!", new BigDecimal("-1.00"), -1, null);
 
             // Act + Assert
             mockMvc.perform(put(ApiPaths.MILKS + "/{id}", id)
@@ -287,11 +272,7 @@ public class MilkControllerTest {
         void patchMilk_returns400_whenInvalidData() throws Exception {
             // Arrange
             var id = UUID.randomUUID();
-            var invalidRequest = MilkPatchRequest.builder()
-                    .upc("Invalid upc!!!")
-                    .price(new BigDecimal("-1.00"))
-                    .stock(-1)
-                    .build();
+            var invalidRequest = new MilkRequest(null, null, "Invalid upc!!!", new BigDecimal("-1.00"), -1, null);
 
             // Act + Assert
             mockMvc.perform(patch(ApiPaths.MILKS + "/{id}", id)

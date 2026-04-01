@@ -87,7 +87,7 @@ public class CustomerRepositoryTest {
         // Act-Assert
         assertThatThrownBy(() -> Customer.createCustomer("Customer name", "invalidEmail"))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Invalid email format");
+                .hasMessage("Must be a valid email address");
     }
 
     // ---------------

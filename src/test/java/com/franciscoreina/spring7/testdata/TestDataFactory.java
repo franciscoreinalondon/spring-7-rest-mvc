@@ -110,7 +110,7 @@ public class TestDataFactory {
     }
 
     public static MilkOrderRequest getMilkOrderCreateRequest(UUID customerId, OrderLineCreateRequest orderLineCreateRequest) {
-        return new MilkOrderRequest("1234TDF".toString(), customerId, Set.of(orderLineCreateRequest));
+        return new MilkOrderRequest("1234TDF", customerId, Set.of(orderLineCreateRequest));
     }
 
 // ---------------

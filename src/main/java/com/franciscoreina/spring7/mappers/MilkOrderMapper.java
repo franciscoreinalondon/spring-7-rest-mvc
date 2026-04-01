@@ -25,7 +25,6 @@ public interface MilkOrderMapper {
     //tbd: update to modify customerRef
 
     @Mapping(target = "customerId", source = "customer.id")
-    @Mapping(target = "orderLineIds", source = "orderLines")
     @Mapping(target = "orderShipmentId", source = "orderShipment.id")
     MilkOrderResponse toResponse(MilkOrder milkOrder);
 
