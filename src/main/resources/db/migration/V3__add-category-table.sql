@@ -1,15 +1,13 @@
-
-drop table if exists milk_categories;
-
-drop table if exists categories;
-
 create table categories (
                       id binary(16) not null,
                       version integer,
-                      description varchar(50) not null,
                       created_at datetime(6) not null,
                       updated_at datetime(6) not null,
-                      primary key (id)
+                      description varchar(50) not null,
+                      primary key (id),
+
+                      constraint uk_categories_description
+                          unique (description)
 ) engine=InnoDB;
 
 create table milk_categories (
@@ -18,11 +16,10 @@ create table milk_categories (
                       primary key (milk_id, category_id)
 ) engine=InnoDB;
 
-alter table categories
-    add constraint uk_categories_description unique (description);
-
 alter table milk_categories
     add constraint fk_milk_categories_milk_id
-        foreign key (milk_id) references milks(id) ON DELETE CASCADE,
+        foreign key (milk_id) references milks(id) on delete cascade,
     add constraint fk_milk_categories_category_id
-        foreign key (category_id) references categories(id) ON DELETE CASCADE;
+        foreign key (category_id) references categories(id) on delete cascade;
+
+create index idx_milk_categories_category_id on milk_categories(category_id);
