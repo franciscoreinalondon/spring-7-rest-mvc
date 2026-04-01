@@ -1,7 +1,7 @@
 
-drop table if exists order_shipment;
+drop table if exists milk_order_shipments;
 
-create table milk_order_shipment (
+create table milk_order_shipments (
                       id binary(16) not null,
                       version integer,
                       milk_order_id binary(16) not null unique,
@@ -11,6 +11,7 @@ create table milk_order_shipment (
                       primary key (id)
 ) engine=InnoDB;
 
-alter table milk_order_shipment
-    add constraint fk_milk_orders_shipment_milk_order_id
-        foreign key (milk_order_id) references milk_orders(id) ON DELETE CASCADE;
+alter table milk_order_shipments
+    add constraint fk_milk_orders_shipments_milk_order_id
+        foreign key (milk_order_id) references milk_orders(id) ON DELETE CASCADE,
+    add constraint uk_order_shipments_tracking_number unique (tracking_number);

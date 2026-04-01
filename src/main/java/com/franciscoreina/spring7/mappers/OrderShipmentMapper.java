@@ -11,14 +11,14 @@ import org.mapstruct.MappingTarget;
 @Mapper
 public interface OrderShipmentMapper {
 
-    default OrderShipment toEntity(OrderShipmentRequest request, MilkOrder milkOrder) {
-        if (request == null || milkOrder == null) return null;
-
-        return OrderShipment.createOrderShipment(
-                request.trackingNumber(),
-                milkOrder
-        );
-    }
+//    default OrderShipment toEntity(OrderShipmentRequest request, MilkOrder milkOrder) {
+//        if (request == null || milkOrder == null) return null;
+//
+//        return OrderShipment.createOrderShipment(
+//                request.trackingNumber(),
+//                milkOrder
+//        );
+//    }
 
     default void updateEntity(@MappingTarget OrderShipment target, OrderShipmentRequest request) {
         if (target == null || request == null) return;

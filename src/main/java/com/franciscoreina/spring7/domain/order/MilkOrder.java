@@ -99,7 +99,7 @@ public class MilkOrder extends BaseEntity {
     public void addOrderLine(OrderLine orderLine) {
         validateOrderLine(orderLine);
         assertOrderIsEditable();
-        assertOrderHasShipment();
+        assertOrderHasNoShipment();
         assertOrderLineIsNotAssignedToAnotherOrder(orderLine);
 
         if (this.orderLines.add(orderLine)) {
@@ -111,7 +111,7 @@ public class MilkOrder extends BaseEntity {
     public void removeOrderLine(OrderLine orderLine) {
         validateOrderLine(orderLine);
         assertOrderIsEditable();
-        assertOrderHasShipment();
+        assertOrderHasNoShipment();
         assertOrderLineBelongsToOrder(orderLine);
 
         if (this.orderLines.remove(orderLine)) {
@@ -126,19 +126,18 @@ public class MilkOrder extends BaseEntity {
         validateOrderLine(orderLine);
         validateQuantity(newQuantity);
         assertOrderIsEditable();
-        assertOrderHasShipment();
+        assertOrderHasNoShipment();
         assertOrderLineBelongsToOrder(orderLine);
 
         orderLine.updateQuantity(newQuantity);
         this.paymentAmount = calculateTotalAmount();
     }
 
-    public void addOrderShipment(OrderShipment orderShipment) {
-        validateOrderShipment(orderShipment);
+    public void addOrderShipment(String trackingNumber) {
         assertOrderIsEditable();
-        assertOrderHasShipment();
-        assertShipmentIsNotAssignedToAnotherOrder(orderShipment);
+        assertOrderHasNoShipment();
 
+        var orderShipment = OrderShipment.createOrderShipment(trackingNumber);
         orderShipment.setMilkOrder(this);
         this.orderShipment = orderShipment;
     }
@@ -164,10 +163,6 @@ public class MilkOrder extends BaseEntity {
         notNull(orderLine, "OrderLine is required");
     }
 
-    private static void validateOrderShipment(OrderShipment orderShipment) {
-        notNull(orderShipment, "OrderShipment is required");
-    }
-
     private static void validateQuantity(Integer newQuantity) {
         notNull(newQuantity, "Quantity is required");
         isPositive(newQuantity, "Quantity must be greater than 0");
@@ -191,15 +186,9 @@ public class MilkOrder extends BaseEntity {
         }
     }
 
-    private void assertOrderHasShipment() {
+    private void assertOrderHasNoShipment() {
         if (this.orderShipment != null) {
             throw new IllegalStateException("Order already has a shipment");
-        }
-    }
-
-    private void assertShipmentIsNotAssignedToAnotherOrder(OrderShipment orderShipment) {
-        if (orderShipment.getMilkOrder() != null && orderShipment.getMilkOrder() != this) {
-            throw new IllegalStateException("OrderShipment does not belong to this order");
         }
     }
 

@@ -41,10 +41,13 @@ class MilkOrderRepositoryTest {
     void testMilkOrder() {
         // Act
         MilkOrder milkOrder = MilkOrder.createMilkOrder(customer, "1234MO");
-        OrderShipment orderShipment = OrderShipment.createOrderShipment("12345", milkOrder);
+
+        milkOrder.addOrderShipment("12345");
+
+//        OrderShipment orderShipment = OrderShipment.createOrderShipment("12345", milkOrder);
 
 
-        milkOrder.addOrderShipment(orderShipment);
+//        milkOrder.addOrderShipment(orderShipment);
 //        customer.addMilkOrder(milkOrder);
 
         MilkOrder savedMilkOrder = milkOrderRepository.saveAndFlush(milkOrder);
