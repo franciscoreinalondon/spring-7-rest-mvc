@@ -36,9 +36,7 @@ public interface MilkMapper {
         target.updateUpc(request.upc());
         target.updatePrice(request.price());
         target.updateStock(request.stock());
-
-        target.getCategories().clear();
-        newCategories.forEach(target::addCategory);
+        target.replaceCategories(newCategories);
     }
 
     default void patchEntity(@MappingTarget Milk target, MilkPatchRequest request, Set<Category> newCategories) {
@@ -49,11 +47,7 @@ public interface MilkMapper {
         if (request.upc() != null) target.updateUpc(request.upc());
         if (request.price() != null) target.updatePrice(request.price());
         if (request.stock() != null) target.updateStock(request.stock());
-
-        if (newCategories != null && !newCategories.isEmpty()) {
-            target.getCategories().clear();
-            newCategories.forEach(target::addCategory);
-        }
+        if (newCategories != null) target.replaceCategories(newCategories); // null = no update, [] = invalid request
     }
 
     @Mapping(target = "categoryIds", source = "categories")

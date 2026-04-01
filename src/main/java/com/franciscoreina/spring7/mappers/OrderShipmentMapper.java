@@ -7,17 +7,12 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
+/**
+ * No toEntity mapping: OrderShipment must be created and assigned through the aggregate (MilkOrder)
+ * to enforce domain invariants and ensure a single shipment per order.
+ */
 @Mapper
 public interface OrderShipmentMapper {
-
-//    default OrderShipment toEntity(OrderShipmentRequest request, MilkOrder milkOrder) {
-//        if (request == null || milkOrder == null) return null;
-//
-//        return OrderShipment.createOrderShipment(
-//                request.trackingNumber(),
-//                milkOrder
-//        );
-//    }
 
     default void updateEntity(@MappingTarget OrderShipment target, OrderShipmentRequest request) {
         if (target == null || request == null) return;

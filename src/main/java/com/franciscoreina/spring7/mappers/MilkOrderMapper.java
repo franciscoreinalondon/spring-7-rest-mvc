@@ -2,15 +2,16 @@ package com.franciscoreina.spring7.mappers;
 
 import com.franciscoreina.spring7.domain.customer.Customer;
 import com.franciscoreina.spring7.domain.order.MilkOrder;
-import com.franciscoreina.spring7.domain.order.OrderLine;
 import com.franciscoreina.spring7.dto.request.order.MilkOrderRequest;
 import com.franciscoreina.spring7.dto.response.order.MilkOrderResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.util.UUID;
-
-@Mapper
+/**
+ * No update mapping: MilkOrder must be modified through explicit domain operations
+ * to enforce aggregate invariants and lifecycle rules.
+ */
+@Mapper(uses = OrderLineMapper.class)
 public interface MilkOrderMapper {
 
     default MilkOrder toEntity(MilkOrderRequest request, Customer customer) {
@@ -22,17 +23,7 @@ public interface MilkOrderMapper {
         );
     }
 
-    //tbd: update to modify customerRef
-
     @Mapping(target = "customerId", source = "customer.id")
     @Mapping(target = "orderShipmentId", source = "orderShipment.id")
     MilkOrderResponse toResponse(MilkOrder milkOrder);
-
-    /**
-     * MapStruct automatically identifies and applies this helper method by matching
-     * the source (OrderLine) and target (UUID) types required to resolve the collection mapping.
-     */
-    default UUID mapOrderLineToId(OrderLine orderLine) {
-        return orderLine == null ? null : orderLine.getId();
-    }
 }

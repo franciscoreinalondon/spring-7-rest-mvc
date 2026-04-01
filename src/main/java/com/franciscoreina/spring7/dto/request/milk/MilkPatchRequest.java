@@ -32,6 +32,6 @@ public record MilkPatchRequest(
 
         // JPA Relationships
 
-        Set<@NotNull UUID> categoryIds // null = no update, [] = to empty
+        Set<@NotNull UUID> categoryIds // null = no update, [] = invalid request
 ) {
 }

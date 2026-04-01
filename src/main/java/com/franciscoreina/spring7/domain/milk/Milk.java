@@ -150,6 +150,12 @@ public class Milk extends BaseEntity {
         this.categories.remove(category);
     }
 
+    public void replaceCategories(Set<Category> newCategories) {
+        validateCategories(newCategories);
+        this.categories.clear();
+        newCategories.forEach(this::addCategory);
+    }
+
     // Utilities
 
     private static String normalizeName(String name) {
