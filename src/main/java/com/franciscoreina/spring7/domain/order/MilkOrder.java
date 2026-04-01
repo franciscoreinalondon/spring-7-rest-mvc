@@ -129,7 +129,7 @@ public class MilkOrder extends BaseEntity {
         assertOrderHasNoShipment();
         assertOrderLineBelongsToOrder(orderLine);
 
-        orderLine.updateQuantity(newQuantity);
+        orderLine.updateRequestedQuantity(newQuantity);
         this.paymentAmount = calculateTotalAmount();
     }
 
