@@ -15,37 +15,38 @@ import lombok.Setter;
 
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notBlank;
 
-@Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // For Hibernate
-@AllArgsConstructor(access = AccessLevel.PRIVATE) // For Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // For Factory
 @Getter
 @Setter(AccessLevel.NONE) // Defensive programming
 @Entity
-@Table(name = "category")
+@Table(name = "categories")
 public class Category extends BaseEntity {
 
     // Business Attributes
 
     @NotBlank
     @Size(max = 50)
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 50, unique = true)
     private String description;
 
     // Factory Method
 
     public static Category createCategory(String description) {
-        notBlank(description, "Description is required");
-
-        return Category.builder()
-                .description(description.trim())
-                .build();
+        return new Category(normalizeDescription(description));
     }
 
     // Business Methods (Rich Model)
 
     public void changeDescriptionTo(String description) {
+        this.description = normalizeDescription(description);
+    }
+
+    // Utilities
+
+    private static String normalizeDescription(String description) {
         notBlank(description, "Description is required");
-        this.description = description.trim();
+        return description.trim();
     }
 
     // Equals / HashCode
