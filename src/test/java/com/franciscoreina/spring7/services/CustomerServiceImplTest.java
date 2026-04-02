@@ -16,7 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -28,42 +27,44 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.instancio.Select.field;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @ExtendWith(MockitoExtension.class)
-public class CustomerServiceImplTest {
+class CustomerServiceImplTest {
 
     @Mock
-    CustomerRepository customerRepository;
+    private CustomerRepository customerRepository;
     @Mock
-    CustomerMapper customerMapper;
+    private CustomerMapper customerMapper;
     @InjectMocks
-    CustomerServiceImpl customerService;
+    private CustomerServiceImpl customerService;
 
-    // We use a model to ensure that email are valid in all tests
     private static final Model<CustomerRequest> REQUEST_MODEL = Instancio.of(CustomerRequest.class)
-            .generate(field(CustomerRequest::email), gen -> gen.net().email())
+            .set(field(CustomerRequest::name), "Request name")
+            .set(field(CustomerRequest::email), "request@test.com")
             .toModel();
 
     private static final Model<CustomerPatchRequest> PATCH_MODEL = Instancio.of(CustomerPatchRequest.class)
-            .generate(field(CustomerPatchRequest::email), gen -> gen.net().email())
+            .set(field(CustomerPatchRequest::name), "Patch name")
+            .set(field(CustomerPatchRequest::email), "patch@test.com")
             .toModel();
 
-    // ---------------
-    //    POSITIVE
-    // ---------------
-
     @Nested
-    class PositiveTests {
+    class CreateTests {
 
         @Test
         void create_shouldReturnResponse_whenRequestIsValid() {
             // Arrange
             var request = Instancio.create(REQUEST_MODEL);
-            var customer = Instancio.create(Customer.class);
+            var customer = Customer.createCustomer(request.name(), request.email());
             var expectedResponse = Instancio.create(CustomerResponse.class);
 
+            given(customerRepository.existsByEmailIgnoreCase(request.email())).willReturn(false);
             given(customerMapper.toEntity(request)).willReturn(customer);
             given(customerRepository.save(customer)).willReturn(customer);
             given(customerMapper.toResponse(customer)).willReturn(expectedResponse);
@@ -73,215 +74,443 @@ public class CustomerServiceImplTest {
 
             // Assert
             assertThat(response).isEqualTo(expectedResponse);
+            verify(customerRepository).existsByEmailIgnoreCase(request.email());
+            verify(customerMapper).toEntity(request);
             verify(customerRepository).save(customer);
+            verify(customerMapper).toResponse(customer);
         }
 
         @Test
-        void getById_shouldReturnResponse_whenExists() {
+        void create_shouldThrowConflictException_whenEmailAlreadyExists() {
             // Arrange
-            var customer = Instancio.create(Customer.class);
+            var request = Instancio.create(REQUEST_MODEL);
+
+            given(customerRepository.existsByEmailIgnoreCase(request.email())).willReturn(true);
+
+            // Act + Assert
+            assertThatThrownBy(() -> customerService.create(request))
+                    .isInstanceOf(ConflictException.class)
+                    .hasMessage("Customer email already exists: " + request.email());
+
+            verify(customerRepository).existsByEmailIgnoreCase(request.email());
+            verifyNoInteractions(customerMapper);
+            verify(customerRepository, never()).save(any());
+        }
+    }
+
+    @Nested
+    class GetByIdTests {
+
+        @Test
+        void getById_shouldReturnResponse_whenCustomerExists() {
+            // Arrange
+            var customerId = UUID.randomUUID();
+            var customer = Customer.createCustomer("John Doe", "john@test.com");
             var expectedResponse = Instancio.create(CustomerResponse.class);
 
-            given(customerRepository.findById(customer.getId())).willReturn(Optional.of(customer));
+            ReflectionTestUtils.setField(customer, "id", customerId);
+
+            given(customerRepository.findById(customerId)).willReturn(Optional.of(customer));
             given(customerMapper.toResponse(customer)).willReturn(expectedResponse);
 
             // Act
-            var response = customerService.getById(customer.getId());
+            var response = customerService.getById(customerId);
 
             // Assert
-            assertThat(expectedResponse).isEqualTo(response);
-            verify(customerRepository).findById(customer.getId());
+            assertThat(response).isEqualTo(expectedResponse);
+            verify(customerRepository).findById(customerId);
+            verify(customerMapper).toResponse(customer);
         }
 
         @Test
-        void list_shouldReturnPageOfResponse_whenExist() {
+        void getById_shouldThrowNotFoundException_whenCustomerDoesNotExist() {
+            // Arrange
+            var customerId = UUID.randomUUID();
+
+            given(customerRepository.findById(customerId)).willReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> customerService.getById(customerId))
+                    .isInstanceOf(NotFoundException.class)
+                    .hasMessage("Customer not found: " + customerId);
+
+            verify(customerRepository).findById(customerId);
+            verify(customerMapper, never()).toResponse(any());
+        }
+    }
+
+    @Nested
+    class ListTests {
+
+        @Test
+        void list_shouldReturnAllCustomers_whenNoFiltersAreProvided() {
             // Arrange
             var pageable = Pageable.ofSize(10);
-            var customer1 = Instancio.create(Customer.class);
-            var customer2 = Instancio.create(Customer.class);
-            var expectedResponse1 = Instancio.create(CustomerResponse.class);
-            var expectedResponse2 = Instancio.create(CustomerResponse.class);
-            var expectedPage = new PageImpl<>(List.of(customer1, customer2), pageable, 1);
+            var customer1 = Customer.createCustomer("John Doe", "john@test.com");
+            var customer2 = Customer.createCustomer("Jane Doe", "jane@test.com");
+            var response1 = Instancio.create(CustomerResponse.class);
+            var response2 = Instancio.create(CustomerResponse.class);
+            var page = new PageImpl<>(List.of(customer1, customer2), pageable, 2);
 
-            given(customerRepository.findAll(pageable)).willReturn(expectedPage);
-            given(customerMapper.toResponse(customer1)).willReturn(expectedResponse1);
-            given(customerMapper.toResponse(customer2)).willReturn(expectedResponse2);
+            given(customerRepository.findAll(pageable)).willReturn(page);
+            given(customerMapper.toResponse(customer1)).willReturn(response1);
+            given(customerMapper.toResponse(customer2)).willReturn(response2);
 
             // Act
-            var page = customerService.list(null, null, pageable);
+            var result = customerService.list(null, null, pageable);
 
             // Assert
-            assertThat(page.getContent()).hasSize(2);
+            assertThat(result.getContent()).containsExactly(response1, response2);
             verify(customerRepository).findAll(pageable);
         }
 
         @Test
-        void update_shouldUpdateCustomer_whenExists() {
+        void list_shouldSearchByName_whenOnlyNameIsProvided() {
             // Arrange
-            var request = Instancio.create(REQUEST_MODEL);
-            var customer = Instancio.create(Customer.class);
-            var expectedResponse = Instancio.create(CustomerResponse.class);
+            var pageable = Pageable.ofSize(10);
+            var customer = Customer.createCustomer("John Doe", "john@test.com");
+            var response = Instancio.create(CustomerResponse.class);
+            var page = new PageImpl<>(List.of(customer), pageable, 1);
 
-            given(customerRepository.findById(customer.getId())).willReturn(Optional.of(customer));
-            given(customerMapper.toResponse(customer)).willReturn(expectedResponse);
+            given(customerRepository.findAllByNameContainingIgnoreCase(customer.getName(), pageable)).willReturn(page);
+            given(customerMapper.toResponse(customer)).willReturn(response);
 
             // Act
-            var response = customerService.update(customer.getId(), request);
+            var result = customerService.list(customer.getName(), null, pageable);
 
             // Assert
-            assertThat(response).isEqualTo(expectedResponse);
-            verify(customerRepository).findById(customer.getId());
+            assertThat(result.getContent()).containsExactly(response);
+            verify(customerRepository).findAllByNameContainingIgnoreCase(customer.getName(), pageable);
         }
 
         @Test
-        void patch_shouldPatchCustomer_whenExists() {
+        void list_shouldSearchByEmail_whenOnlyEmailIsProvided() {
             // Arrange
-            var patch = Instancio.create(PATCH_MODEL);
-            var customer = Instancio.create(Customer.class);
-            var expectedResponse = Instancio.create(CustomerResponse.class);
+            var pageable = Pageable.ofSize(10);
+            var customer = Customer.createCustomer("John Doe", "john@test.com");
+            var response = Instancio.create(CustomerResponse.class);
+            var page = new PageImpl<>(List.of(customer), pageable, 1);
 
-            given(customerRepository.findById(customer.getId())).willReturn(Optional.of(customer));
-            given(customerMapper.toResponse(customer)).willReturn(expectedResponse);
+            given(customerRepository.findAllByEmailIgnoreCase(customer.getEmail(), pageable)).willReturn(page);
+            given(customerMapper.toResponse(customer)).willReturn(response);
 
             // Act
-            var response = customerService.patch(customer.getId(), patch);
+            var result = customerService.list(null, customer.getEmail(), pageable);
 
             // Assert
-            assertThat(response).isEqualTo(expectedResponse);
-            verify(customerRepository).findById(customer.getId());
+            assertThat(result.getContent()).containsExactly(response);
+            verify(customerRepository).findAllByEmailIgnoreCase(customer.getEmail(), pageable);
         }
 
         @Test
-        void delete_shouldCallRepository_whenExists() {
+        void list_shouldSearchByNameAndEmail_whenBothFiltersAreProvided() {
             // Arrange
-            var customer = Instancio.create(Customer.class);
+            var pageable = Pageable.ofSize(10);
+            var customer = Customer.createCustomer("John Doe", "john@test.com");
+            var response = Instancio.create(CustomerResponse.class);
+            var page = new PageImpl<>(List.of(customer), pageable, 1);
 
-            given(customerRepository.findById(customer.getId())).willReturn(Optional.of(customer));
+            given(customerRepository.findAllByNameContainingIgnoreCaseAndEmailIgnoreCase(customer.getName(), customer.getEmail(), pageable))
+                    .willReturn(page);
+            given(customerMapper.toResponse(customer)).willReturn(response);
 
             // Act
-            customerService.delete(customer.getId());
+            var result = customerService.list(customer.getName(), customer.getEmail(), pageable);
 
             // Assert
-            verify(customerRepository).findById(customer.getId());
-            verify(customerRepository).delete(customer);
+            assertThat(result.getContent()).containsExactly(response);
+            verify(customerRepository).findAllByNameContainingIgnoreCaseAndEmailIgnoreCase(customer.getName(), customer.getEmail(), pageable);
+        }
+
+        @Test
+        void list_shouldTreatBlankFiltersAsNull() {
+            // Arrange
+            var pageable = Pageable.ofSize(10);
+            var page = new PageImpl<Customer>(List.of(), pageable, 0);
+
+            given(customerRepository.findAll(pageable)).willReturn(page);
+
+            // Act
+            var result = customerService.list(" ", " ", pageable);
+
+            // Assert
+            assertThat(result.getContent()).isEmpty();
+            verify(customerRepository).findAll(pageable);
         }
     }
 
-    // ---------------
-    //    NEGATIVE
-    // ---------------
-
     @Nested
-    class NegativeTests {
+    class UpdateTests {
 
         @Test
-        void create_shouldThrowException_whenDataViolation() {
+        void update_shouldReturnUpdatedResponse_whenRequestIsValid() {
             // Arrange
+            var customerId = UUID.randomUUID();
             var request = Instancio.create(REQUEST_MODEL);
-            var customer = Instancio.create(Customer.class);
+            var customer = Customer.createCustomer("Old Name", "old@test.com");
+            var expectedResponse = Instancio.create(CustomerResponse.class);
 
-            given(customerMapper.toEntity(request)).willReturn(customer);
-            given(customerRepository.save(customer)).willThrow(new DataIntegrityViolationException("Duplicated"));
+            ReflectionTestUtils.setField(customer, "id", customerId);
 
-            // Act + Assert
-            assertThatThrownBy(() -> customerService.create(request))
-                    .isInstanceOf(DataIntegrityViolationException.class);
+            given(customerRepository.findById(customerId)).willReturn(Optional.of(customer));
+            given(customerRepository.findByEmailIgnoreCase(request.email())).willReturn(Optional.empty());
+            given(customerMapper.toResponse(customer)).willReturn(expectedResponse);
 
-            verify(customerRepository).save(customer);
+            // Act
+            var response = customerService.update(customerId, request);
+
+            // Assert
+            assertThat(response).isEqualTo(expectedResponse);
+            verify(customerRepository).findById(customerId);
+            verify(customerRepository).findByEmailIgnoreCase(request.email());
+            verify(customerMapper).updateEntity(customer, request);
+            verify(customerMapper).toResponse(customer);
+            verify(customerRepository, never()).save(any());
         }
 
         @Test
-        void getById_shouldThrowException_whenNotFound() {
+        void update_shouldNotCheckEmailUniqueness_whenEmailDoesNotChange() {
             // Arrange
-            var id = UUID.randomUUID();
+            var customerId = UUID.randomUUID();
+            var request = new CustomerRequest("New Name", "same@test.com");
+            var customer = Customer.createCustomer("Old Name", "same@test.com");
+            var expectedResponse = Instancio.create(CustomerResponse.class);
 
-            given(customerRepository.findById(id)).willReturn(Optional.empty());
+            ReflectionTestUtils.setField(customer, "id", customerId);
 
-            // Act + Assert
-            assertThatThrownBy(() -> customerService.getById(id))
-                    .isInstanceOf(NotFoundException.class);
+            given(customerRepository.findById(customerId)).willReturn(Optional.of(customer));
+            given(customerMapper.toResponse(customer)).willReturn(expectedResponse);
 
-            verify(customerRepository).findById(id);
+            // Act
+            var response = customerService.update(customerId, request);
+
+            // Assert
+            assertThat(response).isEqualTo(expectedResponse);
+            verify(customerMapper).updateEntity(customer, request);
+            verify(customerRepository, never()).findByEmailIgnoreCase(any());
         }
 
         @Test
-        void update_shouldThrowException_whenDataViolation() {
+        void update_shouldThrowConflictException_whenEmailBelongsToAnotherCustomer() {
             // Arrange
+            var customerId = UUID.randomUUID();
+            var existingCustomerId = UUID.randomUUID();
             var request = Instancio.create(REQUEST_MODEL);
-            var customer = Instancio.create(Customer.class);
-            var existingCustomer = Instancio.create(Customer.class);
+            var customer = Customer.createCustomer("John Doe", "john@test.com");
+            var existingCustomer = Customer.createCustomer("Jane Doe", request.email());
 
-            ReflectionTestUtils.setField(customer, "email", "email@test.com");
-            ReflectionTestUtils.setField(existingCustomer, "email", "email@test.com");
+            ReflectionTestUtils.setField(customer, "id", customerId);
+            ReflectionTestUtils.setField(existingCustomer, "id", existingCustomerId);
 
-            given(customerRepository.findById(customer.getId())).willReturn(Optional.of(customer));
+            given(customerRepository.findById(customerId)).willReturn(Optional.of(customer));
             given(customerRepository.findByEmailIgnoreCase(request.email())).willReturn(Optional.of(existingCustomer));
 
             // Act + Assert
-            assertThatThrownBy(() -> customerService.update(customer.getId(), request))
-                    .isInstanceOf(ConflictException.class);
+            assertThatThrownBy(() -> customerService.update(customerId, request))
+                    .isInstanceOf(ConflictException.class)
+                    .hasMessage("Customer email already exists: " + request.email());
+
+            verify(customerRepository).findById(customerId);
+            verify(customerRepository).findByEmailIgnoreCase(request.email());
+            verify(customerMapper, never()).updateEntity(any(), any());
         }
 
         @Test
-        void update_shouldThrowException_whenNotFound() {
+        void update_shouldThrowNotFoundException_whenCustomerDoesNotExist() {
             // Arrange
-            var id = UUID.randomUUID();
+            var customerId = UUID.randomUUID();
             var request = Instancio.create(REQUEST_MODEL);
 
-            given(customerRepository.findById(id)).willReturn(Optional.empty());
+            given(customerRepository.findById(customerId)).willReturn(Optional.empty());
 
             // Act + Assert
-            assertThatThrownBy(() -> customerService.update(id, request))
-                    .isInstanceOf(NotFoundException.class);
+            assertThatThrownBy(() -> customerService.update(customerId, request))
+                    .isInstanceOf(NotFoundException.class)
+                    .hasMessage("Customer not found: " + customerId);
 
-            verify(customerRepository).findById(id);
+            verify(customerRepository).findById(customerId);
+            verifyNoMoreInteractions(customerRepository);
+        }
+    }
+
+    @Nested
+    class PatchTests {
+
+        @Test
+        void patch_shouldReturnPatchedResponse_whenRequestContainsChanges() {
+            // Arrange
+            var customerId = UUID.randomUUID();
+            var patch = new CustomerPatchRequest("New Name", "new@test.com");
+            var customer = Customer.createCustomer("Old Name", "old@test.com");
+            var expectedResponse = Instancio.create(CustomerResponse.class);
+
+            ReflectionTestUtils.setField(customer, "id", customerId);
+
+            given(customerRepository.findById(customerId)).willReturn(Optional.of(customer));
+            given(customerRepository.findByEmailIgnoreCase(patch.email())).willReturn(Optional.empty());
+            given(customerMapper.toResponse(customer)).willReturn(expectedResponse);
+
+            // Act
+            var response = customerService.patch(customerId, patch);
+
+            // Assert
+            assertThat(response).isEqualTo(expectedResponse);
+            verify(customerRepository).findById(customerId);
+            verify(customerRepository).findByEmailIgnoreCase(patch.email());
+            verify(customerMapper).patchEntity(customer, patch);
+            verify(customerMapper).toResponse(customer);
+            verify(customerRepository, never()).save(any());
         }
 
         @Test
-        void patch_shouldThrowException_whenDataViolation() {
+        void patch_shouldReturnCurrentResponse_whenPatchIsEmpty() {
             // Arrange
+            var customerId = UUID.randomUUID();
+            var patch = new CustomerPatchRequest(null, null);
+            var customer = Customer.createCustomer("John Doe", "john@test.com");
+            var expectedResponse = Instancio.create(CustomerResponse.class);
+
+            ReflectionTestUtils.setField(customer, "id", customerId);
+
+            given(customerRepository.findById(customerId)).willReturn(Optional.of(customer));
+            given(customerMapper.toResponse(customer)).willReturn(expectedResponse);
+
+            // Act
+            var response = customerService.patch(customerId, patch);
+
+            // Assert
+            assertThat(response).isEqualTo(expectedResponse);
+            verify(customerRepository).findById(customerId);
+            verify(customerMapper).toResponse(customer);
+            verify(customerRepository, never()).findByEmailIgnoreCase(any());
+            verify(customerMapper, never()).patchEntity(any(), any());
+        }
+
+        @Test
+        void patch_shouldNotCheckEmailUniqueness_whenEmailIsNull() {
+            // Arrange
+            var customerId = UUID.randomUUID();
+            var patch = new CustomerPatchRequest("New Name", null);
+            var customer = Customer.createCustomer("Old Name", "old@test.com");
+            var expectedResponse = Instancio.create(CustomerResponse.class);
+
+            ReflectionTestUtils.setField(customer, "id", customerId);
+
+            given(customerRepository.findById(customerId)).willReturn(Optional.of(customer));
+            given(customerMapper.toResponse(customer)).willReturn(expectedResponse);
+
+            // Act
+            var response = customerService.patch(customerId, patch);
+
+            // Assert
+            assertThat(response).isEqualTo(expectedResponse);
+            verify(customerRepository, never()).findByEmailIgnoreCase(any());
+            verify(customerMapper).patchEntity(customer, patch);
+            verify(customerMapper).toResponse(customer);
+        }
+
+        @Test
+        void patch_shouldNotCheckEmailUniqueness_whenEmailDoesNotChange() {
+            // Arrange
+            var customerId = UUID.randomUUID();
+            var customer = Customer.createCustomer("New name", "same@test.com");
+            var patch = new CustomerPatchRequest("Old name", "same@test.com");
+            var expectedResponse = Instancio.create(CustomerResponse.class);
+
+            ReflectionTestUtils.setField(customer, "id", customerId);
+
+            given(customerRepository.findById(customerId)).willReturn(Optional.of(customer));
+            given(customerMapper.toResponse(customer)).willReturn(expectedResponse);
+
+            // Act
+            var response = customerService.patch(customerId, patch);
+
+            // Assert
+            assertThat(response).isEqualTo(expectedResponse);
+            verify(customerMapper).patchEntity(customer, patch);
+            verify(customerRepository, never()).findByEmailIgnoreCase(any());
+            verify(customerMapper).toResponse(customer);
+
+        }
+
+        @Test
+        void patch_shouldThrowConflictException_whenEmailBelongsToAnotherCustomer() {
+            // Arrange
+            var customerId = UUID.randomUUID();
+            var existingCustomerId = UUID.randomUUID();
             var patch = Instancio.create(PATCH_MODEL);
-            var customer = Instancio.create(Customer.class);
-            var existingCustomer = Instancio.create(Customer.class);
+            var customer = Customer.createCustomer("John Doe", "john@test.com");
+            var existingCustomer = Customer.createCustomer("Jane Doe", patch.email());
 
-            ReflectionTestUtils.setField(customer, "email", "email@test.com");
-            ReflectionTestUtils.setField(existingCustomer, "email", "email@test.com");
+            ReflectionTestUtils.setField(customer, "id", customerId);
+            ReflectionTestUtils.setField(existingCustomer, "id", existingCustomerId);
 
-            given(customerRepository.findById(customer.getId())).willReturn(Optional.of(customer));
+            given(customerRepository.findById(customerId)).willReturn(Optional.of(customer));
             given(customerRepository.findByEmailIgnoreCase(patch.email())).willReturn(Optional.of(existingCustomer));
 
             // Act + Assert
-            assertThatThrownBy(() -> customerService.patch(customer.getId(), patch))
-                    .isInstanceOf(ConflictException.class);
+            assertThatThrownBy(() -> customerService.patch(customerId, patch))
+                    .isInstanceOf(ConflictException.class)
+                    .hasMessage("Customer email already exists: " + patch.email());
+
+            verify(customerRepository).findById(customerId);
+            verify(customerRepository).findByEmailIgnoreCase(patch.email());
+            verify(customerMapper, never()).patchEntity(any(), any());
         }
 
         @Test
-        void patch_shouldThrowException_whenNotFound() {
+        void patch_shouldThrowNotFoundException_whenCustomerDoesNotExist() {
             // Arrange
-            var id = UUID.randomUUID();
+            var customerId = UUID.randomUUID();
             var patch = Instancio.create(PATCH_MODEL);
 
-            given(customerRepository.findById(id)).willReturn(Optional.empty());
+            given(customerRepository.findById(customerId)).willReturn(Optional.empty());
 
             // Act + Assert
-            assertThatThrownBy(() -> customerService.patch(id, patch))
-                    .isInstanceOf(NotFoundException.class);
+            assertThatThrownBy(() -> customerService.patch(customerId, patch))
+                    .isInstanceOf(NotFoundException.class)
+                    .hasMessage("Customer not found: " + customerId);
 
-            verify(customerRepository).findById(id);
+            verify(customerRepository).findById(customerId);
+            verifyNoMoreInteractions(customerRepository);
+        }
+    }
+
+    @Nested
+    class DeleteTests {
+
+        @Test
+        void delete_shouldCallRepository_whenCustomerExists() {
+            // Arrange
+            var customerId = UUID.randomUUID();
+            var customer = Customer.createCustomer("John Doe", "john@test.com");
+
+            ReflectionTestUtils.setField(customer, "id", customerId);
+
+            given(customerRepository.findById(customerId)).willReturn(Optional.of(customer));
+
+            // Act
+            customerService.delete(customerId);
+
+            // Assert
+            verify(customerRepository).findById(customerId);
+            verify(customerRepository).delete(customer);
         }
 
         @Test
-        void delete_shouldThrowException_whenNotFound() {
+        void delete_shouldThrowNotFoundException_whenCustomerDoesNotExist() {
             // Arrange
-            var id = UUID.randomUUID();
+            var customerId = UUID.randomUUID();
 
-            given(customerRepository.findById(id)).willReturn(Optional.empty());
+            given(customerRepository.findById(customerId)).willReturn(Optional.empty());
 
             // Act + Assert
-            assertThatThrownBy(() -> customerService.delete(id))
-                    .isInstanceOf(NotFoundException.class);
+            assertThatThrownBy(() -> customerService.delete(customerId))
+                    .isInstanceOf(NotFoundException.class)
+                    .hasMessage("Customer not found: " + customerId);
 
-            verify(customerRepository).findById(id);
+            verify(customerRepository).findById(customerId);
+            verify(customerRepository, never()).delete(any());
         }
     }
 }
