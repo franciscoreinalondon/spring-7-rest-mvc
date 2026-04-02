@@ -13,19 +13,15 @@ import java.util.UUID;
 
 public interface MilkOrderService {
 
-    // ---------------
-    //      ORDER
-    // ---------------
+    // Order operations
 
-    MilkOrderResponse create(MilkOrderRequest request);
+    MilkOrderResponse create(@Valid MilkOrderRequest request);
 
     MilkOrderResponse getById(UUID milkOrderId);
 
     Page<MilkOrderResponse> search(String customerRef, Pageable pageable);
 
-    // ---------------
-    //   ORDER LINE
-    // ---------------
+    // Order line operations
 
     OrderLineResponse addLine(UUID milkOrderId, @Valid OrderLineCreateRequest request);
 
