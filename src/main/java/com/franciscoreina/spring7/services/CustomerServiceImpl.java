@@ -26,9 +26,9 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
 
-    // ---------------
-    //      CRUD
-    // ---------------
+    // --------------------
+    //  SERVICE OPERATIONS
+    // --------------------
 
     @Transactional
     @Override
@@ -118,9 +118,9 @@ public class CustomerServiceImpl implements CustomerService {
         customerRepository.delete(savedCustomer);
     }
 
-    // ---------------
-    //     HELPERS
-    // ---------------
+    // -----------------
+    //  PRIVATE HELPERS
+    // -----------------
 
     private Customer findCustomerOrThrow(UUID customerId) {
         return customerRepository.findById(customerId)
