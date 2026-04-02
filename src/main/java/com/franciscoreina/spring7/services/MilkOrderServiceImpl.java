@@ -1,5 +1,6 @@
 package com.franciscoreina.spring7.services;
 
+import com.franciscoreina.spring7.domain.customer.Customer;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.order.MilkOrder;
 import com.franciscoreina.spring7.domain.order.OrderLine;
@@ -35,27 +36,26 @@ public class MilkOrderServiceImpl implements MilkOrderService {
     private final MilkOrderMapper milkOrderMapper;
     private final OrderLineMapper orderLineMapper;
 
-    // ---------------
-    //      ORDER
-    // ---------------
+    // ----------------------------
+    //  SERVICE OPERATIONS - ORDER
+    // ----------------------------
 
     @Transactional
     @Override
     public MilkOrderResponse create(MilkOrderRequest request) {
-        log.info("Creating milk order: {}", request.customerRef());
-        var customer = customerRepository.findById(request.customerId())
-                .orElseThrow(() -> new NotFoundException("Customer not found: " + request.customerId()));
+        log.info("Creating milk order with customerRef={}", request.customerRef());
 
+        var customer = findCustomerOrThrow(request.customerId());
         var order = milkOrderMapper.toEntity(request, customer);
 
-        request.orderLines().forEach(line -> {
-            var milk = milkRepository.findById(line.milkId())
-                    .orElseThrow(() -> new NotFoundException("Milk not found: " + line.milkId()));
-
-            order.addOrderLine(OrderLine.createOrderLine(milk, line.requestedQuantity()));
+        request.orderLines().forEach(lineRequest -> {
+            var milk = findMilkOrThrow(lineRequest.milkId());
+            var orderLine = orderLineMapper.toEntity(lineRequest, milk);
+            order.addOrderLine(orderLine);
         });
 
-        return milkOrderMapper.toResponse(milkOrderRepository.save(order));
+        var savedOrder = milkOrderRepository.save(order);
+        return milkOrderMapper.toResponse(savedOrder);
     }
 
     @Override
@@ -65,52 +65,67 @@ public class MilkOrderServiceImpl implements MilkOrderService {
 
     @Override
     public Page<MilkOrderResponse> list(String customerRef, Pageable pageable) {
-        String cleanCustomerRef = (customerRef != null && !customerRef.isBlank()) ? customerRef.trim() : null;
+        var cleanCustomerRef = normalizeFilter(customerRef);
 
-        if (cleanCustomerRef != null) {  // Search by customerRef
+        log.debug("Listing milk orders with filter: customerRef={}, page={}, size={}",
+                cleanCustomerRef, pageable.getPageNumber(), pageable.getPageSize());
+
+        if (cleanCustomerRef != null) {
             return milkOrderRepository.findAllByCustomerRefContainingIgnoreCase(cleanCustomerRef, pageable)
                     .map(milkOrderMapper::toResponse);
         }
 
-        return milkOrderRepository.findAll(pageable) // Search all
+        return milkOrderRepository.findAll(pageable)
                 .map(milkOrderMapper::toResponse);
     }
 
-    // ---------------
-    //   ORDER LINES
-    // ---------------
+    // ----------------------------------
+    //  SERVICE OPERATIONS - ORDER LINES
+    // ----------------------------------
 
     @Transactional
     @Override
     public OrderLineResponse addLine(UUID milkOrderId, OrderLineCreateRequest request) {
+        log.info("Adding order line to milk order id={}", milkOrderId);
+
         var order = findMilkOrderOrThrow(milkOrderId);
         var milk = findMilkOrThrow(request.milkId());
-        var newLine = OrderLine.createOrderLine(milk, request.requestedQuantity());
+        var newLine = orderLineMapper.toEntity(request, milk);
 
         order.addOrderLine(newLine);
-        milkOrderRepository.save(order); // Hibernate persists via dirty checking; explicit save added for tests.
         return orderLineMapper.toResponse(newLine);
     }
 
     @Transactional
     @Override
     public OrderLineResponse updateLineQuantity(UUID milkOrderId, UUID orderLineId, OrderLineUpdateRequest request) {
+        log.info("Updating order line quantity for milk order id={}, order line id={}", milkOrderId, orderLineId);
+
         var order = findMilkOrderOrThrow(milkOrderId);
         var line = findLineOrThrow(order, orderLineId);
 
         order.updateOrderLineQuantity(line, request.requestedQuantity());
-        milkOrderRepository.save(order); // Hibernate persists via dirty checking; explicit save added for tests.
         return orderLineMapper.toResponse(line);
     }
 
     @Transactional
     @Override
     public void removeLine(UUID milkOrderId, UUID orderLineId) {
+        log.info("Removing order line id={} from milk order id={}", orderLineId, milkOrderId);
+
         var order = findMilkOrderOrThrow(milkOrderId);
         var line = findLineOrThrow(order, orderLineId);
 
         order.removeOrderLine(line);
-        milkOrderRepository.save(order); // Hibernate persists via dirty checking; explicit save added for tests.
+    }
+
+    // -----------------
+    //  PRIVATE HELPERS
+    // -----------------
+
+    private Customer findCustomerOrThrow(UUID customerId) {
+        return customerRepository.findById(customerId)
+                .orElseThrow(() -> new NotFoundException("Customer not found: " + customerId));
     }
 
     private Milk findMilkOrThrow(UUID milkId) {
@@ -120,13 +135,17 @@ public class MilkOrderServiceImpl implements MilkOrderService {
 
     private MilkOrder findMilkOrderOrThrow(UUID milkOrderId) {
         return milkOrderRepository.findById(milkOrderId)
-                .orElseThrow(() -> new NotFoundException("MilkOrder not found: " + milkOrderId));
+                .orElseThrow(() -> new NotFoundException("Milk order not found: " + milkOrderId));
     }
 
     private OrderLine findLineOrThrow(MilkOrder order, UUID lineId) {
         return order.getOrderLines().stream()
-                .filter(line -> line.getId().equals(lineId))
+                .filter(line -> lineId.equals(line.getId()))
                 .findFirst()
-                .orElseThrow(() -> new NotFoundException("OrderLine not found: " + lineId));
+                .orElseThrow(() -> new NotFoundException("Order line not found: " + lineId));
+    }
+
+    private String normalizeFilter(String value) {
+        return (value == null || value.isBlank()) ? null : value.trim();
     }
 }
