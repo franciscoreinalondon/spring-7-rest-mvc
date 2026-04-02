@@ -14,6 +14,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -235,7 +237,7 @@ class MilkMapperTest {
                 "UPC123",
                 new BigDecimal("2.50"),
                 10,
-                Set.of(category1, category2)
+                new LinkedHashSet<>(Arrays.asList(category1, category2))
         );
 
         ReflectionTestUtils.setField(milk, "id", UUID.randomUUID());

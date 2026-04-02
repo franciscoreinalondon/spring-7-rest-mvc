@@ -64,7 +64,7 @@ public class MilkOrderServiceImpl implements MilkOrderService {
     }
 
     @Override
-    public Page<MilkOrderResponse> list(String customerRef, Pageable pageable) {
+    public Page<MilkOrderResponse> search(String customerRef, Pageable pageable) {
         var cleanCustomerRef = normalizeFilter(customerRef);
 
         log.debug("Listing milk orders with filter: customerRef={}, page={}, size={}",
@@ -98,7 +98,7 @@ public class MilkOrderServiceImpl implements MilkOrderService {
 
     @Transactional
     @Override
-    public OrderLineResponse updateLineQuantity(UUID milkOrderId, UUID orderLineId, OrderLineUpdateRequest request) {
+    public OrderLineResponse updateLine(UUID milkOrderId, UUID orderLineId, OrderLineUpdateRequest request) {
         log.info("Updating order line quantity for milk order id={}, order line id={}", milkOrderId, orderLineId);
 
         var order = findMilkOrderOrThrow(milkOrderId);

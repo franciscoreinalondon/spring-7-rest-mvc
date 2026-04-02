@@ -60,7 +60,7 @@ public class MilkOrderController {
             Pageable pageable) {
         log.info("Getting all milk orders");
 
-        return milkOrderService.list(customerRef, pageable);
+        return milkOrderService.search(customerRef, pageable);
     }
 
     // ---------------
@@ -83,7 +83,7 @@ public class MilkOrderController {
             @Valid @RequestBody OrderLineUpdateRequest request) {
         log.info("Updating quantity for line: {}", orderLineId);
 
-        return milkOrderService.updateLineQuantity(milkOrderId, orderLineId, request);
+        return milkOrderService.updateLine(milkOrderId, orderLineId, request);
     }
 
     @DeleteMapping(ApiPaths.MILK_ORDER_ID + ApiPaths.LINES + ApiPaths.LINE_ID)

@@ -24,7 +24,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -61,7 +63,7 @@ class MilkServiceImplTest {
             .set(field(MilkRequest::upc), "UPC123")
             .set(field(MilkRequest::price), new BigDecimal("2.50"))
             .set(field(MilkRequest::stock), 10)
-            .set(field(MilkRequest::categoryIds), Set.of(CATEGORY_ID_1, CATEGORY_ID_2))
+            .set(field(MilkRequest::categoryIds), new LinkedHashSet<>(Arrays.asList(CATEGORY_ID_1, CATEGORY_ID_2)))
             .toModel();
 
     private static final Model<MilkPatchRequest> PATCH_MODEL = Instancio.of(MilkPatchRequest.class)
@@ -70,7 +72,7 @@ class MilkServiceImplTest {
             .set(field(MilkPatchRequest::upc), "PATCH123")
             .set(field(MilkPatchRequest::price), new BigDecimal("3.75"))
             .set(field(MilkPatchRequest::stock), 20)
-            .set(field(MilkPatchRequest::categoryIds), Set.of(CATEGORY_ID_1, CATEGORY_ID_2))
+            .set(field(MilkPatchRequest::categoryIds), new LinkedHashSet<>(Arrays.asList(CATEGORY_ID_1, CATEGORY_ID_2)))
             .toModel();
 
     @Nested
@@ -387,7 +389,7 @@ class MilkServiceImplTest {
                     "SAME123",
                     new BigDecimal("3.00"),
                     15,
-                    Set.of(CATEGORY_ID_1, CATEGORY_ID_2)
+                    new LinkedHashSet<>(Arrays.asList(CATEGORY_ID_1, CATEGORY_ID_2))
             );
             var currentMilk = Milk.createMilk(
                     "Old Milk",
@@ -556,7 +558,7 @@ class MilkServiceImplTest {
                     "PATCH123",
                     new BigDecimal("4.50"),
                     25,
-                    Set.of(CATEGORY_ID_1, CATEGORY_ID_2)
+                    new LinkedHashSet<>(Arrays.asList(CATEGORY_ID_1, CATEGORY_ID_2))
             );
             var currentMilk = Milk.createMilk(
                     "Current Milk",
@@ -754,7 +756,7 @@ class MilkServiceImplTest {
         void patch_shouldThrowNotFoundException_whenAnyCategoryDoesNotExist() {
             // Arrange
             var milkId = UUID.randomUUID();
-            var patch = new MilkPatchRequest(null, null, null, null, null, Set.of(CATEGORY_ID_1, CATEGORY_ID_2));
+            var patch = new MilkPatchRequest(null, null, null, null, null, new LinkedHashSet<>(Arrays.asList(CATEGORY_ID_1, CATEGORY_ID_2)));
             var currentMilk = Milk.createMilk(
                     "Current Milk",
                     MilkType.WHOLE,

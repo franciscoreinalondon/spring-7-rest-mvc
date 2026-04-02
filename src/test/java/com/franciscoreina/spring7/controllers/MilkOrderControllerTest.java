@@ -95,7 +95,7 @@ class MilkOrderControllerTest {
                 // Arrange
                 var page = new PageImpl<>(Instancio.ofList(MilkOrderResponse.class).size(2).create());
 
-                given(milkOrderService.list(any(), any())).willReturn(page);
+                given(milkOrderService.search(any(), any())).willReturn(page);
 
                 // Act + Assert
                 mockMvc.perform(get(ApiPaths.MILK_ORDERS))
@@ -108,7 +108,7 @@ class MilkOrderControllerTest {
                 var page = new PageImpl<>(Instancio.ofList(MilkOrderResponse.class).size(2).create());
 
                 // Arrange
-                given(milkOrderService.list(eq("REF123"), any())).willReturn(page);
+                given(milkOrderService.search(eq("REF123"), any())).willReturn(page);
 
                 // Act + Assert
                 mockMvc.perform(get(ApiPaths.MILK_ORDERS).param("customerRef", "REF123"))
@@ -146,7 +146,7 @@ class MilkOrderControllerTest {
                 var request = Instancio.create(OrderLineUpdateRequest.class);
                 var response = Instancio.of(OrderLineResponse.class).set(field(OrderLineResponse::id), lineId).create();
 
-                given(milkOrderService.updateLineQuantity(orderId, lineId, request)).willReturn(response);
+                given(milkOrderService.updateLine(orderId, lineId, request)).willReturn(response);
 
                 // Act + Assert
                 mockMvc.perform(put(ApiPaths.MILK_ORDERS + "/{id}" + ApiPaths.LINES + "/{id}", orderId, lineId)

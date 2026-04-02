@@ -21,15 +21,15 @@ public interface MilkOrderService {
 
     MilkOrderResponse getById(UUID milkOrderId);
 
-    Page<MilkOrderResponse> list(String customerRef, Pageable pageable);
+    Page<MilkOrderResponse> search(String customerRef, Pageable pageable);
 
     // ---------------
-    //      ORDER
+    //   ORDER LINE
     // ---------------
 
     OrderLineResponse addLine(UUID milkOrderId, @Valid OrderLineCreateRequest request);
 
-    OrderLineResponse updateLineQuantity(UUID milkOrderId, UUID orderLineId, @Valid OrderLineUpdateRequest request);
+    OrderLineResponse updateLine(UUID milkOrderId, UUID orderLineId, @Valid OrderLineUpdateRequest request);
 
     void removeLine(UUID milkOrderId, UUID orderLineId);
 }
