@@ -157,7 +157,7 @@ class CustomerServiceImplTest {
             given(customerMapper.toResponse(customer2)).willReturn(response2);
 
             // Act
-            var result = customerService.list(null, null, pageable);
+            var result = customerService.search(null, null, pageable);
 
             // Assert
             assertThat(result.getContent()).containsExactly(response1, response2);
@@ -176,7 +176,7 @@ class CustomerServiceImplTest {
             given(customerMapper.toResponse(customer)).willReturn(response);
 
             // Act
-            var result = customerService.list(customer.getName(), null, pageable);
+            var result = customerService.search(customer.getName(), null, pageable);
 
             // Assert
             assertThat(result.getContent()).containsExactly(response);
@@ -195,7 +195,7 @@ class CustomerServiceImplTest {
             given(customerMapper.toResponse(customer)).willReturn(response);
 
             // Act
-            var result = customerService.list(null, customer.getEmail(), pageable);
+            var result = customerService.search(null, customer.getEmail(), pageable);
 
             // Assert
             assertThat(result.getContent()).containsExactly(response);
@@ -215,7 +215,7 @@ class CustomerServiceImplTest {
             given(customerMapper.toResponse(customer)).willReturn(response);
 
             // Act
-            var result = customerService.list(customer.getName(), customer.getEmail(), pageable);
+            var result = customerService.search(customer.getName(), customer.getEmail(), pageable);
 
             // Assert
             assertThat(result.getContent()).containsExactly(response);
@@ -231,7 +231,7 @@ class CustomerServiceImplTest {
             given(customerRepository.findAll(pageable)).willReturn(page);
 
             // Act
-            var result = customerService.list(" ", " ", pageable);
+            var result = customerService.search(" ", " ", pageable);
 
             // Assert
             assertThat(result.getContent()).isEmpty();

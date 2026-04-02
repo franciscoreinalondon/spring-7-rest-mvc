@@ -49,7 +49,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Page<CustomerResponse> list(String name, String email, Pageable pageable) {
+    public Page<CustomerResponse> search(String name, String email, Pageable pageable) {
         var cleanName = normalizeFilter(name);
         var cleanEmail = normalizeFilter(email);
 

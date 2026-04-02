@@ -97,11 +97,11 @@ public class CustomerControllerTest {
         }
 
         @Test
-        void listCustomers_returns200_withData() throws Exception {
+        void searchCustomers_returns200_withData() throws Exception {
             // Arrange
             var page = new PageImpl<>(Instancio.ofList(CustomerResponse.class).size(2).create());
 
-            given(customerService.list(any(), any(), any())).willReturn(page);
+            given(customerService.search(any(), any(), any())).willReturn(page);
 
             // Act + Assert
             mockMvc.perform(get(ApiPaths.CUSTOMERS))
@@ -110,11 +110,11 @@ public class CustomerControllerTest {
         }
 
         @Test
-        void listCustomers_returns200_whenFilteredByNameAndEmail() throws Exception {
+        void searchCustomers_returns200_whenFilteredByNameAndEmail() throws Exception {
             var page = new PageImpl<>(Instancio.ofList(CustomerResponse.class).size(2).create());
 
             // Arrange
-            given(customerService.list(eq("Customer name"), eq("test@email.com"), any())).willReturn(page);
+            given(customerService.search(eq("Customer name"), eq("test@email.com"), any())).willReturn(page);
 
             // Act + Assert
             mockMvc.perform(get(ApiPaths.CUSTOMERS).param("name", "Customer name").param("email", "test@email.com"))

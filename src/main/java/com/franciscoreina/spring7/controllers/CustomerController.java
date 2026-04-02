@@ -56,7 +56,7 @@ public class CustomerController {
             Pageable pageable) {
         log.info("Getting all customers");
 
-        return customerService.list(name, email , pageable);
+        return customerService.search(name, email , pageable);
     }
 
     @PutMapping(ApiPaths.CUSTOMER_ID)

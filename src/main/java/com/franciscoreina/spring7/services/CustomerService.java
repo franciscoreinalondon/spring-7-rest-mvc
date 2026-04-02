@@ -14,7 +14,7 @@ public interface CustomerService {
 
     CustomerResponse getById(UUID customerId);
 
-    Page<CustomerResponse> list(String name, String email, Pageable pageable);
+    Page<CustomerResponse> search(String name, String email, Pageable pageable);
 
     CustomerResponse update(UUID customerId, CustomerRequest request);
 
