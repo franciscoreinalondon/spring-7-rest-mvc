@@ -140,10 +140,10 @@ class CustomerServiceImplTest {
     }
 
     @Nested
-    class ListTests {
+    class SearchTests {
 
         @Test
-        void list_shouldReturnAllCustomers_whenNoFiltersAreProvided() {
+        void search_shouldReturnAllCustomers_whenNoFiltersAreProvided() {
             // Arrange
             var pageable = Pageable.ofSize(10);
             var customer1 = Customer.createCustomer("John Doe", "john@test.com");
@@ -165,7 +165,7 @@ class CustomerServiceImplTest {
         }
 
         @Test
-        void list_shouldSearchByName_whenOnlyNameIsProvided() {
+        void search_shouldSearchByName_whenOnlyNameIsProvided() {
             // Arrange
             var pageable = Pageable.ofSize(10);
             var customer = Customer.createCustomer("John Doe", "john@test.com");
@@ -184,7 +184,7 @@ class CustomerServiceImplTest {
         }
 
         @Test
-        void list_shouldSearchByEmail_whenOnlyEmailIsProvided() {
+        void search_shouldSearchByEmail_whenOnlyEmailIsProvided() {
             // Arrange
             var pageable = Pageable.ofSize(10);
             var customer = Customer.createCustomer("John Doe", "john@test.com");
@@ -203,7 +203,7 @@ class CustomerServiceImplTest {
         }
 
         @Test
-        void list_shouldSearchByNameAndEmail_whenBothFiltersAreProvided() {
+        void search_shouldSearchByNameAndEmail_whenBothFiltersAreProvided() {
             // Arrange
             var pageable = Pageable.ofSize(10);
             var customer = Customer.createCustomer("John Doe", "john@test.com");
@@ -223,7 +223,7 @@ class CustomerServiceImplTest {
         }
 
         @Test
-        void list_shouldTreatBlankFiltersAsNull() {
+        void search_shouldTreatBlankFiltersAsNull() {
             // Arrange
             var pageable = Pageable.ofSize(10);
             var page = new PageImpl<Customer>(List.of(), pageable, 0);
