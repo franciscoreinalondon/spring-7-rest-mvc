@@ -109,7 +109,7 @@ public class MilkServiceImplTest {
             given(milkMapper.toResponse(milk2)).willReturn(expectedResponse2);
 
             // Act
-            var page = milkService.list(null, null, pageable);
+            var page = milkService.search(null, null, pageable);
 
             // Assert
             assertThat(page.getContent()).hasSize(2);

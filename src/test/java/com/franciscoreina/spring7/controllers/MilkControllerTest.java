@@ -93,7 +93,7 @@ public class MilkControllerTest {
             // Arrange
             var page = new PageImpl<>(Instancio.ofList(MilkResponse.class).size(2).create());
 
-            given(milkService.list(any(), any(), any())).willReturn(page);
+            given(milkService.search(any(), any(), any())).willReturn(page);
 
             // Act + Assert
             mockMvc.perform(get(ApiPaths.MILKS))
@@ -106,7 +106,7 @@ public class MilkControllerTest {
             var page = new PageImpl<>(Instancio.ofList(MilkResponse.class).size(2).create());
 
             // Arrange
-            given(milkService.list(eq("Milk name"), eq(MilkType.A2), any())).willReturn(page);
+            given(milkService.search(eq("Milk name"), eq(MilkType.A2), any())).willReturn(page);
 
             // Act + Assert
             mockMvc.perform(get(ApiPaths.MILKS).param("name", "Milk name").param("milkType", "A2"))

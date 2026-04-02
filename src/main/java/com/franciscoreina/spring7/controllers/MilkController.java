@@ -57,7 +57,7 @@ public class MilkController {
             Pageable pageable) {
         log.info("Getting all milks");
 
-        return milkService.list(name, milkType, pageable);
+        return milkService.search(name, milkType, pageable);
     }
 
     @PutMapping(ApiPaths.MILK_ID)

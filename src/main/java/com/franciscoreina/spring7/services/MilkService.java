@@ -15,7 +15,7 @@ public interface MilkService {
 
     MilkResponse getById(UUID milkId);
 
-    Page<MilkResponse> list(String name, MilkType milkType, Pageable pageable);
+    Page<MilkResponse> search(String name, MilkType milkType, Pageable pageable);
 
     MilkResponse update(UUID milkId, MilkRequest request);
 
