@@ -93,7 +93,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     @Override
     public CustomerResponse patch(UUID customerId, CustomerPatchRequest request) {
-        log.info("Patching customer id: {}", customerId);
+        log.info("Patching customer id={}", customerId);
 
         var customer = findCustomerOrThrow(customerId);
 
@@ -112,7 +112,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     @Override
     public void delete(UUID customerId) {
-        log.info("Deleting customer id: {}", customerId);
+        log.info("Deleting customer id={}", customerId);
 
         var savedCustomer = findCustomerOrThrow(customerId);
         customerRepository.delete(savedCustomer);
@@ -122,17 +122,8 @@ public class CustomerServiceImpl implements CustomerService {
     //  PRIVATE HELPERS
     // -----------------
 
-    private Customer findCustomerOrThrow(UUID customerId) {
-        return customerRepository.findById(customerId)
-                .orElseThrow(() -> new NotFoundException("Customer not found: " + customerId));
-    }
-
-    private String normalizeFilter(String value) {
-        return (value == null || value.isBlank()) ? null : value.trim();
-    }
-
     private void assertEmailNotInUse(String email) {
-        if (customerRepository.existsByEmailIgnoreCase(email)) {
+        if (customerRepository.existsByEmailIgnoreCase(email.trim())) {
             throw new ConflictException("Customer email already exists: " + email);
         }
     }
@@ -143,5 +134,14 @@ public class CustomerServiceImpl implements CustomerService {
         if (existing.isPresent() && !existing.get().getId().equals(customerId)) {
             throw new ConflictException("Customer email already exists: " + email);
         }
+    }
+
+    private Customer findCustomerOrThrow(UUID customerId) {
+        return customerRepository.findById(customerId)
+                .orElseThrow(() -> new NotFoundException("Customer not found: " + customerId));
+    }
+
+    private String normalizeFilter(String value) {
+        return (value == null || value.isBlank()) ? null : value.trim();
     }
 }
