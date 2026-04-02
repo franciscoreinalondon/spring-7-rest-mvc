@@ -25,6 +25,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(Map.of("errors", errors));
     }
 
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiError> handleNotFoundException(ConflictException ex) {
+        var error = new ApiError(HttpStatus.CONFLICT.value(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ApiError> handleNotFoundException(NotFoundException ex) {
         var error = new ApiError(HttpStatus.NOT_FOUND.value(), ex.getMessage());

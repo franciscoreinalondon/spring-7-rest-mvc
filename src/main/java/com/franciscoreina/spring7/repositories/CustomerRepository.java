@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface CustomerRepository extends JpaRepository<Customer, UUID> {
@@ -14,4 +15,8 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID> {
     Page<Customer> findAllByEmailIgnoreCase(String email, Pageable pageable);
 
     Page<Customer> findAllByNameContainingIgnoreCaseAndEmailIgnoreCase(String name, String email, Pageable pageable);
+
+    boolean existsByEmailIgnoreCase(String email);
+
+    Optional<Customer> findByEmailIgnoreCase(String email);
 }

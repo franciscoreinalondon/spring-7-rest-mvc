@@ -4,6 +4,7 @@ import com.franciscoreina.spring7.domain.customer.Customer;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
+import com.franciscoreina.spring7.exceptions.ConflictException;
 import com.franciscoreina.spring7.exceptions.NotFoundException;
 import com.franciscoreina.spring7.mappers.CustomerMapper;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
@@ -18,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -129,7 +131,6 @@ public class CustomerServiceImplTest {
             // Assert
             assertThat(response).isEqualTo(expectedResponse);
             verify(customerRepository).findById(customer.getId());
-            verify(customerRepository).save(customer);
         }
 
         @Test
@@ -148,7 +149,6 @@ public class CustomerServiceImplTest {
             // Assert
             assertThat(response).isEqualTo(expectedResponse);
             verify(customerRepository).findById(customer.getId());
-            verify(customerRepository).save(customer);
         }
 
         @Test
@@ -209,13 +209,17 @@ public class CustomerServiceImplTest {
             // Arrange
             var request = Instancio.create(REQUEST_MODEL);
             var customer = Instancio.create(Customer.class);
+            var existingCustomer = Instancio.create(Customer.class);
+
+            ReflectionTestUtils.setField(customer, "email", "email@test.com");
+            ReflectionTestUtils.setField(existingCustomer, "email", "email@test.com");
 
             given(customerRepository.findById(customer.getId())).willReturn(Optional.of(customer));
-            given(customerRepository.save(customer)).willThrow(new DataIntegrityViolationException("Duplicated"));
+            given(customerRepository.findByEmailIgnoreCase(request.email())).willReturn(Optional.of(existingCustomer));
 
             // Act + Assert
             assertThatThrownBy(() -> customerService.update(customer.getId(), request))
-                    .isInstanceOf(DataIntegrityViolationException.class);
+                    .isInstanceOf(ConflictException.class);
         }
 
         @Test
@@ -238,13 +242,17 @@ public class CustomerServiceImplTest {
             // Arrange
             var patch = Instancio.create(PATCH_MODEL);
             var customer = Instancio.create(Customer.class);
+            var existingCustomer = Instancio.create(Customer.class);
+
+            ReflectionTestUtils.setField(customer, "email", "email@test.com");
+            ReflectionTestUtils.setField(existingCustomer, "email", "email@test.com");
 
             given(customerRepository.findById(customer.getId())).willReturn(Optional.of(customer));
-            given(customerRepository.save(customer)).willThrow(new DataIntegrityViolationException("Duplicated"));
+            given(customerRepository.findByEmailIgnoreCase(patch.email())).willReturn(Optional.of(existingCustomer));
 
             // Act + Assert
             assertThatThrownBy(() -> customerService.patch(customer.getId(), patch))
-                    .isInstanceOf(DataIntegrityViolationException.class);
+                    .isInstanceOf(ConflictException.class);
         }
 
         @Test
