@@ -176,7 +176,7 @@ class CustomerServiceImplTest {
             given(customerMapper.toResponse(customer)).willReturn(response);
 
             // Act
-            var result = customerService.search(customer.getName(), null, pageable);
+            var result = customerService.search(" John Doe ", null, pageable);
 
             // Assert
             assertThat(result.getContent()).containsExactly(response);
@@ -195,7 +195,7 @@ class CustomerServiceImplTest {
             given(customerMapper.toResponse(customer)).willReturn(response);
 
             // Act
-            var result = customerService.search(null, customer.getEmail(), pageable);
+            var result = customerService.search(null, " john@test.com ", pageable);
 
             // Assert
             assertThat(result.getContent()).containsExactly(response);
@@ -215,7 +215,7 @@ class CustomerServiceImplTest {
             given(customerMapper.toResponse(customer)).willReturn(response);
 
             // Act
-            var result = customerService.search(customer.getName(), customer.getEmail(), pageable);
+            var result = customerService.search(" John Doe ", " john@test.com ", pageable);
 
             // Assert
             assertThat(result.getContent()).containsExactly(response);
