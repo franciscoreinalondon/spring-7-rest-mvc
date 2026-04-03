@@ -36,12 +36,12 @@ public class IntegrationTestDataFactory {
     private final MilkCsvService milkCsvService;
 
     public Customer persistCustomer() {
-        return customerRepository.saveAndFlush(TestDataFactory.getNewCustomer());
+        return customerRepository.saveAndFlush(TestDataFactory.newCustomer());
     }
 
     public List<Customer> persistTwoCustomers() {
-        var savedCustomer1 = customerRepository.save(TestDataFactory.getNewCustomer());
-        var savedCustomer2 = customerRepository.save(TestDataFactory.getNewCustomer());
+        var savedCustomer1 = customerRepository.save(TestDataFactory.newCustomer());
+        var savedCustomer2 = customerRepository.save(TestDataFactory.newCustomer());
         customerRepository.flush();
         return List.of(savedCustomer1, savedCustomer2);
     }
@@ -51,12 +51,12 @@ public class IntegrationTestDataFactory {
     }
 
     public Milk persistMilk(Category savedCategory) {
-        return milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
+        return milkRepository.saveAndFlush(TestDataFactory.newMilk(savedCategory));
     }
 
     public List<Milk> persistTwoMilks(Category savedCategory) {
-        var savedMilk1 = milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
-        var savedMilk2 = milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
+        var savedMilk1 = milkRepository.saveAndFlush(TestDataFactory.newMilk(savedCategory));
+        var savedMilk2 = milkRepository.saveAndFlush(TestDataFactory.newMilk(savedCategory));
         return List.of(savedMilk1, savedMilk2);
     }
 
@@ -71,8 +71,8 @@ public class IntegrationTestDataFactory {
     }
 
     public MilkOrder persistMilkOrder(Category savedCategory) {
-        var savedCustomer = customerRepository.save(TestDataFactory.getNewCustomer());
-        var savedMilk =  milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
+        var savedCustomer = customerRepository.save(TestDataFactory.newCustomer());
+        var savedMilk =  milkRepository.saveAndFlush(TestDataFactory.newMilk(savedCategory));
 
         var newOrderLine = OrderLine.createOrderLine(savedMilk, 2);
         var newMilkOrder = MilkOrder.createMilkOrder(savedCustomer, "1234-1ITDF");
@@ -83,9 +83,9 @@ public class IntegrationTestDataFactory {
     }
 
     public List<MilkOrder> persistTwoMilkOrders() {
-        var savedCustomer = customerRepository.saveAndFlush(TestDataFactory.getNewCustomer());
-        var savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
-        var savedMilk =  milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
+        var savedCustomer = customerRepository.saveAndFlush(TestDataFactory.newCustomer());
+        var savedCategory = categoryRepository.saveAndFlush(TestDataFactory.newCategory());
+        var savedMilk =  milkRepository.saveAndFlush(TestDataFactory.newMilk(savedCategory));
 
         var newOrderLine1 = OrderLine.createOrderLine(savedMilk, 2);
 

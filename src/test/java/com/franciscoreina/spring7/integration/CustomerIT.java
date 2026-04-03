@@ -54,8 +54,8 @@ class CustomerIT extends AbstractJwtMockIntegrationTest {
         @Test
         void create_whenValidData_returnsCreatedAndPersistsCustomer() {
             // Arrange
-            var newCustomer = TestDataFactory.getNewCustomer();
-            var createRequest = TestDataFactory.getCustomerCreateRequest(newCustomer);
+            var newCustomer = TestDataFactory.newCustomer();
+            var createRequest = TestDataFactory.customerRequest(newCustomer);
 
             // Act + Assert
             var response = postRequest(ApiPaths.CUSTOMERS, createRequest)
@@ -75,7 +75,7 @@ class CustomerIT extends AbstractJwtMockIntegrationTest {
         @Test
         void create_whenNameIsNull_returnsBadRequest() {
             // Arrange
-            var createRequest = TestDataFactory.getCustomerCreateRequestNullName();
+            var createRequest = TestDataFactory.customerRequestWithNullName();
 
             // Act + Assert
             postRequest(ApiPaths.CUSTOMERS, createRequest)
@@ -88,8 +88,8 @@ class CustomerIT extends AbstractJwtMockIntegrationTest {
         void create_whenEmailDuplicated_returnsConflict() {
             // Arrange
             var savedCustomer = dataFactory.persistCustomer();
-            var duplicatedCustomer = TestDataFactory.getNewCustomer(savedCustomer.getEmail());
-            var createRequest = TestDataFactory.getCustomerCreateRequest(duplicatedCustomer);
+            var duplicatedCustomer = TestDataFactory.newCustomer(savedCustomer.getEmail());
+            var createRequest = TestDataFactory.customerRequest(duplicatedCustomer);
 
             // Act + Assert
             postRequest(ApiPaths.CUSTOMERS, createRequest)
@@ -172,7 +172,7 @@ class CustomerIT extends AbstractJwtMockIntegrationTest {
             // Arrange
             var savedCustomer = dataFactory.persistCustomer();
             savedCustomer.renameTo("Updated Name");
-            var updateRequest = TestDataFactory.getCustomerUpdateRequest(savedCustomer);
+            var updateRequest = TestDataFactory.customerRequest(savedCustomer);
 
             // Act + Assert
             putRequest(ApiPaths.CUSTOMERS + "/" + savedCustomer.getId(), updateRequest)
@@ -229,7 +229,7 @@ class CustomerIT extends AbstractJwtMockIntegrationTest {
             var customerToUpdate = customers.getFirst();
             customerToUpdate.changeEmailTo(existingEmail);
 
-            var updateRequest = TestDataFactory.getCustomerUpdateRequest(customerToUpdate);
+            var updateRequest = TestDataFactory.customerRequest(customerToUpdate);
 
             // Act + Assert
             putRequest(ApiPaths.CUSTOMERS + "/" + customerToUpdate.getId(), updateRequest)
@@ -250,7 +250,7 @@ class CustomerIT extends AbstractJwtMockIntegrationTest {
         void patch_whenValidCustomer_returnsOkAndUpdatesCustomer() {
             // Arrange
             var savedCustomer = dataFactory.persistCustomer();
-            var patchRequest = TestDataFactory.getCustomerPatchRequestWithName();
+            var patchRequest = TestDataFactory.customerPatchRequestWithName();
 
             // Act + Assert
             patchRequest(ApiPaths.CUSTOMERS + "/" + savedCustomer.getId(), patchRequest)
@@ -283,7 +283,7 @@ class CustomerIT extends AbstractJwtMockIntegrationTest {
         void patch_whenInvalidEmail_returnsBadRequest() {
             // Arrange
             var savedCustomer = dataFactory.persistCustomer();
-            var patchRequest = TestDataFactory.getCustomerPatchRequestInvalidEmail();
+            var patchRequest = TestDataFactory.customerPatchRequestWithInvalidEmail();
 
             // Act + Assert
             patchRequest(ApiPaths.CUSTOMERS + "/" + savedCustomer.getId(), patchRequest)
@@ -295,7 +295,7 @@ class CustomerIT extends AbstractJwtMockIntegrationTest {
         @Test
         void patch_whenIdNotExists_returnsNotFound() {
             // Arrange
-            var patchRequest = TestDataFactory.getCustomerPatchRequestWithName();
+            var patchRequest = TestDataFactory.customerPatchRequestWithName();
 
             // Act + Assert
             patchRequest(ApiPaths.CUSTOMERS + "/" + UUID.randomUUID(), patchRequest)

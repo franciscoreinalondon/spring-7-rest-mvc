@@ -62,8 +62,8 @@ public class MilkIT extends AbstractJwtMockIntegrationTest {
     @Test
     void create_whenValidData_returnsCreated() {
         // Arrange
-        var newMilk = TestDataFactory.getNewMilk(savedCategory);
-        var createRequest = TestDataFactory.getMilkCreateRequest(newMilk);
+        var newMilk = TestDataFactory.newMilk(savedCategory);
+        var createRequest = TestDataFactory.milkRequest(newMilk);
 
         // Act
         var result = postRequest(ApiPaths.MILKS, createRequest)
@@ -81,7 +81,7 @@ public class MilkIT extends AbstractJwtMockIntegrationTest {
     @Test
     void create_whenNameIsNull_returnsBadRequest() {
         // Arrange
-        var createRequest = TestDataFactory.getMilkCreateRequestNullName();
+        var createRequest = TestDataFactory.milkRequestWithNullName();
 
         // Act + Assert
         postRequest(ApiPaths.MILKS, createRequest)
@@ -94,8 +94,8 @@ public class MilkIT extends AbstractJwtMockIntegrationTest {
     void create_whenUpcDuplicated_returnsConflict() {
         // Arrange
         var savedMilk = dataFactory.persistMilk(savedCategory);
-        var milkDuplicateUpc = TestDataFactory.getNewMilk(savedMilk.getUpc(), savedMilk.getCategories().iterator().next());
-        var createRequest = TestDataFactory.getMilkCreateRequest(milkDuplicateUpc);
+        var milkDuplicateUpc = TestDataFactory.newMilk(savedMilk.getUpc(), savedMilk.getCategories().iterator().next());
+        var createRequest = TestDataFactory.milkRequest(milkDuplicateUpc);
 
         // Act + Assert
         postRequest(ApiPaths.MILKS, createRequest)
@@ -338,7 +338,7 @@ public class MilkIT extends AbstractJwtMockIntegrationTest {
     void patch_whenInvalidUpc_returnsBadRequest() {
         // Arrange
         var savedMilk = dataFactory.persistMilk(savedCategory);
-        var patchRequest = TestDataFactory.getMilkPatchRequestInvalidUpc();
+        var patchRequest = TestDataFactory.milkPatchRequestWithInvalidUpc();
 
         // Act + Assert
         patchRequest(ApiPaths.MILKS + "/" + savedMilk.getId(), patchRequest)

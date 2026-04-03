@@ -60,8 +60,8 @@ public class MilkOrderIT extends AbstractJwtMockIntegrationTest {
         // Arrange
         var savedCustomer = dataFactory.persistCustomer();
         var savedMilk = dataFactory.persistMilk(savedCategory);
-        var orderLineCreateRequest = TestDataFactory.getOrderLineCreateRequest(savedMilk.getId());
-        var milkOrderCreateRequest = TestDataFactory.getMilkOrderCreateRequest(savedCustomer.getId(), orderLineCreateRequest);
+        var orderLineCreateRequest = TestDataFactory.orderLineCreateRequest(savedMilk.getId());
+        var milkOrderCreateRequest = TestDataFactory.milkOrderRequest(savedCustomer.getId(), orderLineCreateRequest);
 
         // Act
         var result = postRequest(ApiPaths.MILK_ORDERS, milkOrderCreateRequest)
