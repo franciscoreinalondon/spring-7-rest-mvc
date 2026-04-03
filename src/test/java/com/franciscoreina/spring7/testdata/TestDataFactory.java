@@ -64,24 +64,12 @@ public final class TestDataFactory {
         return new CustomerPatchRequest(null, "Invalid email");
     }
 
-    public static CustomerPatchRequest customerPatchRequestWithBlankName() {
-        return new CustomerPatchRequest(" ", null);
-    }
-
-    public static CustomerPatchRequest customerPatchRequestWithDuplicatedEmail(String email) {
-        return new CustomerPatchRequest(null, email);
-    }
-
     // ---------------
     //    CATEGORY
     // ---------------
 
     public static Category newCategory() {
         return Category.createCategory(DEFAULT_CATEGORY_DESCRIPTION);
-    }
-
-    public static Category newCategory(String description) {
-        return Category.createCategory(description);
     }
 
     // ---------------
