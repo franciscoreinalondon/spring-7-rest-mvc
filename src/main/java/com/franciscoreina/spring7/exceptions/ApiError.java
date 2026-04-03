@@ -1,7 +1,10 @@
 package com.franciscoreina.spring7.exceptions;
 
-public record ApiError(
-        int status,
-        String message
-) {
+import java.time.Instant;
+
+public record ApiError(int status, String message, Instant timestamp) {
+
+    public ApiError(int status, String message) {
+        this(status, message, Instant.now());
+    }
 }
