@@ -10,6 +10,7 @@ import com.franciscoreina.spring7.repositories.CategoryRepository;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
 import com.franciscoreina.spring7.repositories.MilkOrderRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
+import com.franciscoreina.spring7.repositories.OrderLineRepository;
 import com.franciscoreina.spring7.testdata.IntegrationTestDataFactory;
 import com.franciscoreina.spring7.testdata.TestDataFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,6 +55,9 @@ class MilkOrderIT extends AbstractJwtMockIntegrationTest {
 
     @Autowired
     private MilkRepository milkRepository;
+
+    @Autowired
+    private OrderLineRepository orderLineRepository;
 
     private Category savedCategory;
 
@@ -239,9 +243,7 @@ class MilkOrderIT extends AbstractJwtMockIntegrationTest {
             assertThat(response.id()).isNotNull();
             assertThat(response.milkOrderId()).isEqualTo(savedMilkOrder.getId());
             assertThat(response.milkId()).isEqualTo(anotherMilk.getId());
-
-            var updatedOrder = milkOrderRepository.findById(savedMilkOrder.getId()).orElseThrow();
-            assertThat(updatedOrder.getOrderLines()).hasSize(2);
+            assertThat(orderLineRepository.countByMilkOrderId(savedMilkOrder.getId())).isEqualTo(2);
         }
 
         @Test

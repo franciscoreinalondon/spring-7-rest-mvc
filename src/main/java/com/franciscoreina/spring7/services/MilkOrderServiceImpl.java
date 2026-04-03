@@ -15,6 +15,7 @@ import com.franciscoreina.spring7.mappers.OrderLineMapper;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
 import com.franciscoreina.spring7.repositories.MilkOrderRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
+import com.franciscoreina.spring7.repositories.OrderLineRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -34,6 +35,7 @@ public class MilkOrderServiceImpl implements MilkOrderService {
     private final MilkRepository milkRepository;
     private final MilkOrderRepository milkOrderRepository;
     private final MilkOrderMapper milkOrderMapper;
+    private final OrderLineRepository orderLineRepository;
     private final OrderLineMapper orderLineMapper;
 
     // ----------------------------
@@ -46,11 +48,13 @@ public class MilkOrderServiceImpl implements MilkOrderService {
         log.info("Creating milk order with customerRef={}", request.customerRef());
 
         var customer = findCustomerOrThrow(request.customerId());
-        var order = milkOrderMapper.toEntity(request, customer);
+        var order = milkOrderMapper.toEntity(request, customer); //tbr
+//        var order = MilkOrder.createMilkOrder(customer, request.customerRef());
 
         request.orderLines().forEach(lineRequest -> {
             var milk = findMilkOrThrow(lineRequest.milkId());
-            var orderLine = orderLineMapper.toEntity(lineRequest, milk);
+            var orderLine = orderLineMapper.toEntity(lineRequest, milk); //tbr
+//            var orderLine = OrderLine.createOrderLine(milk, lineRequest.requestedQuantity());
             order.addOrderLine(orderLine);
         });
 
@@ -90,10 +94,17 @@ public class MilkOrderServiceImpl implements MilkOrderService {
 
         var order = findMilkOrderOrThrow(milkOrderId);
         var milk = findMilkOrThrow(request.milkId());
-        var newLine = orderLineMapper.toEntity(request, milk);
 
+        var newLine = OrderLine.createOrderLine(milk, request.requestedQuantity());
         order.addOrderLine(newLine);
-        return orderLineMapper.toResponse(newLine);
+
+        // Although OrderLine is part of MilkOrder (cascade = ALL),
+        // when the order already exists (managed entity),
+        // adding a new child does not guarantee it will be persisted before mapping.
+        // We explicitly save it to ensure ID generation and avoid null values in the response.
+        var savedLine = orderLineRepository.saveAndFlush(newLine);
+
+        return orderLineMapper.toResponse(savedLine);
     }
 
     @Transactional
