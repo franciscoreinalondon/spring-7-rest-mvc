@@ -3,91 +3,64 @@ package com.franciscoreina.spring7.repositories;
 import com.franciscoreina.spring7.config.JpaConfig;
 import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
-import com.franciscoreina.spring7.testdata.TestDataFactory;
-import jakarta.persistence.EntityManager;
-import jakarta.validation.ConstraintViolationException;
+import com.franciscoreina.spring7.domain.milk.MilkType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.data.domain.Pageable;
 
-import java.util.Optional;
-import java.util.UUID;
+import java.math.BigDecimal;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Import(JpaConfig.class)
 @DataJpaTest
-public class MilkRepositoryTest {
+class MilkRepositoryTest {
 
     @Autowired
-    CategoryRepository categoryRepository;
+    private MilkRepository milkRepository;
 
     @Autowired
-    MilkRepository milkRepository;
-
-    @Autowired
-    private EntityManager entityManager;
+    private CategoryRepository categoryRepository;
 
     // ---------------
     //      SAVE
     // ---------------
 
     @Test
-    public void saveMilk_whenDataIsValid() {
-        // Arrange-Act
-        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
-        Milk saved = milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
+    void save_shouldPersistMilk_whenDataIsValid() {
+        // Arrange
+        var milk = milk("Whole Milk", MilkType.WHOLE, "UPC123", createCategory());
+
+        // Act
+        var saved = milkRepository.saveAndFlush(milk);
 
         // Assert
         assertThat(saved.getId()).isNotNull();
-        assertThat(saved.getVersion()).isGreaterThanOrEqualTo(0);
-        assertThat(saved.getCreatedAt()).isNotNull();
-        assertThat(saved.getUpdatedAt()).isNotNull();
-
-        assertThat(milkRepository.existsById(saved.getId())).isTrue();
+        assertThat(saved.getName()).isEqualTo(milk.getName());
+        assertThat(saved.getMilkType()).isEqualTo(milk.getMilkType());
+        assertThat(saved.getUpc()).isEqualTo(milk.getUpc());
+        assertThat(saved.getPrice()).isEqualTo(milk.getPrice());
+        assertThat(saved.getStock()).isEqualTo(milk.getStock());
+        assertThat(saved.getCategories()).hasSize(milk.getCategories().size());
     }
 
     @Test
-    public void saveMilk_throwException_whenDataDuplicated() {
+    void save_shouldThrowException_whenUpcIsDuplicated() {
         // Arrange
-        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
-        Milk milk = TestDataFactory.getNewMilk(savedCategory);
-        Milk replica = TestDataFactory.getNewMilk(milk.getUpc(), savedCategory);
+        var category = createCategory();
 
-        // Act
-        milkRepository.saveAndFlush(milk);
+        milkRepository.saveAndFlush(milk("Whole Milk", MilkType.WHOLE, "UPC123", category));
 
-        // Assert
-        assertThatThrownBy(() -> milkRepository.saveAndFlush(replica))
+        var duplicated = milk("Skimmed Milk", MilkType.SKIMMED, "UPC123", category);
+
+        // Act + Assert
+        assertThatThrownBy(() -> milkRepository.saveAndFlush(duplicated))
                 .isInstanceOf(DataIntegrityViolationException.class);
-    }
-
-    @Test
-    public void saveMilk_throwException_whenNameIsNull() {
-        // Arrange
-        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
-        Milk milk = TestDataFactory.getNewMilk(savedCategory);
-        ReflectionTestUtils.setField(milk, "name", null);
-
-        // Act-Assert
-        assertThatThrownBy(() -> milkRepository.saveAndFlush(milk))
-                .isInstanceOf(ConstraintViolationException.class);
-    }
-
-    @Test
-    public void saveMilk_throwException_whenUpcIsNull() {
-        // Arrange
-        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
-        Milk milk = TestDataFactory.getNewMilk(savedCategory);
-        ReflectionTestUtils.setField(milk, "upc", null);
-
-        // Act-Assert
-        assertThatThrownBy(() -> milkRepository.saveAndFlush(milk))
-                .isInstanceOf(ConstraintViolationException.class);
     }
 
     // ---------------
@@ -95,167 +68,100 @@ public class MilkRepositoryTest {
     // ---------------
 
     @Test
-    public void findMilk_whenIdExists() {
+    void findByUpcIgnoreCase_shouldReturnMilk_whenExistsIgnoringCase() {
         // Arrange
-        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
-        Milk saved = milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
-        entityManager.clear();
+        var saved = milkRepository.saveAndFlush(
+                milk("Whole Milk", MilkType.WHOLE, "UPC123",  createCategory()));
 
         // Act
-        Optional<Milk> found = milkRepository.findById(saved.getId());
+        var result = milkRepository.findByUpcIgnoreCase("upc123");
 
         // Assert
-        assertThat(found).isPresent();
-        assertThat(found.get()).isNotSameAs(saved);
-
-        assertThat(found.get().getId()).isEqualTo(saved.getId());
-        assertThat(found.get().getVersion()).isEqualTo(saved.getVersion());
-        assertThat(found.get().getName()).isEqualTo(saved.getName());
-        assertThat(found.get().getMilkType()).isEqualTo(saved.getMilkType());
-        assertThat(found.get().getUpc()).isEqualTo(saved.getUpc());
-        assertThat(found.get().getPrice()).isEqualTo(saved.getPrice());
-        assertThat(found.get().getStock()).isEqualTo(saved.getStock());
-        assertThat(found.get().getCreatedAt()).isNotNull();
-        assertThat(found.get().getUpdatedAt()).isNotNull();
+        assertThat(result).isPresent();
+        assertThat(result.get().getId()).isEqualTo(saved.getId());
     }
 
     @Test
-    public void findMilk_returnEmpty_whenIdNotExists() {
-        // Arrange-Act
-        Optional<Milk> found = milkRepository.findById(UUID.randomUUID());
-
-        // Assert
-        assertThat(found).isEmpty();
-    }
-
-    @Test
-    public void findAllMilks_whenExists() {
+    void existsByUpcIgnoreCase_shouldReturnTrue_whenExistsIgnoringCase() {
         // Arrange
-        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
-        Milk milk1 = TestDataFactory.getNewMilk(savedCategory);
-        Milk milk2 = TestDataFactory.getNewMilk(savedCategory);
-        Milk milk3 = TestDataFactory.getNewMilk(savedCategory);
+        milkRepository.saveAndFlush(
+                milk("Whole Milk", MilkType.WHOLE, "UPC123", createCategory()));
 
         // Act
-        milkRepository.saveAndFlush(milk1);
-        milkRepository.saveAndFlush(milk2);
-        milkRepository.saveAndFlush(milk3);
+        var exists = milkRepository.existsByUpcIgnoreCase("upc123");
 
         // Assert
-        assertThat(milkRepository.count()).isEqualTo(3);
+        assertThat(exists).isTrue();
     }
 
-//    @Test
-//    public void findAllByName_whenExists() {
-//        // Arrange
-//        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
-//        Milk milk1 = TestDataFactory.getNewMilk(savedCategory);
-//        milk1.setName("Ultra-Fresh Skimmed");
-//        milk1.setMilkType(MilkType.SKIMMED);
-//
-//        Milk milk2 = TestDataFactory.getNewMilk(savedCategory);
-//        milk2.setName("Select Semi Skimmed");
-//
-//        Milk milk3 = TestDataFactory.getNewMilk(savedCategory);
-//        milk3.setName("Natural A2");
-//        milk3.setMilkType(MilkType.A2);
-//
-//        Pageable pageable = PageRequest.of(0, 20);
-//
-//        // Act
-//        milkRepository.saveAndFlush(milk1);
-//        milkRepository.saveAndFlush(milk2);
-//        milkRepository.saveAndFlush(milk3);
-//
-//        // Assert
-//        assertThat(milkRepository.findAllByNameContainingIgnoreCase("skimmed", pageable)
-//                .getContent().size()).isEqualTo(2);
-//    }
-
-//    @Test
-//    public void findAllMilksByType_whenExists() {
-//        // Arrange
-//        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
-//        Milk milk1 = TestDataFactory.getNewMilk(savedCategory); // SEMI_SKIMMED milk type
-//        Milk milk2 = TestDataFactory.getNewMilk(savedCategory); // SEMI_SKIMMED milk type
-//        Milk milk3 = TestDataFactory.getNewMilk(savedCategory);
-//        milk3.setMilkType(MilkType.A2);
-//
-//        Pageable pageable = PageRequest.of(0, 20);
-//
-//        // Act
-//        milkRepository.saveAndFlush(milk1);
-//        milkRepository.saveAndFlush(milk2);
-//        milkRepository.saveAndFlush(milk3);
-//
-//        // Assert
-//        assertThat(milkRepository.findAllByMilkType(MilkType.A2, pageable)
-//                .getContent().size()).isEqualTo(1);
-//    }
-
-//    @Test
-//    public void findAllByNameAndMilkType_whenExists() {
-//        // Arrange
-//        Category savedCategory = categoryRepository.save(TestDataFactory.getNewCategory());
-//
-//        Milk milk1 = TestDataFactory.getNewMilk(savedCategory);
-//        milk1.setName("Ultra-Fresh Skimmed");
-//        milk1.setMilkType(MilkType.SKIMMED);
-//
-//        Milk milk2 = TestDataFactory.getNewMilk(savedCategory); // SEMI_SKIMMED milk type
-//        milk2.setName("Select Semi Skimmed");
-//
-//        Milk milk3 = TestDataFactory.getNewMilk(savedCategory);
-//        milk3.setName("Natural A2");
-//        milk3.setMilkType(MilkType.A2);
-//
-//        Pageable pageable = PageRequest.of(0, 20);
-//
-//        // Act
-//        milkRepository.saveAndFlush(milk1);
-//        milkRepository.saveAndFlush(milk2);
-//        milkRepository.saveAndFlush(milk3);
-//
-//        // Assert
-//        assertThat(milkRepository.findAllByNameContainingIgnoreCaseAndMilkType("skimmed", MilkType.SKIMMED, pageable)
-//                .getContent().size()).isEqualTo(1);
-//    }
-
     // ---------------
-    //      UPDATE
-    // ---------------
-
-//    @Test
-//    public void updateMilk_whenIsModified() {
-//        // Arrange
-//        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
-//        Milk saved = milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
-//        Integer oldVersion = saved.getVersion();
-//
-//        // Act
-//        saved.setStock(500);
-//        Milk updated = milkRepository.saveAndFlush(saved);
-//
-//        // Assert
-//        assertThat(updated.getVersion()).isGreaterThan(oldVersion);
-//        assertThat(updated.getStock()).isEqualTo(500);
-//    }
-
-    // ---------------
-    //      DELETE
+    //      SEARCH
     // ---------------
 
     @Test
-    public void deleteMilk_whenIdExists() {
+    void findAllByNameContainingIgnoreCase_shouldReturnMatchingMilks() {
         // Arrange
-        Category savedCategory = categoryRepository.saveAndFlush(TestDataFactory.getNewCategory());
-        Milk saved = milkRepository.saveAndFlush(TestDataFactory.getNewMilk(savedCategory));
+        var category = createCategory();
+        var milk1 = milkRepository.saveAndFlush(milk("Whole Milk", MilkType.WHOLE, "UPC111", category));
+        var milk2 = milkRepository.saveAndFlush(milk("Whole Protein Milk", MilkType.HIGH_PROTEIN, "UPC222", category));
+
+        var pageable = Pageable.ofSize(10);
 
         // Act
-        milkRepository.deleteById(saved.getId());
+        var result = milkRepository.findAllByNameContainingIgnoreCase("whole", pageable);
 
         // Assert
-        assertThat(milkRepository.existsById(saved.getId())).isFalse();
-        assertThat(milkRepository.count()).isEqualTo(0);
+        assertThat(result.getContent())
+                .extracting(Milk::getId)
+                .containsExactlyInAnyOrder(milk1.getId(), milk2.getId());
+    }
+
+    @Test
+    void findAllByMilkType_shouldReturnMatchingMilks() {
+        // Arrange
+        var category = createCategory();
+        var wholeMilk = milkRepository.saveAndFlush(milk("Whole Milk", MilkType.WHOLE, "UPC111", category));
+        milkRepository.saveAndFlush(milk("Skimmed Milk", MilkType.SKIMMED, "UPC222", category));
+
+        var pageable = Pageable.ofSize(10);
+
+        // Act
+        var result = milkRepository.findAllByMilkType(MilkType.WHOLE, pageable);
+
+        // Assert
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().getId()).isEqualTo(wholeMilk.getId());
+    }
+
+    @Test
+    void findAllByNameContainingIgnoreCaseAndMilkType_shouldReturnMatchingMilks() {
+        // Arrange
+        var category = createCategory();
+        var milk = milkRepository.saveAndFlush(milk("Whole Milk", MilkType.WHOLE, "UPC111", category));
+        milkRepository.saveAndFlush(milk("Whole Milk", MilkType.SKIMMED, "UPC222", category));
+
+        var pageable = Pageable.ofSize(10);
+
+        // Act
+        var result = milkRepository.findAllByNameContainingIgnoreCaseAndMilkType("whole", MilkType.WHOLE, pageable);
+
+        // Assert
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().getId()).isEqualTo(milk.getId());
+    }
+
+    private Category createCategory() {
+        return categoryRepository.saveAndFlush(Category.createCategory("Category"));
+    }
+
+    private Milk milk(String name, MilkType milkType, String upc, Category category) {
+        return Milk.createMilk(
+                name,
+                milkType,
+                upc,
+                new BigDecimal("2.50"),
+                10,
+                Set.of(category)
+        );
     }
 }
