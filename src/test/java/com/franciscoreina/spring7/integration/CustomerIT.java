@@ -222,9 +222,7 @@ class CustomerIT extends AbstractJwtMockIntegrationTest {
         @Test
         void update_whenEmailDuplicated_returnsConflict() {
             // Arrange
-            dataFactory.persistTwoCustomers();
-            var customers = dataFactory.findTwoCustomers();
-
+            var customers = dataFactory.persistTwoCustomers();
             var existingEmail = customers.getLast().getEmail();
             var customerToUpdate = customers.getFirst();
             customerToUpdate.changeEmailTo(existingEmail);
@@ -311,9 +309,7 @@ class CustomerIT extends AbstractJwtMockIntegrationTest {
         @Test
         void patch_whenEmailDuplicated_returnsConflict() {
             // Arrange
-            dataFactory.persistTwoCustomers();
-            var customers = dataFactory.findTwoCustomers();
-
+            var customers = dataFactory.persistTwoCustomers();
             var existingEmail = customers.getLast().getEmail();
             var customerToPatch = customers.getFirst();
 
