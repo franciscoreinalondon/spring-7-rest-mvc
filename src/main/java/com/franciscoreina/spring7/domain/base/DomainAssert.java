@@ -8,10 +8,11 @@ public final class DomainAssert {
     private DomainAssert() {
     }
 
-    public static void notNull(Object value, String message) {
+    public static <T> T notNull(T value, String message) {
         if (value == null) {
             throw new IllegalArgumentException(message);
         }
+        return value;
     }
 
     public static void notBlank(String value, String message) {
@@ -50,7 +51,7 @@ public final class DomainAssert {
         }
     }
 
-    public static <T> void cannotRemoveLastElement(Collection<T> collection, T element, String message) {
+    public static <T> void cannotRemoveOnlyElement(Collection<T> collection, T element, String message) {
         if (collection != null && collection.contains(element) && collection.size() <= 1) {
             throw new IllegalStateException(message);
         }

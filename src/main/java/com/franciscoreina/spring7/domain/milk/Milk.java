@@ -30,7 +30,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
-import static com.franciscoreina.spring7.domain.base.DomainAssert.cannotRemoveLastElement;
+import static com.franciscoreina.spring7.domain.base.DomainAssert.cannotRemoveOnlyElement;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.isPositive;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.isPositiveOrZero;
 import static com.franciscoreina.spring7.domain.base.DomainAssert.notBlank;
@@ -146,7 +146,7 @@ public class Milk extends BaseEntity {
     }
 
     public void removeCategory(Category category) {
-        cannotRemoveLastElement(categories, category, "Milk product must have at least one category");
+        cannotRemoveOnlyElement(categories, category, "Milk product must have at least one category");
         this.categories.remove(category);
     }
 
