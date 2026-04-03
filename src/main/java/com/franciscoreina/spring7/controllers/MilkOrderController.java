@@ -55,7 +55,7 @@ public class MilkOrderController {
     }
 
     @GetMapping
-    public Page<MilkOrderResponse> list(
+    public Page<MilkOrderResponse> search(
             @RequestParam(value = "customerRef", required = false) String customerRef,
             Pageable pageable) {
         log.info("Getting all milk orders");

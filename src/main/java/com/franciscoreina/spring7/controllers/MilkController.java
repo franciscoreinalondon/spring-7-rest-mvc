@@ -51,7 +51,7 @@ public class MilkController {
     }
 
     @GetMapping
-    public Page<MilkResponse> list(
+    public Page<MilkResponse> search(
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "milkType", required = false) MilkType milkType,
             Pageable pageable) {
