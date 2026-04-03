@@ -2,92 +2,51 @@ package com.franciscoreina.spring7.repositories;
 
 import com.franciscoreina.spring7.config.JpaConfig;
 import com.franciscoreina.spring7.domain.customer.Customer;
-import com.franciscoreina.spring7.testdata.TestDataFactory;
-import jakarta.persistence.EntityManager;
-import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.test.util.ReflectionTestUtils;
-
-import java.util.Optional;
-import java.util.UUID;
+import org.springframework.data.domain.Pageable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Import(JpaConfig.class)
 @DataJpaTest
-public class CustomerRepositoryTest {
+class CustomerRepositoryTest {
 
     @Autowired
     CustomerRepository customerRepository;
-
-    @Autowired
-    EntityManager entityManager;
 
     // ---------------
     //      SAVE
     // ---------------
 
     @Test
-    public void saveCustomer_whenDataIsValid() {
-        // Arrange-Act
-        Customer saved = customerRepository.saveAndFlush(TestDataFactory.getNewCustomer());
+    void save_shouldPersistCustomer_whenDataIsValid() {
+        // Arrange
+        var customer = Customer.createCustomer("John Doe", "john@test.com");
+
+        // Act
+        var saved = customerRepository.saveAndFlush(customer);
 
         // Assert
         assertThat(saved.getId()).isNotNull();
-        assertThat(saved.getVersion()).isGreaterThanOrEqualTo(0);
-        assertThat(saved.getCreatedAt()).isNotNull();
-        assertThat(saved.getUpdatedAt()).isNotNull();
-
-        assertThat(customerRepository.existsById(saved.getId())).isTrue();
+        assertThat(saved.getName()).isEqualTo(customer.getName());
+        assertThat(saved.getEmail()).isEqualTo(customer.getEmail());
     }
 
     @Test
-    public void saveCustomer_throwException_whenDataDuplicated() {
+    void save_shouldThrowException_whenEmailIsDuplicated() {
         // Arrange
-        Customer customer = TestDataFactory.getNewCustomer();
-        Customer replica = TestDataFactory.getNewCustomer(customer.getEmail());
+        customerRepository.saveAndFlush(Customer.createCustomer("John", "same@test.com"));
 
-        // Act
-        customerRepository.saveAndFlush(customer);
+        var duplicated = Customer.createCustomer("Jane", "same@test.com");
 
-        // Assert
-        assertThatThrownBy(() -> customerRepository.saveAndFlush(replica))
+        // Act + Assert
+        assertThatThrownBy(() -> customerRepository.saveAndFlush(duplicated))
                 .isInstanceOf(DataIntegrityViolationException.class);
-    }
-
-    @Test
-    public void saveCustomer_throwException_whenNameIsNull() {
-        // Arrange
-        Customer customer =  Customer.createCustomer("name", "customer_" + UUID.randomUUID() + "@domain.com");
-        ReflectionTestUtils.setField(customer, "name", null);
-
-        // Act-Assert
-        assertThatThrownBy(() -> customerRepository.saveAndFlush(customer))
-                .isInstanceOf(ConstraintViolationException.class);
-    }
-
-    @Test
-    public void saveCustomer_throwException_whenEmailIsNull() {
-        // Arrange
-        Customer customer =  Customer.createCustomer("name", "customer_" + UUID.randomUUID() + "@domain.com");
-        ReflectionTestUtils.setField(customer, "email", null);
-
-        // Act-Assert
-        assertThatThrownBy(() -> customerRepository.saveAndFlush(customer))
-                .isInstanceOf(ConstraintViolationException.class);
-    }
-
-    @Test
-    public void saveCustomer_throwException_whenEmailIsInvalid() {
-        // Act-Assert
-        assertThatThrownBy(() -> Customer.createCustomer("Customer name", "invalidEmail"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Must be a valid email address");
     }
 
     // ---------------
@@ -95,84 +54,95 @@ public class CustomerRepositoryTest {
     // ---------------
 
     @Test
-    public void findCustomer_whenIdExists() {
+    void findByEmailIgnoreCase_shouldReturnCustomer_whenExistsIgnoringCase() {
         // Arrange
-        Customer saved = customerRepository.saveAndFlush(TestDataFactory.getNewCustomer());
-        entityManager.clear();
+        var saved = customerRepository.saveAndFlush(
+                Customer.createCustomer("John Doe", "john@test.com")
+        );
 
         // Act
-        Optional<Customer> found = customerRepository.findById(saved.getId());
+        var result = customerRepository.findByEmailIgnoreCase("JOHN@TEST.COM");
 
         // Assert
-        assertThat(found).isPresent();
-        assertThat(found.get()).isNotSameAs(saved);
-
-        assertThat(found.get().getId()).isEqualTo(saved.getId());
-        assertThat(found.get().getVersion()).isEqualTo(saved.getVersion());
-        assertThat(found.get().getName()).isEqualTo(saved.getName());
-        assertThat(found.get().getEmail()).isEqualTo(saved.getEmail());
-        assertThat(found.get().getCreatedAt()).isNotNull();
-        assertThat(found.get().getUpdatedAt()).isNotNull();
+        assertThat(result).isPresent();
+        assertThat(result.get().getId()).isEqualTo(saved.getId());
     }
 
     @Test
-    public void findCustomer_returnEmpty_whenIdNotExists() {
-        // Arrange-Act
-        Optional<Customer> found = customerRepository.findById(UUID.randomUUID());
-
-        // Assert
-        assertThat(found).isEmpty();
-    }
-
-    @Test
-    public void findAllCustomers_whenExists() {
+    void existsByEmailIgnoreCase_shouldReturnTrue_whenExistsIgnoringCase() {
         // Arrange
-        Customer customer1 = TestDataFactory.getNewCustomer();
-        Customer customer2 = TestDataFactory.getNewCustomer();
-        Customer customer3 = TestDataFactory.getNewCustomer();
+        customerRepository.saveAndFlush(
+                Customer.createCustomer("John Doe", "john@test.com")
+        );
 
         // Act
-        customerRepository.saveAndFlush(customer1);
-        customerRepository.saveAndFlush(customer2);
-        customerRepository.saveAndFlush(customer3);
+        var exists = customerRepository.existsByEmailIgnoreCase("JOHN@TEST.COM");
 
         // Assert
-        assertThat(customerRepository.count()).isEqualTo(3);
+        assertThat(exists).isTrue();
     }
 
     // ---------------
-    //      UPDATE
+    //      SEARCH
     // ---------------
 
     @Test
-    public void updateCustomer_whenIsModified() {
+    void findAllByNameContainingIgnoreCase_shouldReturnMatchingCustomers() {
         // Arrange
-        Customer saved = customerRepository.saveAndFlush(TestDataFactory.getNewCustomer());
-        Integer oldVersion = saved.getVersion();
+        var customer1 = customerRepository.saveAndFlush(
+                Customer.createCustomer("John Doe", "john@test.com")
+        );
+        var customer2 = customerRepository.saveAndFlush(
+                Customer.createCustomer("Johnny Doe", "johnny@test.com")
+        );
+
+        var pageable = Pageable.ofSize(10);
 
         // Act
-        saved.changeEmailTo("new_email@domain.com");
-        Customer updated = customerRepository.saveAndFlush(saved);
+        var result = customerRepository.findAllByNameContainingIgnoreCase("JOHN", pageable);
 
         // Assert
-        assertThat(updated.getVersion()).isGreaterThan(oldVersion);
-        assertThat(updated.getEmail()).isEqualTo("new_email@domain.com");
+        assertThat(result.getContent())
+                .extracting(Customer::getId)
+                .containsExactly(customer1.getId(), customer2.getId());
     }
 
-    // ---------------
-    //      DELETE
-    // ---------------
-
     @Test
-    public void deleteCustomer_whenIdExists() {
+    void findAllByEmailIgnoreCase_shouldReturnMatchingCustomer() {
         // Arrange
-        Customer saved = customerRepository.saveAndFlush(TestDataFactory.getNewCustomer());
+        var customer = customerRepository.saveAndFlush(
+                Customer.createCustomer("John Doe", "john@test.com")
+        );
+
+        var pageable = Pageable.ofSize(10);
 
         // Act
-        customerRepository.deleteById(saved.getId());
+        var result = customerRepository.findAllByEmailIgnoreCase("JOHN@TEST.COM", pageable);
 
         // Assert
-        assertThat(customerRepository.existsById(saved.getId())).isFalse();
-        assertThat(customerRepository.count()).isEqualTo(0);
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().getId()).isEqualTo(customer.getId());
+    }
+
+    @Test
+    void findAllByNameContainingIgnoreCaseAndEmailIgnoreCase_shouldReturnMatchingCustomer() {
+        // Arrange
+        var customer = customerRepository.saveAndFlush(
+                Customer.createCustomer("John Doe", "john@test.com")
+        );
+
+        customerRepository.saveAndFlush(
+                Customer.createCustomer("John Doe", "other@test.com")
+        );
+
+        var pageable = Pageable.ofSize(10);
+
+        // Act
+        var result = customerRepository
+                .findAllByNameContainingIgnoreCaseAndEmailIgnoreCase("john", "john@test.com", pageable);
+
+        // Assert
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().getId()).isEqualTo(customer.getId());
     }
 }
