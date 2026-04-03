@@ -1,6 +1,9 @@
 package com.franciscoreina.spring7.api;
 
-public class ApiPaths {
+public final class ApiPaths {
+
+    private ApiPaths() {
+    }
 
     public static final String API_V1 = "/api/v1";
 
@@ -13,10 +16,10 @@ public class ApiPaths {
     public static final String MILK_ID = "/{milkId}";
 
     // MILK ORDERS
-    public static final String MILK_ORDERS = API_V1 + "/milkorders";
+    public static final String MILK_ORDERS = API_V1 + "/milk-orders";
     public static final String MILK_ORDER_ID = "/{milkOrderId}";
 
     // ORDER LINES
-    public static final String LINES = "/lines";
-    public static final String LINE_ID = "/{lineId}";
+    public static final String ORDER_LINES = "/lines";
+    public static final String ORDER_LINE_ID = "/{orderLineId}";
 }

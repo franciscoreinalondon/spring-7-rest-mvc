@@ -67,29 +67,29 @@ public class MilkOrderController {
     //   ORDER LINES
     // ---------------
 
-    @PostMapping(ApiPaths.MILK_ORDER_ID + ApiPaths.LINES)
+    @PostMapping(ApiPaths.MILK_ORDER_ID + ApiPaths.ORDER_LINES)
     public ResponseEntity<OrderLineResponse> addLine(@PathVariable("milkOrderId") UUID milkOrderId, @Valid @RequestBody OrderLineCreateRequest request) {
         log.info("Adding line for order id: {}", milkOrderId);
         var orderLineResponse = milkOrderService.addLine(milkOrderId, request);
-        var location = URI.create(ApiPaths.MILK_ORDERS + "/" + milkOrderId + ApiPaths.LINES + "/" + orderLineResponse.id());
+        var location = URI.create(ApiPaths.MILK_ORDERS + "/" + milkOrderId + ApiPaths.ORDER_LINES + "/" + orderLineResponse.id());
 
         return ResponseEntity.created(location).body(orderLineResponse);
     }
 
-    @PutMapping(ApiPaths.MILK_ORDER_ID + ApiPaths.LINES + ApiPaths.LINE_ID)
+    @PutMapping(ApiPaths.MILK_ORDER_ID + ApiPaths.ORDER_LINES + ApiPaths.ORDER_LINE_ID)
     public OrderLineResponse updateLineQuantity(
             @PathVariable("milkOrderId") UUID milkOrderId,
-            @PathVariable("lineId") UUID orderLineId,
+            @PathVariable("orderLineId") UUID orderLineId,
             @Valid @RequestBody OrderLineUpdateRequest request) {
         log.info("Updating quantity for line: {}", orderLineId);
 
         return milkOrderService.updateLine(milkOrderId, orderLineId, request);
     }
 
-    @DeleteMapping(ApiPaths.MILK_ORDER_ID + ApiPaths.LINES + ApiPaths.LINE_ID)
+    @DeleteMapping(ApiPaths.MILK_ORDER_ID + ApiPaths.ORDER_LINES + ApiPaths.ORDER_LINE_ID)
     public ResponseEntity<Void> removeLine(
             @PathVariable("milkOrderId") UUID milkOrderId,
-            @PathVariable("lineId") UUID orderLineId) {
+            @PathVariable("orderLineId") UUID orderLineId) {
         log.info("Removing line with id: {}", orderLineId);
         milkOrderService.removeLine(milkOrderId, orderLineId);
 
