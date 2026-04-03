@@ -1,42 +1,69 @@
 package com.franciscoreina.spring7.repositories;
 
+import com.franciscoreina.spring7.config.JpaConfig;
 import com.franciscoreina.spring7.domain.milk.Category;
-import com.franciscoreina.spring7.domain.milk.Milk;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringBootTest
+@Import(JpaConfig.class)
+@DataJpaTest
 class CategoryRepositoryTest {
     
     @Autowired
     CategoryRepository categoryRepository;
-    
-    @Autowired
-    MilkRepository milkRepository;
 
-    Milk milk;
+    // ---------------
+    //      SAVE
+    // ---------------
 
-    @BeforeEach
-    void setUp() {
-        milk = milkRepository.findAll().getFirst();
-    }
-
-    @Transactional
     @Test
-    void testAddCategory() {
-        // Act
-        Category savedCategory = categoryRepository.save(
-                Category.createCategory("Category description"));
+    void save_shouldPersistCategory_whenDataIsValid() {
+        // Arrange
+        var category = Category.createCategory("Protein");
 
-        milk.addCategory(savedCategory);
-        Milk savedMilk = milkRepository.save(milk);
+        // Act
+        var savedCategory = categoryRepository.saveAndFlush(category);
 
         // Assert
-        assertThat(savedMilk.getCategories().contains(savedCategory));
+        assertThat(savedCategory.getId()).isNotNull();
+        assertThat(savedCategory.getDescription()).isEqualTo(category.getDescription());
+    }
+
+    @Test
+    void save_shouldThrowException_whenDescriptionIsDuplicated() {
+        // Arrange
+        categoryRepository.saveAndFlush(Category.createCategory("Protein"));
+
+        var duplicatedCategory = Category.createCategory("Protein");
+
+        // Act + Assert
+        assertThatThrownBy(() -> categoryRepository.saveAndFlush(duplicatedCategory))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    // ---------------
+    //      FIND
+    // ---------------
+
+    @Test
+    void findById_shouldReturnCategory_whenCategoryExists() {
+        // Arrange
+        var savedCategory = categoryRepository.saveAndFlush(
+                Category.createCategory("Protein")
+        );
+
+        // Act
+        var result = categoryRepository.findById(savedCategory.getId());
+
+        // Assert
+        assertThat(result).isPresent();
+        assertThat(result.get().getId()).isEqualTo(savedCategory.getId());
+        assertThat(result.get().getDescription()).isEqualTo(savedCategory.getDescription());
     }
 }
