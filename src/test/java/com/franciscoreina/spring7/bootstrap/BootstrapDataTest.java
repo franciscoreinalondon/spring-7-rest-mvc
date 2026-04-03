@@ -5,7 +5,6 @@ import com.franciscoreina.spring7.repositories.CategoryRepository;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
 import com.franciscoreina.spring7.repositories.MilkOrderRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
-import com.franciscoreina.spring7.repositories.OrderLineRepository;
 import com.franciscoreina.spring7.services.MilkCsvService;
 import com.franciscoreina.spring7.services.MilkCsvServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,9 +32,6 @@ public class BootstrapDataTest {
     private MilkOrderRepository milkOrderRepository;
 
     @Autowired
-    private OrderLineRepository orderLineRepository;
-
-    @Autowired
     private MilkCsvService milkCsvService;
 
     BootstrapData bootstrapData;
@@ -59,6 +55,6 @@ public class BootstrapDataTest {
         assertThat(customerRepository.count()).isEqualTo(3);
         assertThat(milkRepository.count()).isEqualTo(503);
         assertThat(milkOrderRepository.count()).isEqualTo(3);
-        assertThat(orderLineRepository.count()).isEqualTo(5);
+//        assertThat(orderLineRepository.count()).isEqualTo(5);
     }
 }

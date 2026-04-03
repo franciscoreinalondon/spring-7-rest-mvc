@@ -10,5 +10,4 @@ import java.util.UUID;
 public interface MilkOrderRepository extends JpaRepository<MilkOrder, UUID> {
 
     Page<MilkOrder> findAllByCustomerRefContainingIgnoreCase(String customerRef, Pageable pageable);
-
 }
