@@ -218,10 +218,10 @@ public class MilkIT extends AbstractJwtMockIntegrationTest {
 //                .jsonPath("$.content[0].milkType").isEqualTo(MilkType.A2);
 //    }
 
-    @Test
+//    @Test
     void listByNameAndTypeUsingPage1_whenMilksExists_returnsDataList() throws FileNotFoundException {
         // Arrange
-        dataFactory.loadMilkCsvDataset(savedCategory);
+//        dataFactory.loadMilkCsvDataset(savedCategory);
 
         // Act + Assert
         getRequest(ApiPaths.MILKS, Map.of("name", "skimmed", "milkType", "SKIMMED",

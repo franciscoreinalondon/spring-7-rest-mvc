@@ -6,18 +6,18 @@ import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.domain.order.MilkOrder;
 import com.franciscoreina.spring7.domain.order.OrderLine;
-import com.franciscoreina.spring7.dto.file.MilkCsvRecord;
+import com.franciscoreina.spring7.csv.dto.MilkCsvRecord;
 import com.franciscoreina.spring7.repositories.CategoryRepository;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
 import com.franciscoreina.spring7.repositories.MilkOrderRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
-import com.franciscoreina.spring7.services.MilkCsvService;
+import com.franciscoreina.spring7.csv.service.MilkCsvService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ResourceUtils;
 
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
@@ -60,11 +60,14 @@ public class IntegrationTestDataFactory {
         return List.of(savedMilk1, savedMilk2);
     }
 
-    public void loadMilkCsvDataset(Category savedCategory) throws FileNotFoundException {
-        var csvFile = ResourceUtils.getFile("classpath:csvdata/milk_dataset.csv");
-        var records = milkCsvService.convertCSV(csvFile);
+    public void loadMilkCsvDataset(Category savedCategory)  throws IOException {
+        var csvFile = new ClassPathResource("csvdata/milk_dataset.csv");
 
-        records.forEach(record -> milkRepository.save(mapToBeer(record, savedCategory)));
+        try (var is = csvFile.getInputStream()) {
+            var records = milkCsvService.convertCSV(is);
+
+            records.forEach(record -> milkRepository.save(mapToBeer(record, savedCategory)));
+        }
     }
 
     public MilkOrder persistMilkOrder(Category savedCategory) {
@@ -105,7 +108,7 @@ public class IntegrationTestDataFactory {
     // with placeholder values and do not represent realistic domain data.
     private Milk mapToBeer(MilkCsvRecord record, Category savedCategory) {
         return Milk.createMilk(
-                record.getMilk(),
+                record.getMilkName(),
                 parseMilkType(record.getStyle()),
                 record.getRow().toString(),
                 BigDecimal.TEN,

@@ -1,9 +1,9 @@
 package com.franciscoreina.spring7.csv.dto;
 
-import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.csv.converter.CsvNullableBigDecimalConverter;
 import com.franciscoreina.spring7.csv.converter.CsvNullableIntegerConverter;
 import com.franciscoreina.spring7.csv.converter.CsvNullableStringConverter;
+import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvCustomBindByName;
 import lombok.AllArgsConstructor;
@@ -25,10 +25,10 @@ public class MilkCsvRecord {
     private Integer count;
 
     @CsvCustomBindByName(column = "mfp", converter = CsvNullableBigDecimalConverter.class)
-    private String milkFatPercentage;
+    private BigDecimal milkFatPercentage;
 
     @CsvCustomBindByName(column = "lc", converter = CsvNullableBigDecimalConverter.class)
-    private String lactoseContent;
+    private BigDecimal lactoseContent;
 
     @CsvBindByName(column = "id")
     private Integer externalId;
@@ -62,6 +62,10 @@ public class MilkCsvRecord {
 
     @CsvBindByName(column = "label")
     private String label;
+
+    public Integer getProductCount() {
+        return count;
+    }
 
     public void normalize() {
         milkName = normalizeText(milkName);
