@@ -6,7 +6,7 @@ import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.domain.order.MilkOrder;
 import com.franciscoreina.spring7.domain.order.OrderLine;
-import com.franciscoreina.spring7.dto.file.MilkCsvRecord;
+import com.franciscoreina.spring7.csv.dto.MilkCsvRecord;
 import com.franciscoreina.spring7.repositories.CategoryRepository;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
 import com.franciscoreina.spring7.repositories.MilkOrderRepository;
@@ -155,7 +155,7 @@ public class BootstrapData implements CommandLineRunner {
     private Milk mapToBeer(MilkCsvRecord record) {
         var savedCategory = categoryRepository.findAll().getFirst();
         return Milk.createMilk(
-                record.getMilk(),
+                record.getMilkName(),
                 parseMilkType(record.getStyle()),
                 record.getRow().toString(),
                 BigDecimal.TEN,

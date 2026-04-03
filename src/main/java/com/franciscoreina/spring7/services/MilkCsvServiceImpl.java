@@ -1,6 +1,6 @@
 package com.franciscoreina.spring7.services;
 
-import com.franciscoreina.spring7.dto.file.MilkCsvRecord;
+import com.franciscoreina.spring7.csv.dto.MilkCsvRecord;
 import com.opencsv.bean.CsvToBeanBuilder;
 import org.springframework.stereotype.Service;
 
