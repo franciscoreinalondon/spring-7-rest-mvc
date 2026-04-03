@@ -1,8 +1,8 @@
 package com.franciscoreina.spring7.controllers;
 
 import com.franciscoreina.spring7.api.ApiPaths;
-import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.request.customer.CustomerPatchRequest;
+import com.franciscoreina.spring7.dto.request.customer.CustomerRequest;
 import com.franciscoreina.spring7.dto.response.customer.CustomerResponse;
 import com.franciscoreina.spring7.services.CustomerService;
 import jakarta.validation.Valid;
@@ -35,7 +35,8 @@ public class CustomerController {
 
     @PostMapping
     public ResponseEntity<CustomerResponse> create(@Valid @RequestBody CustomerRequest request) {
-        log.info("Creating customer with email: {}", request.email());
+        log.info("Creating customer with email={}", request.email());
+
         var customerResponse = customerService.create(request);
         var location = URI.create(ApiPaths.CUSTOMERS + "/" + customerResponse.id());
 
@@ -44,38 +45,41 @@ public class CustomerController {
 
     @GetMapping(ApiPaths.CUSTOMER_ID)
     public CustomerResponse getById(@PathVariable("customerId") UUID customerId) {
-        log.info("Getting customer by id: {}", customerId);
+        log.info("Getting customer id={}", customerId);
 
         return customerService.getById(customerId);
     }
 
     @GetMapping
-    public Page<CustomerResponse> list(
+    public Page<CustomerResponse> search(
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "email", required = false) String email,
             Pageable pageable) {
-        log.info("Getting all customers");
+        log.info("Searching customers with filters: name={}, email={}", name, email);
 
-        return customerService.search(name, email , pageable);
+        return customerService.search(name, email, pageable);
     }
 
     @PutMapping(ApiPaths.CUSTOMER_ID)
-    public CustomerResponse update(@PathVariable("customerId") UUID customerId, @Valid @RequestBody CustomerRequest request) {
-        log.info("Updating customer with id: {}", customerId);
+    public CustomerResponse update(@PathVariable("customerId") UUID customerId,
+                                   @Valid @RequestBody CustomerRequest request) {
+        log.info("Updating customer id={}", customerId);
 
         return customerService.update(customerId, request);
     }
 
     @PatchMapping(ApiPaths.CUSTOMER_ID)
-    public CustomerResponse patch(@PathVariable("customerId") UUID customerId, @Valid @RequestBody CustomerPatchRequest request) {
-        log.info("Patching customer with id: {}", customerId);
+    public CustomerResponse patch(@PathVariable("customerId") UUID customerId,
+                                  @Valid @RequestBody CustomerPatchRequest request) {
+        log.info("Patching customer id={}", customerId);
 
         return customerService.patch(customerId, request);
     }
 
     @DeleteMapping(ApiPaths.CUSTOMER_ID)
     public ResponseEntity<Void> delete(@PathVariable("customerId") UUID customerId) {
-        log.info("Deleting customer with id: {}", customerId);
+        log.info("Deleting customer id={}", customerId);
+
         customerService.delete(customerId);
 
         return ResponseEntity.noContent().build();
