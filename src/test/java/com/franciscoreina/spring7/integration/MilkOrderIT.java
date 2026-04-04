@@ -297,8 +297,7 @@ class MilkOrderIT extends AbstractJwtMockIntegrationTest {
                         assertThat(response.requestedQuantity()).isEqualTo(5);
                     });
 
-            var updatedOrder = milkOrderRepository.findById(savedMilkOrder.getId()).orElseThrow();
-            var updatedLine = updatedOrder.getOrderLines().iterator().next();
+            var updatedLine = orderLineRepository.findById(savedOrderLine.getId()).orElseThrow();
             assertThat(updatedLine.getRequestedQuantity()).isEqualTo(5);
         }
 
@@ -308,7 +307,7 @@ class MilkOrderIT extends AbstractJwtMockIntegrationTest {
             var request = TestDataFactory.orderLineUpdateRequest(5);
 
             // Act + Assert
-            putRequest(ApiPaths.MILK_ORDERS + "/" + UUID.randomUUID() + ApiPaths.ORDER_LINES + UUID.randomUUID(), request)
+            putRequest(ApiPaths.MILK_ORDERS + "/" + UUID.randomUUID() + ApiPaths.ORDER_LINES + "/" + UUID.randomUUID(), request)
                     .expectStatus().isNotFound()
                     .expectBody(ApiError.class)
                     .value(error -> {
@@ -345,8 +344,8 @@ class MilkOrderIT extends AbstractJwtMockIntegrationTest {
             deleteRequest(ApiPaths.MILK_ORDERS + "/" + savedMilkOrder.getId() + ApiPaths.ORDER_LINES + "/" + savedOrderLine.getId())
                     .expectStatus().isNoContent();
 
-            var updatedOrder = milkOrderRepository.findById(savedMilkOrder.getId()).orElseThrow();
-            assertThat(updatedOrder.getOrderLines()).isEmpty();
+            var exists = orderLineRepository.existsById(savedOrderLine.getId());
+            assertThat(exists).isFalse();
         }
 
         @Test
