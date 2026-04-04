@@ -4,50 +4,61 @@ import com.franciscoreina.spring7.dto.auth.AccessTokenResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.testcontainers.containers.MySQLContainer;
 
 import java.util.Map;
 
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("integration-test")
+@AutoConfigureWebTestClient
 public abstract class AbstractIntegrationTest {
 
     private static final MediaType JSON = MediaType.APPLICATION_JSON;
+    private static final MediaType FORM_URLENCODED = MediaType.APPLICATION_FORM_URLENCODED;
+
+    @ServiceConnection
+    static final MySQLContainer<?> mysqlContainer = new MySQLContainer<>("mysql:8.4");
+
+    static {
+        // Start once for the whole JVM to avoid container shutdown between IT classes
+        mysqlContainer.start();
+    }
 
     @Autowired
-    WebTestClient webTestClient;
+    protected WebTestClient webTestClient;
 
     @Value("${test.auth-server.token-uri}")
-    String tokenUri;
+    protected String tokenUri;
 
     @Value("${test.auth-server.client-id}")
-    String clientId;
+    protected String clientId;
 
     @Value("${test.auth-server.client-secret}")
-    String clientSecret;
+    protected String clientSecret;
 
     @Value("${test.auth-server.scope}")
-    String scope;
-
-    private String accessToken;
+    protected String scope;
 
     @BeforeEach
     void setUp() {
-        accessToken = fetchAccessToken();
-        webTestClient = webTestClient
-                .mutate()
+        var accessToken = fetchAccessToken();
+        webTestClient = webTestClient.mutate()
                 .defaultHeaders(headers -> headers.setBearerAuth(accessToken))
                 .build();
     }
 
     private String fetchAccessToken() {
-        var tokenResponse = WebTestClient.bindToServer()
-                .baseUrl(tokenUri)
-                .build()
-                .post()
+        var tokenResponse = authClient().post()
                 .uri("")
                 .headers(headers -> headers.setBasicAuth(clientId, clientSecret))
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .contentType(FORM_URLENCODED)
                 .bodyValue("grant_type=client_credentials&scope=" + scope)
                 .exchange()
                 .expectStatus().isOk()
@@ -60,6 +71,12 @@ public abstract class AbstractIntegrationTest {
         }
 
         return tokenResponse.accessToken();
+    }
+
+    private WebTestClient authClient() {
+        return WebTestClient.bindToServer()
+                .baseUrl(tokenUri)
+                .build();
     }
 
     protected WebTestClient.ResponseSpec postRequest(String uri, Object body) {

@@ -10,16 +10,19 @@ import static org.mockito.BDDMockito.given;
 
 public abstract class AbstractJwtMockIntegrationTest extends AbstractIntegrationTest {
 
+    private static final String FAKE_TOKEN = "fake-token";
+    private static final String TEST_USER = "test-user";
+
     @MockitoBean
-    JwtDecoder jwtDecoder;
+    protected JwtDecoder jwtDecoder;
 
     @BeforeEach
     void setUpJwtMock() {
         // Mock JWT
-        Jwt jwt = Jwt.withTokenValue("fake-token")
+        Jwt jwt = Jwt.withTokenValue(FAKE_TOKEN)
                 .header("alg", "none")
-                .claim("sub", "test-user")
-                .claim("scope", "message.read message.write")
+                .claim("sub", TEST_USER)
+                .claim("scope", scope)
                 .build();
 
         given(jwtDecoder.decode(anyString())).willReturn(jwt);
@@ -27,13 +30,13 @@ public abstract class AbstractJwtMockIntegrationTest extends AbstractIntegration
         // Override WebTestClient to always use fake token
         webTestClient = webTestClient
                 .mutate()
-                .defaultHeaders(headers -> headers.setBearerAuth("fake-token"))
+                .defaultHeaders(headers -> headers.setBearerAuth(FAKE_TOKEN))
                 .build();
     }
 
     @Override
     @BeforeEach
     void setUp() {
-        // Avoid fetchAccessToken()
+        // Intentionally overridden to skip real token retrieval from auth server
     }
 }

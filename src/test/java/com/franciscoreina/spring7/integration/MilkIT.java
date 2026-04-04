@@ -7,6 +7,7 @@ import com.franciscoreina.spring7.dto.request.milk.MilkRequest;
 import com.franciscoreina.spring7.dto.response.milk.MilkResponse;
 import com.franciscoreina.spring7.exceptions.ApiError;
 import com.franciscoreina.spring7.repositories.CategoryRepository;
+import com.franciscoreina.spring7.repositories.MilkOrderRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
 import com.franciscoreina.spring7.testdata.IntegrationTestDataFactory;
 import com.franciscoreina.spring7.testdata.TestDataFactory;
@@ -14,36 +15,24 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Testcontainers
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("integration-test")
-@AutoConfigureWebTestClient
 class MilkIT extends AbstractJwtMockIntegrationTest {
-
-    @Container
-    @ServiceConnection
-    static final MySQLContainer<?> mysqlContainer = new MySQLContainer<>("mysql:8.4");
 
     @Autowired
     private CategoryRepository categoryRepository;
 
     @Autowired
     private MilkRepository milkRepository;
+
+    @Autowired
+    private MilkOrderRepository milkOrderRepository;
 
     @Autowired
     private IntegrationTestDataFactory dataFactory;
@@ -53,6 +42,7 @@ class MilkIT extends AbstractJwtMockIntegrationTest {
     @BeforeEach
     void setUp() {
         super.setUp();
+        milkOrderRepository.deleteAll();
         milkRepository.deleteAll();
         categoryRepository.deleteAll();
         savedCategory = categoryRepository.saveAndFlush(Category.createCategory(UUID.randomUUID().toString()));
