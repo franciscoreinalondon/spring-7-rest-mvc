@@ -4,12 +4,9 @@ import com.franciscoreina.spring7.csv.dto.MilkCsvRecord;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class MilkCsvServiceImplTest {
 
