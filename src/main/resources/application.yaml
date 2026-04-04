@@ -12,15 +12,6 @@ spring:
         jwt:
           issuer-uri: http://localhost:9000
 
-#      jakarta:
-#        persistence:
-#          schema-generation:
-#            scripts:
-#              action: drop-and-create             # Generate database schema creation scripts
-#              create-source: metadata             # Use entity metadata (JPA annotations) as the source for schema generation
-#              drop-target: V1__init-mysql-database.sql    # File where the generated DROP schema script will be written
-#              create-target: V1__init-mysql-database.sql  # File where the generated CREATE schema script will be written
-
   flyway:
     enabled: false
 

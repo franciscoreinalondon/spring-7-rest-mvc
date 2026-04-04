@@ -3,6 +3,7 @@ spring:
     hibernate:
       ddl-auto: validate
 
+  # Used by AbstractIntegrationTest for real auth-server integration tests
   security:
     user:
       name: user
