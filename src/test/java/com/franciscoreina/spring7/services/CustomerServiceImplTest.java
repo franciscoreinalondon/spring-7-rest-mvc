@@ -13,6 +13,7 @@ import org.instancio.Model;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -61,23 +62,27 @@ class CustomerServiceImplTest {
         void create_shouldReturnResponse_whenRequestIsValid() {
             // Arrange
             var request = Instancio.create(REQUEST_MODEL);
-            var customer = Customer.createCustomer(request.name(), request.email());
+            var savedCustomer = Customer.createCustomer(request.name(), request.email());
             var expectedResponse = Instancio.create(CustomerResponse.class);
+            var customerCaptor = ArgumentCaptor.forClass(Customer.class);
 
             given(customerRepository.existsByEmailIgnoreCase(request.email())).willReturn(false);
-            given(customerMapper.toEntity(request)).willReturn(customer);
-            given(customerRepository.save(customer)).willReturn(customer);
-            given(customerMapper.toResponse(customer)).willReturn(expectedResponse);
+            given(customerRepository.save(any(Customer.class))).willReturn(savedCustomer);
+            given(customerMapper.toResponse(savedCustomer)).willReturn(expectedResponse);
 
             // Act
             var response = customerService.create(request);
 
             // Assert
             assertThat(response).isEqualTo(expectedResponse);
+
             verify(customerRepository).existsByEmailIgnoreCase(request.email());
-            verify(customerMapper).toEntity(request);
-            verify(customerRepository).save(customer);
-            verify(customerMapper).toResponse(customer);
+            verify(customerRepository).save(customerCaptor.capture());
+            verify(customerMapper).toResponse(savedCustomer);
+
+            var capturedCustomer = customerCaptor.getValue();
+            assertThat(capturedCustomer.getName()).isEqualTo(request.name());
+            assertThat(capturedCustomer.getEmail()).isEqualTo(request.email());
         }
 
         @Test

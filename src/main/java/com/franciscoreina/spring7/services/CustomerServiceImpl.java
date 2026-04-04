@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+import static com.franciscoreina.spring7.domain.customer.Customer.createCustomer;
+
 @Slf4j
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -37,7 +39,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         assertEmailNotInUse(request.email());
 
-        var customer = customerMapper.toEntity(request);
+        var customer = createCustomer(request.name(), request.email());
         var savedCustomer = customerRepository.save(customer);
 
         return customerMapper.toResponse(savedCustomer);
