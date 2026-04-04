@@ -17,11 +17,13 @@ import com.franciscoreina.spring7.mappers.OrderLineMapper;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
 import com.franciscoreina.spring7.repositories.MilkOrderRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
+import com.franciscoreina.spring7.repositories.OrderLineRepository;
 import org.instancio.Instancio;
 import org.instancio.Model;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -55,6 +57,8 @@ class MilkOrderServiceImplTest {
     private MilkRepository milkRepository;
     @Mock
     private MilkOrderRepository milkOrderRepository;
+    @Mock
+    private OrderLineRepository orderLineRepository;
     @Mock
     private MilkOrderMapper milkOrderMapper;
     @Mock
@@ -94,37 +98,35 @@ class MilkOrderServiceImplTest {
         void create_shouldReturnResponse_whenRequestIsValid() {
             // Arrange
             var request = Instancio.create(MILK_ORDER_REQUEST_MODEL);
-
             var customer = customer();
             var milk1 = milk("Milk 1", "UPC111");
             var milk2 = milk("Milk 2", "UPC222");
-            var order = MilkOrder.createMilkOrder(customer, request.customerRef());
-            var line1 = OrderLine.createOrderLine(milk1, ORDER_LINE_1.requestedQuantity());
-            var line2 = OrderLine.createOrderLine(milk2, ORDER_LINE_2.requestedQuantity());
+            var savedOrder = MilkOrder.createMilkOrder(customer, request.customerRef()); // CHANGED
             var expectedResponse = Instancio.create(MilkOrderResponse.class);
+            var orderCaptor = ArgumentCaptor.forClass(MilkOrder.class);
 
             given(customerRepository.findById(request.customerId())).willReturn(Optional.of(customer));
-            given(milkOrderMapper.toEntity(request, customer)).willReturn(order);
             given(milkRepository.findById(MILK_ID_1)).willReturn(Optional.of(milk1));
             given(milkRepository.findById(MILK_ID_2)).willReturn(Optional.of(milk2));
-            given(orderLineMapper.toEntity(ORDER_LINE_1, milk1)).willReturn(line1);
-            given(orderLineMapper.toEntity(ORDER_LINE_2, milk2)).willReturn(line2);
-            given(milkOrderRepository.save(order)).willReturn(order);
-            given(milkOrderMapper.toResponse(order)).willReturn(expectedResponse);
+            given(milkOrderRepository.save(any(MilkOrder.class))).willReturn(savedOrder); // CHANGED
+            given(milkOrderMapper.toResponse(savedOrder)).willReturn(expectedResponse);
 
             // Act
             var response = milkOrderService.create(request);
 
             // Assert
             assertThat(response).isEqualTo(expectedResponse);
+
             verify(customerRepository).findById(request.customerId());
-            verify(milkOrderMapper).toEntity(request, customer);
             verify(milkRepository).findById(MILK_ID_1);
             verify(milkRepository).findById(MILK_ID_2);
-            verify(orderLineMapper).toEntity(ORDER_LINE_1, milk1);
-            verify(orderLineMapper).toEntity(ORDER_LINE_2, milk2);
-            verify(milkOrderRepository).save(order);
-            verify(milkOrderMapper).toResponse(order);
+            verify(milkOrderRepository).save(orderCaptor.capture());
+            verify(milkOrderMapper).toResponse(any(MilkOrder.class));
+
+            var capturedOrder = orderCaptor.getValue();
+            assertThat(capturedOrder.getCustomer()).isEqualTo(customer);
+            assertThat(capturedOrder.getCustomerRef()).isEqualTo(request.customerRef());
+            assertThat(capturedOrder.getOrderLines()).hasSize(2);
         }
 
         @Test
@@ -147,17 +149,12 @@ class MilkOrderServiceImplTest {
         void create_shouldThrowNotFoundException_whenAnyMilkDoesNotExist() {
             // Arrange
             var request = Instancio.create(MILK_ORDER_REQUEST_MODEL);
-
             var customer = customer();
-            var order = MilkOrder.createMilkOrder(customer, request.customerRef());
             var milk1 = milk("Milk 1", "UPC111");
-            var line1 = OrderLine.createOrderLine(milk1, ORDER_LINE_1.requestedQuantity());
 
             given(customerRepository.findById(request.customerId())).willReturn(Optional.of(customer));
-            given(milkOrderMapper.toEntity(request, customer)).willReturn(order);
             given(milkRepository.findById(MILK_ID_1)).willReturn(Optional.of(milk1));
             given(milkRepository.findById(MILK_ID_2)).willReturn(Optional.empty());
-            given(orderLineMapper.toEntity(ORDER_LINE_1, milk1)).willReturn(line1);
 
             // Act + Assert
             assertThatThrownBy(() -> milkOrderService.create(request))
@@ -165,7 +162,6 @@ class MilkOrderServiceImplTest {
                     .hasMessage("Milk not found: " + MILK_ID_2);
 
             verify(customerRepository).findById(request.customerId());
-            verify(milkOrderMapper).toEntity(request, customer);
             verify(milkRepository).findById(MILK_ID_1);
             verify(milkRepository).findById(MILK_ID_2);
             verify(milkOrderRepository, never()).save(any());
@@ -282,18 +278,17 @@ class MilkOrderServiceImplTest {
             // Arrange
             var orderId = UUID.randomUUID();
             var request = Instancio.create(ORDER_LINE_CREATE_REQUEST_MODEL);
-
             var order = order();
             var milk = milk("Milk", "UPC123");
-            var newLine = OrderLine.createOrderLine(milk, request.requestedQuantity());
+            var savedLine = OrderLine.createOrderLine(milk, request.requestedQuantity());
             var expectedResponse = Instancio.create(OrderLineResponse.class);
 
             ReflectionTestUtils.setField(order, "id", orderId);
 
             given(milkOrderRepository.findById(orderId)).willReturn(Optional.of(order));
             given(milkRepository.findById(request.milkId())).willReturn(Optional.of(milk));
-            given(orderLineMapper.toEntity(request, milk)).willReturn(newLine);
-            given(orderLineMapper.toResponse(newLine)).willReturn(expectedResponse);
+            given(orderLineRepository.saveAndFlush(any(OrderLine.class))).willReturn(savedLine);
+            given(orderLineMapper.toResponse(savedLine)).willReturn(expectedResponse);
 
             // Act
             var response = milkOrderService.addLine(orderId, request);
@@ -302,8 +297,7 @@ class MilkOrderServiceImplTest {
             assertThat(response).isEqualTo(expectedResponse);
             verify(milkOrderRepository).findById(orderId);
             verify(milkRepository).findById(request.milkId());
-            verify(orderLineMapper).toEntity(request, milk);
-            verify(orderLineMapper).toResponse(newLine);
+            verify(orderLineMapper).toResponse(savedLine);
         }
 
         @Test
@@ -355,7 +349,6 @@ class MilkOrderServiceImplTest {
             var orderId = UUID.randomUUID();
             var orderLineId = UUID.randomUUID();
             var request = Instancio.create(ORDER_LINE_UPDATE_REQUEST_MODEL);
-
             var milk = milk("Milk", "UPC123");
             var order = order();
             var line = OrderLine.createOrderLine(milk, ORDER_LINE_1.requestedQuantity());
@@ -449,6 +442,7 @@ class MilkOrderServiceImplTest {
             // Arrange
             var orderId = UUID.randomUUID();
             var orderLineId = UUID.randomUUID();
+
             given(milkOrderRepository.findById(orderId)).willReturn(Optional.empty());
 
             // Act + Assert

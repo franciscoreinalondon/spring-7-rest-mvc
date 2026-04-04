@@ -48,13 +48,11 @@ public class MilkOrderServiceImpl implements MilkOrderService {
         log.info("Creating milk order with customerRef={}", request.customerRef());
 
         var customer = findCustomerOrThrow(request.customerId());
-        var order = milkOrderMapper.toEntity(request, customer); //tbr
-//        var order = MilkOrder.createMilkOrder(customer, request.customerRef());
+        var order = MilkOrder.createMilkOrder(customer, request.customerRef());
 
         request.orderLines().forEach(lineRequest -> {
             var milk = findMilkOrThrow(lineRequest.milkId());
-            var orderLine = orderLineMapper.toEntity(lineRequest, milk); //tbr
-//            var orderLine = OrderLine.createOrderLine(milk, lineRequest.requestedQuantity());
+            var orderLine = OrderLine.createOrderLine(milk, lineRequest.requestedQuantity());
             order.addOrderLine(orderLine);
         });
 
