@@ -44,7 +44,13 @@ public class MilkServiceImpl implements MilkService {
         assertUpcNotInUse(request.upc());
 
         var categories = fetchRequiredCategoriesOrThrow(request.categoryIds());
-        var milk = milkMapper.toEntity(request, categories);
+        var milk = Milk.createMilk(
+                request.name(),
+                request.milkType(),
+                request.upc(),
+                request.price(),
+                request.stock(),
+                categories);
 
         return milkMapper.toResponse(milkRepository.save(milk));
     }

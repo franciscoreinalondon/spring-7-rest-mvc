@@ -16,6 +16,7 @@ import org.instancio.Model;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -82,36 +83,41 @@ class MilkServiceImplTest {
         void create_shouldReturnResponse_whenRequestIsValid() {
             // Arrange
             var request = Instancio.create(REQUEST_MODEL);
-            var category1 = Category.createCategory("Category 1");
-            var category2 = Category.createCategory("Category 2");
-            var categories = List.of(category1, category2);
+            var categories = Arrays.asList(category("Category 1"), category("Category 2"));
 
-            var milk = Milk.createMilk(
+            var savedMilk = Milk.createMilk(
                     request.name(),
                     request.milkType(),
                     request.upc(),
                     request.price(),
                     request.stock(),
-                    new HashSet<>(categories)
+                    new LinkedHashSet<>(categories)
             );
             var expectedResponse = Instancio.create(MilkResponse.class);
+            var milkCaptor = ArgumentCaptor.forClass(Milk.class);
 
             given(milkRepository.existsByUpcIgnoreCase(request.upc())).willReturn(false);
             given(categoryRepository.findAllById(request.categoryIds())).willReturn(categories);
-            given(milkMapper.toEntity(request, new HashSet<>(categories))).willReturn(milk);
-            given(milkRepository.save(milk)).willReturn(milk);
-            given(milkMapper.toResponse(milk)).willReturn(expectedResponse);
+            given(milkRepository.save(any(Milk.class))).willReturn(savedMilk);
+            given(milkMapper.toResponse(savedMilk)).willReturn(expectedResponse);
 
             // Act
             var response = milkService.create(request);
 
             // Assert
             assertThat(response).isEqualTo(expectedResponse);
+
             verify(milkRepository).existsByUpcIgnoreCase(request.upc());
             verify(categoryRepository).findAllById(request.categoryIds());
-            verify(milkMapper).toEntity(request, new HashSet<>(categories));
-            verify(milkRepository).save(milk);
-            verify(milkMapper).toResponse(milk);
+            verify(milkRepository).save(milkCaptor.capture());
+            verify(milkMapper).toResponse(savedMilk);
+
+            var capturedMilk = milkCaptor.getValue();
+            assertThat(capturedMilk.getName()).isEqualTo(request.name());
+            assertThat(capturedMilk.getMilkType()).isEqualTo(request.milkType());
+            assertThat(capturedMilk.getUpc()).isEqualTo(request.upc());
+            assertThat(capturedMilk.getPrice()).isEqualTo(request.price());
+            assertThat(capturedMilk.getStock()).isEqualTo(request.stock());
         }
 
         @Test
@@ -159,7 +165,7 @@ class MilkServiceImplTest {
         void create_shouldThrowNotFoundException_whenAnyCategoryDoesNotExist() {
             // Arrange
             var request = Instancio.create(REQUEST_MODEL);
-            var category = Category.createCategory("Category ");
+            var category = category("Category ");
 
             given(milkRepository.existsByUpcIgnoreCase(request.upc())).willReturn(false);
             given(categoryRepository.findAllById(request.categoryIds())).willReturn(List.of(category));
@@ -182,14 +188,7 @@ class MilkServiceImplTest {
         void getById_shouldReturnResponse_whenMilkExists() {
             // Arrange
             var milkId = UUID.randomUUID();
-            var milk = Milk.createMilk(
-                    "Milk",
-                    MilkType.WHOLE,
-                    "UPC123",
-                    new BigDecimal("2.50"),
-                    10,
-                    Set.of(Category.createCategory("Category"))
-            );
+            var milk = milk("Milk", "UPC123");
             var expectedResponse = Instancio.create(MilkResponse.class);
 
             ReflectionTestUtils.setField(milk, "id", milkId);
@@ -230,14 +229,8 @@ class MilkServiceImplTest {
         void search_shouldReturnAllMilks_whenNoFiltersAreProvided() {
             // Arrange
             var pageable = Pageable.ofSize(10);
-            var milk1 = Milk.createMilk(
-                    "Milk 1", MilkType.WHOLE, "UPC111", new BigDecimal("1.50"), 10,
-                    Set.of(Category.createCategory("Category 1"))
-            );
-            var milk2 = Milk.createMilk(
-                    "Milk 2", MilkType.SKIMMED, "UPC222", new BigDecimal("2.50"), 20,
-                    Set.of(Category.createCategory("Category 2"))
-            );
+            var milk1 = milk("Milk1", "UPC111");
+            var milk2 = milk("Milk2", "UPC222");
             var response1 = Instancio.create(MilkResponse.class);
             var response2 = Instancio.create(MilkResponse.class);
             var page = new PageImpl<>(List.of(milk1, milk2), pageable, 2);
@@ -258,10 +251,7 @@ class MilkServiceImplTest {
         void search_shouldSearchByName_whenOnlyNameIsProvided() {
             // Arrange
             var pageable = Pageable.ofSize(10);
-            var milk = Milk.createMilk(
-                    "Whole Milk", MilkType.WHOLE, "UPC123", new BigDecimal("2.50"), 10,
-                    Set.of(Category.createCategory("Category"))
-            );
+            var milk = milk("Milk", "UPC111");
             var response = Instancio.create(MilkResponse.class);
             var page = new PageImpl<>(List.of(milk), pageable, 1);
 
@@ -269,7 +259,7 @@ class MilkServiceImplTest {
             given(milkMapper.toResponse(milk)).willReturn(response);
 
             // Act
-            var result = milkService.search(" Whole Milk ", null, pageable);
+            var result = milkService.search(" Milk ", null, pageable);
 
             // Assert
             assertThat(result.getContent()).containsExactly(response);
@@ -280,10 +270,7 @@ class MilkServiceImplTest {
         void search_shouldSearchByMilkType_whenOnlyMilkTypeIsProvided() {
             // Arrange
             var pageable = Pageable.ofSize(10);
-            var milk = Milk.createMilk(
-                    "Whole Milk", MilkType.WHOLE, "UPC123", new BigDecimal("2.50"), 10,
-                    Set.of(Category.createCategory("Category"))
-            );
+            var milk = milk("Milk", "UPC111");
             var response = Instancio.create(MilkResponse.class);
             var page = new PageImpl<>(List.of(milk), pageable, 1);
 
@@ -302,10 +289,7 @@ class MilkServiceImplTest {
         void search_shouldSearchByNameAndMilkType_whenBothFiltersAreProvided() {
             // Arrange
             var pageable = Pageable.ofSize(10);
-            var milk = Milk.createMilk(
-                    "Whole Milk", MilkType.WHOLE, "UPC123", new BigDecimal("2.50"), 10,
-                    Set.of(Category.createCategory("Category"))
-            );
+            var milk = milk("Milk", "UPC111");
             var response = Instancio.create(MilkResponse.class);
             var page = new PageImpl<>(List.of(milk), pageable, 1);
 
@@ -314,7 +298,7 @@ class MilkServiceImplTest {
             given(milkMapper.toResponse(milk)).willReturn(response);
 
             // Act
-            var result = milkService.search(" Whole Milk ", MilkType.WHOLE, pageable);
+            var result = milkService.search(" Milk ", MilkType.WHOLE, pageable);
 
             // Assert
             assertThat(result.getContent()).containsExactly(response);
@@ -807,14 +791,7 @@ class MilkServiceImplTest {
         void delete_shouldCallRepository_whenMilkExists() {
             // Arrange
             var milkId = UUID.randomUUID();
-            var milk = Milk.createMilk(
-                    "Milk",
-                    MilkType.WHOLE,
-                    "UPC123",
-                    new BigDecimal("2.50"),
-                    10,
-                    Set.of(Category.createCategory("Category"))
-            );
+            var milk = milk("Milk", "UPC111");
 
             ReflectionTestUtils.setField(milk, "id", milkId);
 
@@ -843,5 +820,20 @@ class MilkServiceImplTest {
             verify(milkRepository).findById(milkId);
             verify(milkRepository, never()).delete(any());
         }
+    }
+
+    private Category category(String description) {
+        return Category.createCategory(description);
+    }
+
+    private Milk milk(String name, String upc) {
+        return Milk.createMilk(
+                name,
+                MilkType.WHOLE,
+                upc,
+                new BigDecimal("2.50"),
+                10,
+                Set.of(Category.createCategory("Category"))
+        );
     }
 }
