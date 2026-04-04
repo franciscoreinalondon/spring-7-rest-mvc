@@ -5,10 +5,7 @@ import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.milk.MilkType;
 import com.franciscoreina.spring7.domain.order.MilkOrder;
-import com.franciscoreina.spring7.domain.order.MilkOrderStatus;
 import com.franciscoreina.spring7.domain.order.OrderLine;
-import com.franciscoreina.spring7.dto.request.order.MilkOrderRequest;
-import com.franciscoreina.spring7.dto.request.order.OrderLineCreateRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,57 +26,6 @@ class MilkOrderMapperTest {
 
     @Autowired
     private MilkOrderMapper mapper;
-
-    @Test
-    void toEntity_shouldCreateMilkOrder() {
-        // Arrange
-        var customer = Customer.createCustomer("John Doe", "john@test.com");
-        var request = new MilkOrderRequest(
-                "ORDER-001",
-                UUID.randomUUID(),
-                Set.of(new OrderLineCreateRequest(2, UUID.randomUUID()))
-        );
-
-        // Act
-        var milkOrder = mapper.toEntity(request, customer);
-
-        // Assert
-        assertThat(milkOrder).isNotNull();
-        assertThat(milkOrder.getCustomerRef()).isEqualTo(request.customerRef());
-        assertThat(milkOrder.getPaymentAmount()).isEqualTo(BigDecimal.ZERO);
-        assertThat(milkOrder.getMilkOrderStatus()).isEqualTo(MilkOrderStatus.NEW);
-        assertThat(milkOrder.getCustomer()).isEqualTo(customer);
-        assertThat(milkOrder.getOrderLines()).isEmpty();
-        assertThat(milkOrder.getOrderShipment()).isNull();
-    }
-
-    @Test
-    void toEntity_shouldReturnNull_whenRequestIsNull() {
-        // Arrange
-        var customer = Customer.createCustomer("John Doe", "john@test.com");
-
-        // Act
-        var result = mapper.toEntity(null, customer);
-
-        // Assert
-        assertThat(result).isNull();
-    }
-
-    @Test
-    void toEntity_shouldReturnNull_whenCustomerIsNull() {
-        // Arrange
-        var request = new MilkOrderRequest(
-                "ORDER-001",
-                UUID.randomUUID(),
-                Set.of(new OrderLineCreateRequest(2, UUID.randomUUID()))
-        );
-
-        // Act
-        var result = mapper.toEntity(request, null);
-
-        // Assert
-        assertThat(result).isNull();
-    }
 
     @Test
     void toResponse_shouldMapAllFields() {

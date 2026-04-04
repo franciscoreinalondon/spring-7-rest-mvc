@@ -30,64 +30,6 @@ class MilkMapperTest {
     private MilkMapper mapper;
 
     @Test
-    void toEntity_shouldCreateMilk() {
-        // Arrange
-        var category = Category.createCategory("Protein");
-
-        var request = new MilkRequest(
-                "Whole Milk",
-                MilkType.WHOLE,
-                "UPC123",
-                new BigDecimal("2.50"),
-                10,
-                Set.of(UUID.randomUUID())
-        );
-
-        // Act
-        var milk = mapper.toEntity(request, Set.of(category));
-
-        // Assert
-        assertThat(milk).isNotNull();
-        assertThat(milk.getName()).isEqualTo(request.name());
-        assertThat(milk.getMilkType()).isEqualTo(request.milkType());
-        assertThat(milk.getUpc()).isEqualTo(request.upc());
-        assertThat(milk.getPrice()).isEqualTo(request.price());
-        assertThat(milk.getStock()).isEqualTo(request.stock());
-        assertThat(milk.getCategories()).contains(category);
-    }
-
-    @Test
-    void toEntity_shouldReturnNull_whenRequestIsNull() {
-        // Arrange
-        var category = Category.createCategory("Protein");
-
-        // Act
-        var result = mapper.toEntity(null, Set.of(category));
-
-        // Assert
-        assertThat(result).isNull();
-    }
-
-    @Test
-    void toEntity_shouldReturnNull_whenCategoriesAreNull() {
-        // Arrange
-        var request = new MilkRequest(
-                "Whole Milk",
-                MilkType.WHOLE,
-                "UPC123",
-                new BigDecimal("2.50"),
-                10,
-                Set.of(UUID.randomUUID())
-        );
-
-        // Act
-        var result = mapper.toEntity(request, null);
-
-        // Assert
-        assertThat(result).isNull();
-    }
-
-    @Test
     void updateEntity_shouldUpdateAllFields() {
         // Arrange
         var oldCategory = Category.createCategory("Old");

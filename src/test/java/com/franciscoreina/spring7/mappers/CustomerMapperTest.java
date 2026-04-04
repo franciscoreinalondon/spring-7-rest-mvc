@@ -24,29 +24,6 @@ class CustomerMapperTest {
     private CustomerMapper mapper;
 
     @Test
-    void toEntity_shouldCreateCustomer() {
-        // Arrange
-        var request = new CustomerRequest("John Doe", "john@test.com");
-
-        // Act
-        var customer = mapper.toEntity(request);
-
-        // Assert
-        assertThat(customer).isNotNull();
-        assertThat(customer.getName()).isEqualTo(request.name());
-        assertThat(customer.getEmail()).isEqualTo(request.email());
-    }
-
-    @Test
-    void toEntity_shouldReturnNull_whenRequestIsNull() {
-        // Act
-        var customer = mapper.toEntity(null);
-
-        // Assert
-        assertThat(customer).isNull();
-    }
-
-    @Test
     void updateEntity_shouldUpdateAllFields() {
         // Arrange
         var customer = Customer.createCustomer("Old Name", "old@test.com");

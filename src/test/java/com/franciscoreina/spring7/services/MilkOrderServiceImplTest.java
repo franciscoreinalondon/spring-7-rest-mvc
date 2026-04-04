@@ -336,7 +336,6 @@ class MilkOrderServiceImplTest {
 
             verify(milkOrderRepository).findById(orderId);
             verify(milkRepository).findById(request.milkId());
-            verify(orderLineMapper, never()).toEntity(any(), any());
         }
     }
 

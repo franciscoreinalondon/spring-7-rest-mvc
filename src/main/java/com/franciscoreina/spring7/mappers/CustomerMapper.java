@@ -10,15 +10,6 @@ import org.mapstruct.MappingTarget;
 @Mapper
 public interface CustomerMapper {
 
-    default Customer toEntity(CustomerRequest request) {
-        if (request == null) return null;
-
-        return Customer.createCustomer(
-                request.name(),
-                request.email()
-        );
-    }
-
     default void updateEntity(@MappingTarget Customer target, CustomerRequest request) {
         if (target == null || request == null) return;
 

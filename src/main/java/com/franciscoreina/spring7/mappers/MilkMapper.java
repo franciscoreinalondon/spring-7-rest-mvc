@@ -15,19 +15,6 @@ import java.util.UUID;
 @Mapper
 public interface MilkMapper {
 
-    default Milk toEntity(MilkRequest request, Set<Category> categories) {
-        if (request == null || categories == null) return null;
-
-        return Milk.createMilk(
-                request.name(),
-                request.milkType(),
-                request.upc(),
-                request.price(),
-                request.stock(),
-                categories
-        );
-    }
-
     default void updateEntity(@MappingTarget Milk target, MilkRequest request, Set<Category> newCategories) {
         if (target == null || request == null || newCategories == null) return;
 
