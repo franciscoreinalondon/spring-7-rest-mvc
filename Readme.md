@@ -9,7 +9,6 @@ REST API built with Spring Boot to manage customers, products, categories and or
 
 Designed as a portfolio project to showcase clean architecture, good testing practices, and API development.
 
----
 
 ## Tech Stack
 
@@ -19,11 +18,12 @@ Designed as a portfolio project to showcase clean architecture, good testing pra
 - Spring Security (OAuth2 / JWT)
 - MySQL & Flyway
 - Testcontainers
+- Docker (containerization)
+- Kubernetes (optional, for local deployment)
 - JUnit 5, Mockito
 - Open CSV
 - Postman
 
----
 
 ## Architecture Overview
 
@@ -35,7 +35,6 @@ Designed as a portfolio project to showcase clean architecture, good testing pra
 
 The design is inspired by Domain-Driven Design (DDD), focusing on clear boundaries and encapsulated business logic.
 
----
 
 ## Setup & Configuration
 
@@ -49,7 +48,7 @@ The design is inspired by Domain-Driven Design (DDD), focusing on clear boundari
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local-mysql
 ```
 
-The API will be available at http://localhost:8080.
+The API will be available at http://localhost:8080
 
 ### Profiles
 
@@ -78,7 +77,44 @@ Authentication is handled by an external authorization server
 [spring-7-auth-server](https://github.com/franciscoreinalondon/spring-7-auth-server), 
 which runs at http://localhost:9000 and must be started to obtain valid access tokens.
 
----
+
+## Running with Kubernetes (optional)
+
+This service requires:
+- MySQL
+- Auth Server
+
+Make sure the [auth server](https://github.com/franciscoreinalondon/spring-7-auth-server) is running in Kubernetes before starting this service.
+
+Build the Docker image:
+
+```
+./mvnw clean spring-boot:build-image 
+-Dspring-boot.build-image.imageName=spring-7-rest-mvc:0.0.1-SNAPSHOT
+```
+
+Deploy MySQL:
+
+```
+kubectl apply -f mysql-deployment.yaml
+kubectl apply -f mysql-service.yaml
+```
+
+Deploy the API:
+
+```
+kubectl apply -f rest-mvc-deployment.yaml
+kubectl apply -f rest-mvc-service.yaml
+```
+
+Expose locally:
+
+```
+kubectl port-forward svc/rest-mvc 8080:8080
+```
+
+The API will be available at http://localhost:8080
+
 
 ## API Endpoints
 
@@ -99,7 +135,6 @@ A complete and ready-to-use
 [Postman collection](https://github.com/franciscoreinalondon/spring-7-rest-mvc/tree/main/postman) 
 is included in this repository.
 
----
 
 ## Testing Strategy
 
@@ -125,7 +160,6 @@ Run the tests and generate the report:
 
 Open the report in your browser: `target/site/jacoco/index.html`
 
----
 
 ## Troubleshooting
 - **Port already in use (3306)** → Stop any local MySQL instance or change the Docker port mapping
@@ -133,7 +167,6 @@ Open the report in your browser: `target/site/jacoco/index.html`
 - **401 Unauthorized** → Verify the auth server is running and a valid token is used
 - **Application fails on startup** → Check logs and ensure the correct Spring profile is active
 
----
 
 ## Future Improvements
 - Introduce API documentation (e.g., OpenAPI/Swagger)
