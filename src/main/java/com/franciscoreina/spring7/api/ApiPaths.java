@@ -7,6 +7,9 @@ public final class ApiPaths {
 
     public static final String API_V1 = "/api/v1";
 
+    // CATEGORIES
+    public static final String CATEGORIES = API_V1 + "/categories";
+
     // CUSTOMERS
     public static final String CUSTOMERS = API_V1 + "/customers";
     public static final String CUSTOMER_ID = "/{customerId}";

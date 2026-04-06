@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Pageable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -65,5 +66,39 @@ class CategoryRepositoryTest {
         assertThat(result).isPresent();
         assertThat(result.get().getId()).isEqualTo(savedCategory.getId());
         assertThat(result.get().getDescription()).isEqualTo(savedCategory.getDescription());
+    }
+
+    // ---------------
+    //      SEARCH
+    // ---------------
+
+    @Test
+    void findAllByDescriptionContainingIgnoreCase_whenMatchExists_shouldReturnCategories() {
+        // Arrange
+        var category1 = categoryRepository.saveAndFlush(Category.createCategory("Milk"));
+        var category2 = categoryRepository.saveAndFlush(Category.createCategory("Whole Milk"));
+
+        var pageable = Pageable.ofSize(10);
+
+        // Act
+        var result = categoryRepository.findByDescriptionContainingIgnoreCase("milk", pageable);
+
+        // Assert
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getContent())
+                .extracting(Category::getDescription)
+                .containsExactly(category1.getDescription(), category2.getDescription());
+    }
+
+    @Test
+    void findAllByDescriptionContainingIgnoreCase_whenNoMatchExists_shouldReturnEmptyPage() {
+        // Arrange
+        var pageable = Pageable.ofSize(10);
+
+        // Act
+        var result = categoryRepository.findByDescriptionContainingIgnoreCase("Milk", pageable);
+
+        // Assert
+        assertThat(result.getContent()).isEmpty();
     }
 }
