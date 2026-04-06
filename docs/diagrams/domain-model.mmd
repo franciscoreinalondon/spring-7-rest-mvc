@@ -2,57 +2,86 @@ classDiagram
  class Customer {
   UUID id
   Integer version
-  String name
-  String email
   Instant createdAt
   Instant updatedAt
+  String name
+  String email
  }
 
  class MilkOrder {
   UUID id
   Integer version
-  String customerRef
-  BigDecimal paymentAmount
   Instant createdAt
   Instant updatedAt
+  String customerRef
+  BigDecimal paymentAmount
+  MilkOrderStatus milkOrderStatus
+  Customer customer
+  Set<OrderLine> orderLines
+  OrderShipment orderShipment
+  createMilkOrder(Customer, String customerRef)$ MilkOrder
   addOrderLine(OrderLine)
   removeOrderLine(OrderLine)
+  updateOrderLineQuantity(OrderLine, Integer quantity)
   addOrderShipment(OrderShipment)
-  getTotalAmount() BigDecimal
  }
 
  class OrderLine {
   UUID id
+  Integer version
+  Instant createdAt
+  Instant updatedAt
   Integer requestedQuantity
   Integer assignedQuantity
-  BigDecimal priceAtPurchase
   OrderLineStatus orderLineStatus
-  createLine(Milk milk, Integer quantity)$ OrderLine
+  BigDecimal priceAtPurchase
+  MilkOrder milkOrder
+  Milk milk
+  createOrderLine(Milk, Integer quantity)$ OrderLine
+  assignQuantity(Integer quantity)
+  allocateUpTo(Integer availableStock)
  }
 
  class OrderLineStatus {
   <<enumeration>>
   NEW
-  COMPLETE
+  PARTIALLY_ALLOCATED
+  FULLY_ALLOCATED
+  OUT_OF_STOCK
  }
 
  class OrderShipment {
   UUID id
-  String trackingNumber
+  Integer version
   Instant createdAt
   Instant updatedAt
+  String trackingNumber
+  MilkOrder milkOrder
+  createOrderLine(String trackingNumber)$ OrderShipment
+  updateTrackingNumber(String trackingNumber)
  }
 
  class Milk {
   UUID id
+  Integer version
+  Instant createdAt
+  Instant updatedAt
   String name
   MilkType milkType
   String upc
   BigDecimal price
   Integer stock
-  Instant createdAt
-  Instant updatedAt
-  addCategory(Category category)
+  Set<Category> categories
+  renameTo(String newName)
+  updateMilkType(MilkType newMilkType)
+  updateUpc(String newUpc)
+  updatePrice(BigDecimal newPrice)
+  updateStock(Integer newStock)
+  decreaseStock(Integer amount)
+  createMilk(String name, MilkType, String upc, BigDecimal price, Integer stock, Set<Category>)$ Milk
+  addCategory(Category)
+  removeCategory(Category)
+  replaceCategories(Set<Category>)
  }
 
  class MilkType {
@@ -69,15 +98,18 @@ classDiagram
 
  class Category {
   UUID id
-  String description
+  Integer version
   Instant createdAt
   Instant updatedAt
+  String description
+  createCategory(String description)$ Category
+  changeDescriptionTo(String description)
  }
 
- Customer "1" -- "0..*" MilkOrder : places
- MilkOrder "1" *-- "1..*" OrderLine : contains
- MilkOrder "1" -- "0..1" OrderShipment : tracking
- OrderLine "n" -- "1" Milk : references
- OrderLine -- OrderLineStatus : status
- Milk "n" -- "m" Category : belongs to
- Milk -- MilkType : type
+ Customer "1" --> "0..*" MilkOrder : places
+ MilkOrder "1" *--> "0..*" OrderLine : contains
+ MilkOrder "1" *--> "0..1" OrderShipment : shipment
+ OrderLine "0..*" --> "1" Milk : references
+ OrderLine --> OrderLineStatus : status
+ Milk "0..*" <--> "0..*" Category : belongs to
+ Milk --> MilkType : type
