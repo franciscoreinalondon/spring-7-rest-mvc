@@ -113,6 +113,18 @@ is included in this repository.
 
 This combination helps verify both isolated components and real application behavior.
 
+High test coverage (+85% instruction coverage) across services, controllers, and integration layers.
+
+### Code Coverage (JaCoCo)
+
+Run the tests and generate the report:
+
+```
+./mvnw clean test jacoco:report
+```
+
+Open the report in your browser: `target/site/jacoco/index.html`
+
 ---
 
 ## Troubleshooting
