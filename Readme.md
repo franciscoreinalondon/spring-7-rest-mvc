@@ -1,6 +1,7 @@
 ![Java](https://img.shields.io/badge/Java-21-blue?logo=openjdk)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0-brightgreen?logo=springboot)
 ![JUnit](https://img.shields.io/badge/JUnit-5-orange?logo=junit5)
+![Kafka](https://img.shields.io/badge/Kafka-Event--Driven-green?logo=apachekafka)
 ![Build](https://img.shields.io/badge/build-passing-brightgreen)
 
 # Milk Order API project using Spring Boot 4, Spring Framework 7 and JUnit 5 compiling with Java 21
@@ -16,6 +17,7 @@ Designed as a portfolio project to showcase clean architecture, good testing pra
 - Spring Boot 4.0
 - Spring Data JPA
 - Spring Security (OAuth2 / JWT)
+- Kafka (event-driven architecture)
 - MySQL & Flyway
 - Testcontainers
 - Docker (containerization)
@@ -76,6 +78,32 @@ The API is secured using OAuth2 with JWT tokens.
 Authentication is handled by an external authorization server 
 [spring-7-auth-server](https://github.com/franciscoreinalondon/spring-7-auth-server), 
 which runs at http://localhost:9000 and must be started to obtain valid access tokens.
+
+
+## Event Publishing (Kafka)
+
+This service publishes domain events to Kafka as part of an event-driven architecture.
+
+For example, when an order is paid, an `order-paid` event is produced and sent to Kafka.
+
+### Requirements
+
+Make sure Kafka and Schema Registry are running.
+
+You can use the infrastructure provided in the
+[spring-7-events-consumer](https://github.com/franciscoreinalondon/spring-7-events-consumer) project.
+
+### Configuration
+
+Kafka is enabled via `app.kafka.enabled=true`
+
+Events are serialized using Avro and registered automatically in Schema Registry.
+
+### Notes
+
+- This service acts as a **Kafka producer**
+- Events are consumed by an external service (events-consumer)
+- If Kafka is disabled (`app.kafka.enabled=false`), events will not be published
 
 
 ## Running with Kubernetes (optional)
