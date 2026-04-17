@@ -5,7 +5,7 @@ create table milk_orders (
                       updated_at datetime(6) not null,
                       customer_ref varchar(50) not null,
                       payment_amount decimal(14,2) not null,
-                      milk_order_status enum ('NEW', 'CONFIRMED', 'SHIPPED', 'CANCELLED') not null,
+                      milk_order_status enum ('NEW', 'CONFIRMED', 'PAID', 'SHIPPED', 'CANCELLED') not null,
                       customer_id binary(16) not null,
                       primary key (id),
 

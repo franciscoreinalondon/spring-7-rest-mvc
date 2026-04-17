@@ -18,3 +18,7 @@ test:
     client-id: messaging-client
     client-secret: secret
     scope: "message.read message.write"
+
+app:
+  kafka:
+    enabled: false
