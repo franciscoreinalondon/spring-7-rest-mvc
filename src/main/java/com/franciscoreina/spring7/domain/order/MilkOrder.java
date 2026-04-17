@@ -142,6 +142,30 @@ public class MilkOrder extends BaseEntity {
         this.orderShipment = orderShipment;
     }
 
+    public void confirmOrder() {
+        if (this.milkOrderStatus != MilkOrderStatus.NEW) {
+            throw new IllegalStateException("Only NEW orders can be confirmed");
+        }
+
+        this.milkOrderStatus = MilkOrderStatus.CONFIRMED;
+    }
+
+    public void markAsPaid() {
+        if (this.milkOrderStatus == MilkOrderStatus.PAID) {
+            throw new IllegalStateException("Order already paid");
+        }
+
+        if (this.milkOrderStatus != MilkOrderStatus.CONFIRMED) {
+            throw new IllegalStateException("Only CONFIRMED orders can be paid");
+        }
+
+        this.milkOrderStatus = MilkOrderStatus.PAID;
+    }
+
+    public boolean isPaid() {
+        return this.milkOrderStatus == MilkOrderStatus.PAID;
+    }
+
     // Utilities
 
     private static String normalizeCustomerRef(String customerRef) {

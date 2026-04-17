@@ -21,6 +21,8 @@ public interface MilkOrderService {
 
     Page<MilkOrderResponse> search(String customerRef, Pageable pageable);
 
+    MilkOrderResponse payOrder(UUID orderId);
+
     // Order line operations
 
     OrderLineResponse addLine(UUID milkOrderId, @Valid OrderLineCreateRequest request);

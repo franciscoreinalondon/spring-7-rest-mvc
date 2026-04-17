@@ -1,5 +1,6 @@
 package com.franciscoreina.spring7.services;
 
+import com.franciscoreina.spring7.application.kafka.event.OrderPlacedEvent;
 import com.franciscoreina.spring7.domain.customer.Customer;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.order.MilkOrder;
@@ -18,6 +19,7 @@ import com.franciscoreina.spring7.repositories.MilkRepository;
 import com.franciscoreina.spring7.repositories.OrderLineRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,7 @@ public class MilkOrderServiceImpl implements MilkOrderService {
     private final MilkOrderMapper milkOrderMapper;
     private final OrderLineRepository orderLineRepository;
     private final OrderLineMapper orderLineMapper;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     // ----------------------------
     //  SERVICE OPERATIONS - ORDER
@@ -79,6 +82,23 @@ public class MilkOrderServiceImpl implements MilkOrderService {
 
         return milkOrderRepository.findAll(pageable)
                 .map(milkOrderMapper::toResponse);
+    }
+
+    @Transactional
+    @Override
+    public MilkOrderResponse payOrder(UUID milkOrderId) {
+        log.info("Paying milk order with id={}", milkOrderId);
+
+        var order = findMilkOrderOrThrow(milkOrderId);
+        var wasPaid = order.isPaid();
+
+        order.markAsPaid();
+
+        if (!wasPaid && order.isPaid()) {
+            applicationEventPublisher.publishEvent(new OrderPlacedEvent(order.getId()));
+        }
+
+        return milkOrderMapper.toResponse(order);
     }
 
     // ----------------------------------

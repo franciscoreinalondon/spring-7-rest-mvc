@@ -1,6 +1,7 @@
 package com.franciscoreina.spring7.bootstrap;
 
 import com.franciscoreina.spring7.csv.dto.MilkCsvRecord;
+import com.franciscoreina.spring7.csv.service.MilkCsvService;
 import com.franciscoreina.spring7.domain.customer.Customer;
 import com.franciscoreina.spring7.domain.milk.Category;
 import com.franciscoreina.spring7.domain.milk.Milk;
@@ -11,7 +12,6 @@ import com.franciscoreina.spring7.repositories.CategoryRepository;
 import com.franciscoreina.spring7.repositories.CustomerRepository;
 import com.franciscoreina.spring7.repositories.MilkOrderRepository;
 import com.franciscoreina.spring7.repositories.MilkRepository;
-import com.franciscoreina.spring7.csv.service.MilkCsvService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
@@ -119,19 +119,21 @@ public class BootstrapData implements CommandLineRunner {
         var milk2 = milks.get(1);
         var milk3 = milks.get(2);
 
-        milkOrderRepository.saveAll(List.of(
-                createMilkOrder(customer1, "1234R", List.of(
-                        OrderLine.createOrderLine(milk1, 1),
-                        OrderLine.createOrderLine(milk2, 2)
-                )),
-                createMilkOrder(customer1, "5678R", List.of(
-                        OrderLine.createOrderLine(milk3, 1)
-                )),
-                createMilkOrder(customer2, "1357R", List.of(
-                        OrderLine.createOrderLine(milk1, 3),
-                        OrderLine.createOrderLine(milk2, 1)
-                ))
+        var order1 = createMilkOrder(customer1, "1234R", List.of(
+                OrderLine.createOrderLine(milk1, 1),
+                OrderLine.createOrderLine(milk2, 2)
         ));
+        var order2 = createMilkOrder(customer1, "5678R", List.of(
+                OrderLine.createOrderLine(milk3, 1)
+        ));
+        var order3 = createMilkOrder(customer2, "1357R", List.of(
+                OrderLine.createOrderLine(milk1, 3),
+                OrderLine.createOrderLine(milk2, 1)
+        ));
+        order3.getOrderLines().forEach(OrderLine::fullyAllocateLine);
+        order3.confirmOrder();
+
+        milkOrderRepository.saveAll(List.of(order1, order2, order3));
     }
 
     private MilkOrder createMilkOrder(Customer customer, String customerRef, List<OrderLine> lines) {

@@ -64,6 +64,15 @@ public class MilkOrderController {
         return milkOrderService.search(customerRef, pageable);
     }
 
+    @PostMapping("/{milkOrderId}/pay")
+    public ResponseEntity<MilkOrderResponse> payOrder(@PathVariable("milkOrderId") UUID milkOrderId) {
+        log.info("Paying milk order by id: {}", milkOrderId);
+
+        var milkOrderResponse = milkOrderService.payOrder(milkOrderId);
+
+        return ResponseEntity.accepted().body(milkOrderResponse);
+    }
+
     // ---------------
     //   ORDER LINES
     // ---------------

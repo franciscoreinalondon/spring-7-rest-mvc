@@ -133,6 +133,10 @@ public class OrderLine extends BaseEntity {
         }
     }
 
+    public void fullyAllocateLine() {
+        this.orderLineStatus = OrderLineStatus.FULLY_ALLOCATED;
+    }
+
     // Utilities
 
     private static void validateRequestedQuantity(Integer requestedQuantity) {

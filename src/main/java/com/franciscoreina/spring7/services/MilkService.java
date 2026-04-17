@@ -23,5 +23,4 @@ public interface MilkService {
     MilkResponse patch(UUID milkId, @Valid MilkPatchRequest request);
 
     void delete(UUID milkId);
-
 }
