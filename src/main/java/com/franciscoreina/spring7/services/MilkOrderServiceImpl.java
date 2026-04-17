@@ -1,6 +1,6 @@
 package com.franciscoreina.spring7.services;
 
-import com.franciscoreina.spring7.application.kafka.event.OrderPlacedEvent;
+import com.franciscoreina.spring7.application.kafka.event.OrderPaidEvent;
 import com.franciscoreina.spring7.domain.customer.Customer;
 import com.franciscoreina.spring7.domain.milk.Milk;
 import com.franciscoreina.spring7.domain.order.MilkOrder;
@@ -95,7 +95,7 @@ public class MilkOrderServiceImpl implements MilkOrderService {
         order.markAsPaid();
 
         if (!wasPaid && order.isPaid()) {
-            applicationEventPublisher.publishEvent(new OrderPlacedEvent(order.getId()));
+            applicationEventPublisher.publishEvent(new OrderPaidEvent(order.getId()));
         }
 
         return milkOrderMapper.toResponse(order);

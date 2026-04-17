@@ -1,0 +1,8 @@
+{
+  "type": "record",
+  "name": "OrderPaidAvro",
+  "namespace": "com.franciscoreina.spring7.application.kafka.avro",
+  "fields": [
+    { "name": "orderId", "type": "string" }
+  ]
+}
