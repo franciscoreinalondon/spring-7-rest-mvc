@@ -78,6 +78,11 @@ Authentication is handled by an external authorization server
 which runs at http://localhost:9000 and must be started to obtain valid access tokens.
 
 
+## Event Publishing (Kafka)
+
+Kafka integration is implemented in the [kafka-integration](https://github.com/franciscoreinalondon/spring-7-rest-mvc/tree/feature/kafka-integration) branch.
+
+
 ## Running with Kubernetes (optional)
 
 This service requires:
